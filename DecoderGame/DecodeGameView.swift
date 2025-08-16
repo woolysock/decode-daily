@@ -8,7 +8,8 @@
 import SwiftUI
 
 struct DecodeGameView: View {
-    @ObservedObject var game = DecodeGame()
+    @StateObject private var game: DecodeGame
+    @EnvironmentObject var scoreManager: GameScoreManager
     
     // Color picker state
     @State private var showingColorPicker = false
@@ -16,10 +17,15 @@ struct DecodeGameView: View {
     @State private var selectedSquare: (row: Int, col: Int) = (0, 0)
     @State private var pickerSize: CGSize = .zero
     @State private var frameOffset: CGPoint = .zero
-
+    
     // How-to-play overlay state
     @State private var showHowToPlay = false
     
+    // Initialize with proper dependency injection
+    init() {
+        // Create a temporary game with a basic score manager that will be replaced
+        self._game = StateObject(wrappedValue: DecodeGame(scoreManager: GameScoreManager.shared))
+    }
     
     var body: some View {
         ZStack {
@@ -46,7 +52,7 @@ struct DecodeGameView: View {
                     }
                 }
                 .padding(.horizontal, 20)
-
+                
                 Divider().background(.white).padding(5)
                 
                 // Code display
@@ -115,10 +121,6 @@ struct DecodeGameView: View {
                                                         x: screenFrame.midX - frame.midX,
                                                         y: screenFrame.midY - frame.midY
                                                     )
-
-//                                                    print("GameBoardSpace frame: midX=\(frame.midX), midY=\(frame.midY)")
-//                                                    print("Screen frame: midX=\(screenFrame.midX), midY=\(screenFrame.midY)")
-//                                                    print("Offsets: x=\(frameOffset.x), y=\(frameOffset.y)")
                                                     
                                                     // Use GameBoardSpace coordinates for picker
                                                     colorPickerPosition = CGPoint(x: screenFrame.midX, y: screenFrame.midY - frame.height - 34)
@@ -128,12 +130,11 @@ struct DecodeGameView: View {
                                                     }
                                                     
                                                     game.statusText = "Choose a color for this square."
-                                                   // print("Tapped square \(row),\(col) -> picker offset \(colorPickerPosition) & frame.height = \(frame.height)")
                                                 }
                                                 .allowsHitTesting(!showingColorPicker && !showHowToPlay)
                                         }
                                     )
-
+                                
                             }
                             
                             // Spacer before score button
@@ -166,13 +167,25 @@ struct DecodeGameView: View {
                                     .foregroundColor(row == game.currentTurn ? (game.gameOver == 0 ? .gray : .clear) : .clear)
                                     .contentShape(Circle())
                                     .onTapGesture {
-                                        if row == game.currentTurn { game.scoreRow(row) }
+                                        if row == game.currentTurn {
+                                            game.scoreRow(row)
+                                        }
                                     }
                             }
                         }
                     }
                 }
                 .coordinateSpace(name: "GameBoardSpace") // board space for picker alignment
+            }
+            .onAppear {
+                // Inject the real scoreManager into the game
+                game.scoreManager = scoreManager
+                
+                // Show the How-to-Play overlay if the user hasn't dismissed it before
+                let key = "hasSeenHowToPlay_decodeGame"
+                if !UserDefaults.standard.bool(forKey: key) {
+                    showHowToPlay = true
+                }
             }
             
             // Color Picker Overlay
@@ -195,6 +208,7 @@ struct DecodeGameView: View {
                 )
                 .zIndex(1)
             }
+            
             // How-to-Play Overlay
             if showHowToPlay {
                 HowToPlayOverlay(
@@ -214,14 +228,6 @@ struct DecodeGameView: View {
                 )
                 .transition(.opacity)
                 .zIndex(2)
-            }
-        }
-
-        .onAppear {
-            // Show the How-to-Play overlay if the user hasn't dismissed it before
-            let key = "hasSeenHowToPlay_decodeGame"
-            if !UserDefaults.standard.bool(forKey: key) {
-                showHowToPlay = true
             }
         }
     }

@@ -14,6 +14,8 @@ extension Color {
 
 struct MainMenuView: View {
     
+    @EnvironmentObject var scoreManager: GameScoreManager    
+    
     let screenHeight = UIScreen.main.bounds.height
     let screenWidth = UIScreen.main.bounds.width
     var logoPadding: CGFloat = -25
@@ -23,11 +25,11 @@ struct MainMenuView: View {
     private func gameDestination(for gameId: String) -> some View {
         switch gameId {
         case "decode":
-            DecodeGameView()
+            DecodeGameView().environmentObject(scoreManager)
         case "numbers":
-            NumbersGameView()
+            NumbersGameView().environmentObject(scoreManager)
         case "flashdance":
-            FlashdanceGameView()
+            FlashdanceGameView().environmentObject(scoreManager)
         default:
             EmptyView()
         }
@@ -80,7 +82,7 @@ struct MainMenuView: View {
 //                                .foregroundColor(.white)
 //                        }
                         
-                        NavigationLink(destination: ScoresView()) {
+                        NavigationLink(destination: MultiGameLeaderboardView()) {
                             VStack(spacing: 5) {
                                 Text("High Scores")
                                     .font(.custom("LuloOne-Bold", size: 22))
@@ -132,28 +134,28 @@ struct MainMenuView: View {
 //    }
 //}
 
-struct ScoresView: View {
-    var body: some View {
-        ZStack {
-            Color.black.ignoresSafeArea()
-            VStack(spacing: 15) {
-                Text("High Scores")
-                    .foregroundColor(.white)
-                    .font(.system(size: 20, weight: .black))
-            }
-        }
-    }
-}
+//struct ScoresView: View {
+//    var body: some View {
+//        ZStack {
+//            Color.black.ignoresSafeArea()
+//            VStack(spacing: 15) {
+//                Text("High Scores")
+//                    .foregroundColor(.white)
+//                    .font(.system(size: 20, weight: .black))
+//            }
+//        }
+//    }
+//}
 
-struct SettingsView: View {
-    var body: some View {
-        ZStack {
-            Color.black.ignoresSafeArea()
-            VStack(spacing: 15) {
-                Text("Your Account & Other Stuff")
-                    .foregroundColor(.white)
-                    .font(.system(size: 20, weight: .black))
-            }
-        }
-    }
-}
+//struct SettingsView: View {
+//    var body: some View {
+//        ZStack {
+//            Color.black.ignoresSafeArea()
+//            VStack(spacing: 15) {
+//                Text("Your Account & Other Stuff")
+//                    .foregroundColor(.white)
+//                    .font(.system(size: 20, weight: .black))
+//            }
+//        }
+//    }
+//}

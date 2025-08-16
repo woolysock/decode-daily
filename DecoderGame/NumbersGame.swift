@@ -5,14 +5,6 @@
 //  Created by Megan Donahue on 8/14/25.
 //
 
-
-//
-//  NumbersGame.swift
-//  Decode! Daily iOS
-//
-//  Created by Megan Donahue on 8/14/25.
-//
-
 import SwiftUI
 
 class NumbersGame: GameProtocol {

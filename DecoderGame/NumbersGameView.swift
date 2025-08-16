@@ -1,3 +1,11 @@
+//
+//  NumbersGameView.swift
+//  Decode! Daily iOS
+//
+//  Created by Megan Donahue on 8/14/25.
+//
+
+
 import SwiftUI
 
 struct NumbersGameView: View {

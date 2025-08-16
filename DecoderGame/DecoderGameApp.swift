@@ -10,6 +10,8 @@ import SwiftData
 
 @main
 struct DecoderGameApp: App {
+    // Remove the @StateObject and use the shared instance instead
+    // @StateObject var scoreManager = GameScoreManager()
   
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
@@ -27,6 +29,7 @@ struct DecoderGameApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .environmentObject(GameScoreManager.shared)
         }
         .modelContainer(sharedModelContainer)
     }
