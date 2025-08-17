@@ -40,7 +40,7 @@ class FlashdanceGame: GameProtocol, ObservableObject {
            displayName: "flashdance",
            description: "math flashcard fun",
            isAvailable: true,
-           gameLocation: FlashdanceGameView()
+           gameLocation: AnyView(FlashdanceGameView())
        )
 
 

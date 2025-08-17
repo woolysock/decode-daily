@@ -39,7 +39,7 @@ class AnagramsGame: GameProtocol, ObservableObject {
            displayName: "letters",
            description: "rearrange letters into words",
            isAvailable: true,
-           gameLocation: AnagramsGameView()
+           gameLocation: AnyView(AnagramsGameView())
        )
 
     // Word list for anagrams

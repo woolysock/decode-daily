@@ -23,7 +23,7 @@ class NumbersGame: GameProtocol {
         displayName: "numbers",
         description: "tbd",
         isAvailable: false,
-        gameLocation: NumbersGameView()
+        gameLocation: AnyView(NumbersGameView())
     )
     
     init() {

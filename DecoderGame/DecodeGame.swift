@@ -38,7 +38,7 @@ class DecodeGame: ObservableObject, GameProtocol {
            displayName: "decode",
            description: "crack the color code",
            isAvailable: true,
-           gameLocation: DecodeGameView()
+           gameLocation: AnyView(DecodeGameView())
        )
 
 
