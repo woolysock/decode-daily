@@ -1,3 +1,11 @@
+//
+//  FlashdanceGameView.swift
+//  Decode! Daily iOS
+//
+//  Created by Megan Donahue on 8/12/25.
+//
+
+
 import SwiftUI
 
 struct FlashdanceGameView: View {
@@ -10,16 +18,21 @@ struct FlashdanceGameView: View {
     // Instructions specific to Flashdance
     private let instructionsText = """
     Flashdance is a quick-moving race against the clock to solve the most math problems.
+    
+    
+    How to Play:
 
-    You'll be shown a series of math equation flashcards.
+    
+    You'll be shown math equation flashcards.
+    
     + - × ÷
 
-    Swipe each card towards the correct answer before time runs out.
+    Swipe a card towards the correct answer, before time runs out.
+    
     ⇠ ⇡ ⇢
 
-    The more flashcards you solve, the higher your score!
+    The more flashcards you solve, the higher you score!
 
-    { Restart any time by tapping the game title. }
     """
 
     // Initialize with proper dependency injection
@@ -36,7 +49,7 @@ struct FlashdanceGameView: View {
                 Spacer().frame(height:5)
                 // Title + Timer + Help button
                 HStack {
-                    Text("flashdance")
+                    Text("\(game.gameInfo.displayName)")
                         .foregroundColor(.white)
                         .font(.custom("LuloOne-Bold", size: 20))
                         .onTapGesture { startRound() }

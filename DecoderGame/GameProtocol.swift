@@ -11,7 +11,7 @@ import SwiftUI
 protocol GameProtocol: ObservableObject {
     var gameOver: Int { get set }
     var statusText: String { get set }
-    
+    var gameInfo: GameInfo { get }
     func startGame()
     func resetGame()
 }
@@ -22,12 +22,15 @@ struct GameInfo {
     let displayName: String
     let description: String
     let isAvailable: Bool
+    let gameLocation: any View
     
     static let availableGames: [GameInfo] = [
-        GameInfo(id: "decode", displayName: "decode", description: "crack the color code", isAvailable: true),
-        GameInfo(id: "flashdance", displayName: "flashdance", description: "math flash card fun", isAvailable: true),
-        GameInfo(id: "numbers", displayName: "numbers", description: "solve the equations", isAvailable: true)
+        GameInfo(id: "decode", displayName: "decode", description: "crack the color code", isAvailable: true, gameLocation: DecodeGameView()),
+        GameInfo(id: "flashdance", displayName: "flashdance", description: "math flashcard fun", isAvailable: true, gameLocation: DecodeGameView()),
+        GameInfo(id: "numbers", displayName: "numbers", description: "solve the equations", isAvailable: false, gameLocation: DecodeGameView()),
+        GameInfo(id: "anagrams", displayName: "letters", description: "rearrange letters into words", isAvailable: true, gameLocation: DecodeGameView())
         // Future games can be added here:
         // GameInfo(id: "wordle", displayName: "Word Game", description: "Guess the word", isAvailable: false),
     ]
+
 }

@@ -17,11 +17,19 @@ class NumbersGame: GameProtocol {
     @Published var attempts: Int = 0
     
     let maxAttempts = 6 // Example game configuration
-
+    
+    let gameInfo = GameInfo(
+        id: "numbers",
+        displayName: "numbers",
+        description: "tbd",
+        isAvailable: false,
+        gameLocation: NumbersGameView()
+    )
+    
     init() {
         startGame()
     }
-
+    
     func startGame() {
         gameOver = 0
         currentNumber = 0

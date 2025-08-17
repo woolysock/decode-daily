@@ -10,7 +10,7 @@ import SwiftUI
 
 struct GameScore: Codable, Identifiable, Equatable {
     let id: UUID
-    let gameId: String           // "flashdance", "decode", "numbers"
+    let gameId: String           // "flashdance", "decode", "numbers", "anagrams"
     let date: Date
     let attempts: Int            // Number of tries/turns
     let timeElapsed: TimeInterval // Seconds to complete

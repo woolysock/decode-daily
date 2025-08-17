@@ -30,6 +30,8 @@ struct MainMenuView: View {
             NumbersGameView().environmentObject(scoreManager)
         case "flashdance":
             FlashdanceGameView().environmentObject(scoreManager)
+        case "anagrams":
+            AnagramsGameView().environmentObject(scoreManager)
         default:
             EmptyView()
         }
@@ -42,15 +44,34 @@ struct MainMenuView: View {
                 
                 GeometryReader { geo in
                     VStack(spacing: 25) {
-                        // Title image exactly 15 pts below safe area
-                        Image("TitleLoader-w")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: screenWidth - 20)
-                            .padding(.top, geo.safeAreaInsets.top + 25)
-                            .frame(maxWidth: .infinity, alignment: .center)
                         Spacer()
-                            .frame(height: 1)
+                            .frame(height : 40)
+                        //game title header
+                        VStack (spacing: 5){
+                            Text(" DECODE!")
+                                .font(.custom("LuloOne-Bold", size: 52))
+                                .foregroundColor(.white)
+                            Text("DAILY")
+                                .font(.custom("LuloOne-Bold", size: 24))
+                                .foregroundColor(.white)
+                            Text("Just Puzzles. No Distractions.")
+                                .font(.custom("LuloOne", size: 10))
+                                .foregroundColor(.white)
+                        }
+                        .fixedSize()
+                        .frame(width: (screenWidth))
+                        
+                        Spacer()
+                            .frame(height: 10)
+                        
+//                        // Title image exactly 15 pts below safe area
+//                        Image("TitleLoader-w")
+//                            .resizable()
+//                            .scaledToFit()
+//                            .frame(width: screenWidth - 20)
+//                            .padding(.top, geo.safeAreaInsets.top + 25)
+//                            .frame(maxWidth: .infinity, alignment: .center)
+                    
                         // Dynamic game buttons from GameInfo array
                         ForEach(GameInfo.availableGames.filter { $0.isAvailable }, id: \.id) { gameInfo in
                             NavigationLink(destination: gameDestination(for: gameInfo.id)) {
@@ -82,31 +103,51 @@ struct MainMenuView: View {
 //                                .foregroundColor(.white)
 //                        }
                         
+                        Spacer()
+                            .frame(height: 10)
                         NavigationLink(destination: MultiGameLeaderboardView()) {
                             VStack(spacing: 5) {
-                                Text("High Scores")
-                                    .font(.custom("LuloOne-Bold", size: 22))
-                                Text("How'd you do?")
-                                    .font(.custom("LuloOne", size: 12))
-                                    .opacity(0.8)
+                                HStack(spacing: 10) {
+                                    Image(systemName: "trophy")
+                                        .font(.system(size: 10))
+                                    
+                                    Text("High Scores")
+                                        .font(.custom("LuloOne-Bold", size: 14))
+                                
+                                }
+                                Text("How did you do?")
+                                    .font(.custom("LuloOne", size: 10))
                             }
+                            .padding()
                             .fixedSize()
-                                .frame(width: (screenWidth-120), height: 40)
-                                .padding()
-                                .background(Color.myAccentColor1)
-                                .foregroundColor(.white)
+                            .frame(width: (screenWidth-120), height: 60)
+                            .background(Color.myAccentColor1)
+                            .foregroundColor(Color.white)
+                            .cornerRadius(10)
                         }
-                        
                         
                         NavigationLink(destination: SettingsView()) {
-                            Text("Account & Settings")
-                                .fixedSize()
-                                .frame(width: (screenWidth-120), height: 40)
-                                .font(.custom("LuloOne", size: 16))
-                                .padding()
-                                .background(Color.myAccentColor2)
-                                .foregroundColor(.white)
+                            VStack(spacing: 5) {
+                                HStack(spacing: 10) {
+                                    Image(systemName: "person.text.rectangle")
+                                        .font(.system(size: 10))
+                                    
+                                    Text("Settings")
+                                        .font(.custom("LuloOne-Bold", size: 14))
+                                }
+                                
+                                Text("get help, reset the app, etc.")
+                                    .font(.custom("LuloOne", size: 10))
+                            }
+                            .padding()
+                            .fixedSize()
+                            .frame(width: (screenWidth-120), height: 60)
+                            .background(Color.myAccentColor2)
+                            .foregroundColor(Color.white)
+                            .cornerRadius(10)
                         }
+                        
+                       
                         
                         //Spacer().frame(height: screenHeight / 6)
                         Spacer()

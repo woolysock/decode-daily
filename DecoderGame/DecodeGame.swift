@@ -32,6 +32,15 @@ class DecodeGame: ObservableObject, GameProtocol {
         self.scoreManager = scoreManager
         startGame()
     }
+    
+    let gameInfo = GameInfo(
+           id: "decode",
+           displayName: "decode",
+           description: "crack the color code",
+           isAvailable: true,
+           gameLocation: DecodeGameView()
+       )
+
 
     func startGame() {
         pegShades = [myPegColor1, myPegColor2, myPegColor3, myPegColor4, myPegColor5, myPegColor6]
@@ -45,7 +54,7 @@ class DecodeGame: ObservableObject, GameProtocol {
         lastScore = nil
         
         // Debug logging to verify scoreManager is connected
-        print("DecodeGame started with scoreManager: \(type(of: scoreManager))")
+        print("DecodeGame initialized with scoreManager: \(type(of: scoreManager))")
     }
 
     func resetGame() {

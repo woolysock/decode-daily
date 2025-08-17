@@ -58,7 +58,7 @@ struct SettingsView: View {
     // MARK: - Header Section
     private var headerSection: some View {
         HStack {
-            Text("Account & Settings")
+            Text("Settings")
                 .font(.custom("LuloOne-Bold", size: 20))
                 .foregroundColor(.black)
             
@@ -87,6 +87,7 @@ struct SettingsView: View {
                 eraseScoresButton
                 
                 // Placeholder for future settings items
+            
                 
                 // Add some bottom padding so content doesn't stick to the bottom
                 Spacer()
@@ -108,19 +109,19 @@ struct SettingsView: View {
                 showingEraseConfirmation = true
             }
         }) {
-            HStack {
+            HStack (spacing:10){
                 Image(systemName: "trash")
                     .foregroundColor(hasScores ? .red : .gray)
                     .font(.title3)
                 
                 if hasScores {
                     // When there are scores, use VStack layout
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Erase All High Scores")
+                    VStack(alignment: .center, spacing: 2) {
+                        Text("Erase All Scores")
                             .font(.custom("LuloOne", size: 16))
                             .foregroundColor(.red)
                         
-                        Text("This will erase \(totalScores) score\(totalScores == 1 ? "" : "s") across \(uniqueGames) game\(uniqueGames == 1 ? "" : "s").")
+                        Text("This will erase \(totalScores) high score\(totalScores == 1 ? "" : "s") across \(uniqueGames) game\(uniqueGames == 1 ? "" : "s").")
                             .font(.custom("LuloOne", size: 12))
                             .foregroundColor(.gray)
                     }
@@ -188,12 +189,12 @@ struct SettingsView: View {
                 .font(.custom("LuloOne-Bold", size: 20))
                 .foregroundColor(.black)
             
-            Text("For help, email mgdesignseattle@gmail.com")
+            Text("For support\nwith the app, please reach out to the team.\n\nClick below to visit our website:")
                 .font(.custom("LuloOne", size: 14))
                 .foregroundColor(.black)
                 .multilineTextAlignment(.center)
             
-            Link("www.meganddesign.com", destination: URL(string: "http://www.meganddesign.com")!)
+            Link("www.meganddesign.com", destination: URL(string: "http://www.meganddesign.com/")!)
                 .font(.custom("LuloOne", size: 14))
                 .foregroundColor(.blue)
         }

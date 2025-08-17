@@ -32,7 +32,7 @@ struct NumbersGameView: View {
             VStack(spacing: 15) {
                 // Title + How To Play button
                 HStack {
-                    Text("numbers")
+                    Text("\(game.gameInfo.displayName)")
                         .foregroundColor(.white)
                         .font(.custom("LuloOne-Bold", size: 20))
                         .onTapGesture {

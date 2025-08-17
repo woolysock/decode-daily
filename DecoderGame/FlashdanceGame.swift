@@ -1,3 +1,11 @@
+//
+//  FlashdanceGame.swift
+//  Decode! Daily iOS
+//
+//  Created by Megan Donahue on 8/12/25.
+//
+
+
 import SwiftUI
 import Combine
 
@@ -26,6 +34,15 @@ class FlashdanceGame: GameProtocol, ObservableObject {
     private var preCountdownTimer: Timer?
     private var gameTimer: Timer?
     private var roundStart: Date?
+    
+    let gameInfo = GameInfo(
+           id: "flashdance",
+           displayName: "flashdance",
+           description: "math flashcard fun",
+           isAvailable: true,
+           gameLocation: FlashdanceGameView()
+       )
+
 
     // Initialize with score manager
     init(scoreManager: GameScoreManager) {
