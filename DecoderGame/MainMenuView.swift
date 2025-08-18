@@ -229,7 +229,7 @@ struct MainMenuView: View {
                 GeometryReader { geo in
                     VStack(spacing: 25) {
                         Spacer()
-                            .frame(height : 40)
+                            .frame(height : 30)
                         //game title header
                         VStack (spacing: 5){
                             Text(" DECODE!")

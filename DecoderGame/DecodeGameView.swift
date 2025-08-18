@@ -190,7 +190,7 @@ struct DecodeGameView: View {
                     game.scoreManager = scoreManager
                     
                     // Show the How-to-Play overlay if the user hasn't dismissed it before
-                    let key = "hasSeenHowToPlay_decodeGame"
+                    let key = "hasSeenHowToPlay_decode"
                     if !UserDefaults.standard.bool(forKey: key) {
                         showHowToPlay = true
                     }

@@ -163,7 +163,7 @@ struct MultiGameLeaderboardView: View {
                         currentTabIndex = (currentTabIndex - 1 + games.count) % games.count
                     }
                 }) {
-                    Image(systemName: "arrow.left")
+                    Image(systemName: "arrowshape.left.fill")
                         .foregroundColor(.black) // always enabled now
                         .font(.title2)
                 }
@@ -180,7 +180,7 @@ struct MultiGameLeaderboardView: View {
                         currentTabIndex = (currentTabIndex + 1) % games.count
                     }
                 }) {
-                    Image(systemName: "arrow.right")
+                    Image(systemName: "arrowshape.right.fill")
                         .foregroundColor(.black) // always enabled now
                         .font(.title2)
                 }

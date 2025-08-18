@@ -10,7 +10,7 @@ struct HowToPlayOverlay: View {
     var body: some View {
         ZStack {
             // Dimmed background
-            Color.black.opacity(0.4)
+            Color.black.opacity(0.6)
                 .edgesIgnoringSafeArea(.all)
                 .onTapGesture {
                     dismissOverlay()
@@ -35,7 +35,7 @@ struct HowToPlayOverlay: View {
                 .frame(maxHeight: 300)
                 
                 Toggle("do not show again", isOn: $dontShowAgain)
-                    .foregroundColor(.white).opacity(0.6)
+                    .foregroundColor(.white)
                     .font(.custom("LuloOne-Bold", size: 12))
                     .padding(.horizontal)
                     .onChange(of: dontShowAgain) {
