@@ -81,7 +81,7 @@ struct AnagramsGameView: View {
 
                     Spacer()
 
-                    // === GAME BOARD (same as before) ===
+                    // === GAME BOARD ===
                     ZStack {
                         Color.black.ignoresSafeArea()
                         VStack(spacing: 30) {
@@ -92,23 +92,8 @@ struct AnagramsGameView: View {
                                     .monospacedDigit()
                                     .scaleEffect(1.05)
                                     .transition(.scale)
-                            } else if game.gameOver == 1 {
-                                VStack(spacing: 20) {
-                                    Text("Game Over!")
-                                        .font(.custom("LuloOne-Bold", size: 36))
-                                        .foregroundColor(.white)
-                                    
-                                    Text("Final Score")
-                                        .font(.custom("LuloOne", size: 16))
-                                        .foregroundColor(.white)
-                                    
-                                    Text("\(game.attempts)")
-                                        .font(.custom("LuloOne-Bold", size: 48))
-                                        .foregroundColor(.white)
-                                        .monospacedDigit()
-                                }
-                            } else {
-                                // Game area…
+                            } else if game.isGameActive {
+                                // Game area when game is active
                                 gameArea
                             }
                         }
@@ -134,9 +119,7 @@ struct AnagramsGameView: View {
                 }
                 .onChange(of: game.gameOver, initial: false) { oldValue, newValue in
                     if newValue == 1 {
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
-                            showEndGameOverlay = true
-                        }
+                       showEndGameOverlay = true
                     }
                 }
 
@@ -199,7 +182,7 @@ struct AnagramsGameView: View {
     // MARK: - Game Area
     private var gameArea: some View {
         VStack(spacing: 15) {
-            // User’s answer
+            // User's answer
             VStack(spacing: 10) {
                 Text("Your Answer:")
                     .font(.custom("LuloOne", size: 14))
