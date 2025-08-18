@@ -5,7 +5,7 @@ struct HowToPlayOverlay: View {
     let instructions: String
     @Binding var isVisible: Bool
     
-    @State private var dontShowAgain = false
+    @State private var dontShowAgain: Bool = false
     
     var body: some View {
         ZStack {
@@ -13,14 +13,13 @@ struct HowToPlayOverlay: View {
             Color.black.opacity(0.4)
                 .edgesIgnoringSafeArea(.all)
                 .onTapGesture {
-                    // Tap outside solid rectangle dismisses
                     dismissOverlay()
                 }
             
             // Main instruction card
             VStack(spacing: 20) {
-                Spacer()
-                        .frame(height: 10)
+                Spacer().frame(height: 10)
+                
                 Text("How to Play")
                     .font(.custom("LuloOne-Bold", size: 22))
                     .bold()
@@ -39,6 +38,10 @@ struct HowToPlayOverlay: View {
                     .foregroundColor(.white).opacity(0.6)
                     .font(.custom("LuloOne-Bold", size: 12))
                     .padding(.horizontal)
+                    .onChange(of: dontShowAgain) {
+                        UserDefaults.standard.set(dontShowAgain, forKey: "hasSeenHowToPlay_\(gameID)")
+                    }
+
                 
                 Button(action: {
                     dismissOverlay()
@@ -53,21 +56,22 @@ struct HowToPlayOverlay: View {
                 }
             }
             .padding()
-            .background(Color.myAccentColor2) // Solid rectangle
+            .background(Color.myAccentColor2)
             .cornerRadius(16)
             .padding(30)
-            // Tap gesture on the solid rectangle dismisses overlay except for the toggle
             .contentShape(Rectangle())
             .onTapGesture {
                 dismissOverlay()
+            }
+            .onAppear {
+                // Sync toggle state with saved setting on appear
+                let savedValue = UserDefaults.standard.bool(forKey: "hasSeenHowToPlay_\(gameID)")
+                dontShowAgain = savedValue
             }
         }
     }
     
     private func dismissOverlay() {
-        if dontShowAgain {
-            UserDefaults.standard.set(true, forKey: "hasSeenHowToPlay_\(gameID)")
-        }
         withAnimation {
             isVisible = false
         }
