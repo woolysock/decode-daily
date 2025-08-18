@@ -63,46 +63,30 @@ struct MainMenuView: View {
                         
                         Spacer()
                             .frame(height: 10)
-                        
-//                        // Title image exactly 15 pts below safe area
-//                        Image("TitleLoader-w")
-//                            .resizable()
-//                            .scaledToFit()
-//                            .frame(width: screenWidth - 20)
-//                            .padding(.top, geo.safeAreaInsets.top + 25)
-//                            .frame(maxWidth: .infinity, alignment: .center)
                     
                         // Dynamic game buttons from GameInfo array
                         ForEach(GameInfo.availableGames.filter { $0.isAvailable }, id: \.id) { gameInfo in
                             NavigationLink(destination: gameDestination(for: gameInfo.id)) {
                                 VStack(spacing: 5) {
-                                    Text(gameInfo.displayName)
-                                        .font(.custom("LuloOne-Bold", size: 22))
+                                    HStack(alignment: .center, spacing: 10) {
+                                        gameInfo.gameIcon.font(.system(size: 14))
+                                        
+                                        Text(gameInfo.displayName)
+                                            .font(.custom("LuloOne-Bold", size: 22))
+                                    }
+                                    
                                     Text(gameInfo.description)
-                                        .font(.custom("LuloOne", size: 12))
-                                        .opacity(0.8)
+                                        .font(.custom("LuloOne", size: 10))
                                 }
                                 .fixedSize()
                                 .frame(width: (screenWidth-120), height: 40)
                                 .padding()
-                                //.background(gameInfo.id == "decode" ? Color.white : myAccentColor1)
                                 .background(Color.white)
-                                //.foregroundColor(gameInfo.id == "decode" ? .black : .white)
                                 .foregroundColor(Color.black)
                             }
                             .disabled(!gameInfo.isAvailable)
                         }
-                        
-//                        NavigationLink(destination: ArchiveView()) {
-//                            Text("Archives")
-//                                .fixedSize()
-//                                .frame(width: (screenWidth-120), height: 40)
-//                                .font(.system(size: 20, weight: .black))
-//                                .padding()
-//                                .background(myAccentColor1)
-//                                .foregroundColor(.white)
-//                        }
-                        
+                      
                         Spacer()
                             .frame(height: 5)
                         NavigationLink(destination: MultiGameLeaderboardView()) {

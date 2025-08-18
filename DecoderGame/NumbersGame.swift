@@ -23,7 +23,8 @@ class NumbersGame: GameProtocol {
         displayName: "numbers",
         description: "tbd",
         isAvailable: false,
-        gameLocation: AnyView(NumbersGameView())
+        gameLocation: AnyView(NumbersGameView()),
+        gameIcon: Image(systemName: "30.arrow.trianglehead.clockwise")
     )
     
     init() {

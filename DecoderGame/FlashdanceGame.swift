@@ -40,7 +40,8 @@ class FlashdanceGame: GameProtocol, ObservableObject {
            displayName: "flashdance",
            description: "math flashcard fun",
            isAvailable: true,
-           gameLocation: AnyView(FlashdanceGameView())
+           gameLocation: AnyView(FlashdanceGameView()),
+           gameIcon: Image(systemName: "30.arrow.trianglehead.clockwise")
        )
 
 
@@ -95,12 +96,11 @@ class FlashdanceGame: GameProtocol, ObservableObject {
         print("Game ended. Saving score: \(attempts) to \(type(of: scoreManager))")
         
         // --- Save score to ScoreManager ---
-        let timeElapsed = roundStart != nil ? Date().timeIntervalSince(roundStart!) : 30.0
         let newScore = GameScore(
             gameId: "flashdance",
             date: Date(),
             attempts: attempts,
-            timeElapsed: timeElapsed,
+            timeElapsed: 30.0,
             won: true,  // In Flashdance, finishing the game is always a "win"
             finalScore: attempts  // Score is the number of correct answers
         )

@@ -142,7 +142,7 @@ struct AnagramsGameView: View {
                         isVisible: $showEndGameOverlay,
                         onPlayAgain: { startNewGame() },
                         onHighScores: { navigateToHighScores = true },
-                        onMenu: { navigateToMenu = true }               // 👈
+                        onMenu: { navigateToMenu = true }               
                     )
                     .transition(.opacity)
                 }
@@ -164,24 +164,56 @@ struct AnagramsGameView: View {
             Text(isUsed ? "" : letter)
                 .font(.custom("LuloOne-Bold", size: 20))
                 .foregroundColor(.black)
-                .frame(width: 45, height: 45)
+                .frame(width: isScrambled ? 60 : 45, height: isScrambled ? 60 : 45)
                 .background(
                     isUsed ? Color.gray.opacity(0.3) :
                     (isScrambled ? Color.white : Color.myAccentColor1)
                 )
-                .cornerRadius(5)
+                .clipShape(isScrambled ? AnyShape(Circle()) : AnyShape(RoundedRectangle(cornerRadius: 5)))
                 .overlay(
-                    RoundedRectangle(cornerRadius: 5)
-                        .stroke(Color.black, lineWidth: 1)
+                    Group {
+                        if isScrambled {
+                            Circle().stroke(Color.myAccentColor1, lineWidth: 3)
+                        } else {
+                            RoundedRectangle(cornerRadius: 0).stroke(Color.black, lineWidth: 1)
+                        }
+                    }
                 )
                 .shadow(radius: isUsed ? 1 : 2)
         }
         .disabled(!game.isGameActive || isUsed)
     }
+    
+    // MARK: - Circular Grid Layout for Scrambled Letters
+    private var scrambledLettersGrid: some View {
+        let columns = Array(repeating: GridItem(.fixed(60), spacing: 5), count: 5)
+        
+        return LazyVGrid(columns: columns, spacing: 5) {
+            ForEach(0..<game.scrambledLetters.count, id: \.self) { index in
+                letterButton(
+                    game.scrambledLetters[index],
+                    isScrambled: true,
+                    isUsed: game.usedLetterIndices.contains(index)
+                ) {
+                    game.selectLetter(at: index)
+                }
+            }
+        }
+        .padding(.horizontal, 10)
+    }
 
     // MARK: - Game Area
     private var gameArea: some View {
         VStack(spacing: 15) {
+            // Score
+            if game.isGameActive {
+                Text("Score: \(game.attempts)")
+                    .font(.custom("LuloOne-Bold", size: 16))
+                    .foregroundColor(.white)
+            }
+            Spacer()
+                .frame(height: 40)
+            
             // User's answer
             VStack(spacing: 10) {
                 Text("Your Answer:")
@@ -200,7 +232,7 @@ struct AnagramsGameView: View {
                         Rectangle()
                             .fill(Color.white.opacity(0.3))
                             .frame(width: 45, height: 45)
-                            .cornerRadius(5)
+                            .cornerRadius(0)
                     }
                 }
                 .frame(minHeight: 55)
@@ -219,32 +251,15 @@ struct AnagramsGameView: View {
             
             Spacer().frame(height: 35)
             
-            // Scrambled letters
+            // Scrambled letters in circular grid
             VStack(spacing: 10) {
                 Text("Scrambled Letters:")
                     .font(.custom("LuloOne", size: 14))
                     .foregroundColor(.white)
                 
-                HStack(spacing: 8) {
-                    ForEach(0..<game.scrambledLetters.count, id: \.self) { index in
-                        letterButton(
-                            game.scrambledLetters[index],
-                            isScrambled: true,
-                            isUsed: game.usedLetterIndices.contains(index)
-                        ) {
-                            game.selectLetter(at: index)
-                        }
-                    }
-                }
-                .frame(minHeight: 85)
+                scrambledLettersGrid
             }
             
-            // Score
-            if game.isGameActive {
-                Text("Score: \(game.attempts)")
-                    .font(.custom("LuloOne-Bold", size: 16))
-                    .foregroundColor(.white)
-            }
         }
         .padding(.horizontal, 20)
     }
@@ -262,5 +277,20 @@ struct AnagramsGameView: View {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
             startRound()
         }
+    }
+}
+
+// Helper struct to allow both Circle and RoundedRectangle in clipShape
+struct AnyShape: Shape {
+    private let _path: @Sendable (CGRect) -> Path
+
+    init<S: Shape>(_ shape: S) {
+        _path = { rect in
+            shape.path(in: rect)
+        }
+    }
+
+    func path(in rect: CGRect) -> Path {
+        _path(rect)
     }
 }

@@ -23,14 +23,13 @@ struct GameInfo {
     let description: String
     let isAvailable: Bool
     let gameLocation: AnyView
+    let gameIcon: Image
     
     static let availableGames: [GameInfo] = [
-        GameInfo(id: "decode", displayName: "decode", description: "crack the color code", isAvailable: true, gameLocation: AnyView(DecodeGameView())),
-        GameInfo(id: "flashdance", displayName: "flashdance", description: "math flashcard fun", isAvailable: true, gameLocation: AnyView(FlashdanceGameView())),
+        GameInfo(id: "decode", displayName: "decode", description: "crack the color code", isAvailable: true, gameLocation: AnyView(DecodeGameView()), gameIcon: Image(systemName: "moonphase.first.quarter")),
+        GameInfo(id: "flashdance", displayName: "flashdance", description: "math flashcard fun", isAvailable: true, gameLocation: AnyView(FlashdanceGameView()), gameIcon: Image(systemName: "30.arrow.trianglehead.clockwise")),
         //GameInfo(id: "numbers", displayName: "numbers", description: "solve the equations", isAvailable: false, gameLocation: AnyView(NumbersGameView())),
-        GameInfo(id: "anagrams", displayName: "letters", description: "rearrange letters into words", isAvailable: true, gameLocation: AnyView(AnagramsGameView()))
-        // Future games can be added here:
-        // GameInfo(id: "wordle", displayName: "Word Game", description: "Guess the word", isAvailable: false),
+        GameInfo(id: "anagrams", displayName: "letters", description: "rearrange letters into words", isAvailable: true, gameLocation: AnyView(AnagramsGameView()), gameIcon: Image(systemName: "60.arrow.trianglehead.clockwise"))
     ]
 
 }

@@ -20,7 +20,7 @@ struct LeaderboardPageView: View {
                 VStack {
                     LeaderboardHeaderText(count: filteredScores.count)
                     ScrollView {
-                        LazyVStack(spacing: 0) {
+                        LazyVStack(spacing: 10) {
                             ForEach(filteredScores) { score in
                                 ScoreRowView(score: score)
                             }
@@ -35,7 +35,13 @@ struct LeaderboardPageView: View {
     private var filteredScores: [GameScore] {
         scoreManager.allScores
             .filter { $0.gameId == gameID }
-            .sorted { $0.date > $1.date }
+            .sorted {
+                if $0.finalScore == $1.finalScore {
+                    // if tied, keep most recent first
+                    return $0.date > $1.date
+                }
+                return $0.finalScore > $1.finalScore
+            }
     }
 }
 
@@ -87,28 +93,35 @@ struct ScoreRowView: View {
     let score: GameScore
 
     var body: some View {
-        HStack {
-            
-            VStack(alignment: .center) {
+        HStack(spacing: 5) {
+            Spacer()
+                .frame(width: 20)
+            VStack(alignment: .leading) {
                 HStack(spacing: 4) {
-                    Text(timeFormatter.string(from: score.date))
+                    Text(dateOnlyFormatter.string(from: score.date))
                         .font(.custom("LuloOne-Bold", size: 12))
+                    
                     Text(" ⋰⋰⋰ ")
                         .font(.custom("LuloOne-Bold", size: 10))
                         .foregroundColor(.secondary)
-                    Text(dateOnlyFormatter.string(from: score.date))
+                    
+                    Text(timeFormatter.string(from: score.date))
                         .font(.custom("LuloOne-Bold", size: 12))
                 }
+
                 Text("\(Int(score.timeElapsed))s game")
                     .font(.custom("LuloOne", size: 12))
                     .foregroundColor(.secondary)
+               
             }
-            //Spacer()
+            Spacer()
             Text("\(score.finalScore)")
                 .font(.custom("LuloOne-Bold", size: 22))
+            Spacer()
+                .frame(width: 20)
         }
         .padding(.vertical, 5)
-        .padding(.horizontal, 10)
+        //.padding(.horizontal, 10)
     }
 
     private var timeFormatter: DateFormatter {
@@ -145,12 +158,15 @@ struct MultiGameLeaderboardView: View {
         VStack {
             // Top arrows
             HStack {
-                Button(action: { if currentTabIndex > 0 { withAnimation { currentTabIndex -= 1 } } }) {
+                Button(action: {
+                    withAnimation {
+                        currentTabIndex = (currentTabIndex - 1 + games.count) % games.count
+                    }
+                }) {
                     Image(systemName: "arrow.left")
-                        .foregroundColor(currentTabIndex == 0 ? .white : .black)
+                        .foregroundColor(.black) // always enabled now
                         .font(.title2)
                 }
-                .disabled(currentTabIndex == 0)
 
                 Spacer()
 
@@ -159,15 +175,19 @@ struct MultiGameLeaderboardView: View {
 
                 Spacer()
 
-                Button(action: { if currentTabIndex < games.count - 1 { withAnimation { currentTabIndex += 1 } } }) {
+                Button(action: {
+                    withAnimation {
+                        currentTabIndex = (currentTabIndex + 1) % games.count
+                    }
+                }) {
                     Image(systemName: "arrow.right")
-                        .foregroundColor(currentTabIndex == games.count - 1 ? .white : .black)
+                        .foregroundColor(.black) // always enabled now
                         .font(.title2)
                 }
-                .disabled(currentTabIndex == games.count - 1)
             }
             .padding(.horizontal, 20)
             .padding(.top, 10)
+
 
             // Page TabView
             TabView(selection: $currentTabIndex) {

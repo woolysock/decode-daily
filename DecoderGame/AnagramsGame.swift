@@ -39,7 +39,8 @@ class AnagramsGame: GameProtocol, ObservableObject {
            displayName: "letters",
            description: "rearrange letters into words",
            isAvailable: true,
-           gameLocation: AnyView(AnagramsGameView())
+           gameLocation: AnyView(AnagramsGameView()),
+           gameIcon: Image(systemName: "60.arrow.trianglehead.clockwise")
        )
 
     // Word list for anagrams
@@ -108,12 +109,12 @@ class AnagramsGame: GameProtocol, ObservableObject {
         print("Game ended. Saving score: \(attempts) to \(type(of: scoreManager))")
         
         // --- Save score to ScoreManager ---
-        let timeElapsed = roundStart != nil ? Date().timeIntervalSince(roundStart!) : 60.0
+       
         let newScore = GameScore(
             gameId: "anagrams",
             date: Date(),
             attempts: attempts,
-            timeElapsed: timeElapsed,
+            timeElapsed: 60.0,
             won: true,  // In Anagrams, finishing the game is always a "win"
             finalScore: attempts  // Score is the number of correct answers
         )

@@ -39,7 +39,8 @@ class DecodeGame: ObservableObject, GameProtocol {
            displayName: "decode",
            description: "crack the color code",
            isAvailable: true,
-           gameLocation: AnyView(DecodeGameView())
+           gameLocation: AnyView(DecodeGameView()),
+           gameIcon: Image(systemName: "moonphase.first.quarter")
        )
 
 
