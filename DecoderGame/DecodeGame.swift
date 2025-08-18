@@ -13,6 +13,7 @@ class DecodeGame: ObservableObject, GameProtocol {
 
     // Make scoreManager mutable so it can be injected after initialization
     var scoreManager: GameScoreManager
+    
 
     // Colors
     let myPegColor1 = Color(red:49/255,green:52/255,blue:66/255)

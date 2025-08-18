@@ -45,12 +45,14 @@ struct EndGameOverlay: View {
        
     private var scoreText: String {
         switch gameID {
-        case "anagrams", "flashdance":
+        case "anagrams":
             return "Words Solved"
         case "decode":
-            return "Score"
+            return "Turns"
         case "numbers":
             return "Score"
+        case "flashdance":
+            return "Equations Solved"
         default:
             return "Score"
         }

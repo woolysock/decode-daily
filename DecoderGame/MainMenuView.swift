@@ -104,7 +104,7 @@ struct MainMenuView: View {
 //                        }
                         
                         Spacer()
-                            .frame(height: 10)
+                            .frame(height: 5)
                         NavigationLink(destination: MultiGameLeaderboardView()) {
                             VStack(spacing: 5) {
                                 HStack(spacing: 10) {
