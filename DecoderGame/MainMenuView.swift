@@ -45,6 +45,7 @@ struct MainMenuView: View {
         }
     }
     
+        
     // Helper function to calculate 3D tilt based on drag position
     private func calculateTilt(dragValue: DragGesture.Value, buttonWidth: CGFloat, buttonHeight: CGFloat) -> (x: Double, y: Double) {
         let maxTilt: Double = 3.0 // Much more subtle tilt in degrees
@@ -176,7 +177,7 @@ struct MainMenuView: View {
         
         NavigationLink(destination: SettingsView()) {
             VStack(spacing: 5) {
-                HStack(spacing: 10) {
+                HStack(alignment: .lastTextBaseline, spacing: 10) {
                     Image(systemName: "person.text.rectangle")
                         .font(.system(size: 10))
                     
@@ -229,7 +230,7 @@ struct MainMenuView: View {
                 GeometryReader { geo in
                     VStack(spacing: 25) {
                         Spacer()
-                            .frame(height : 30)
+                            .frame(height : 40)
                         //game title header
                         VStack (spacing: 5){
                             Text(" DECODE!")

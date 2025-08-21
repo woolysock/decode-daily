@@ -10,6 +10,7 @@ import SwiftUI
 struct DecodeGameView: View {
     @StateObject private var game: DecodeGame
     @EnvironmentObject var scoreManager: GameScoreManager
+    @Environment(\.dismiss) private var dismiss  // Add this
     
     // Color picker state
     @State private var showingColorPicker = false
@@ -23,8 +24,7 @@ struct DecodeGameView: View {
     @State private var showEndGameOverlay = false
     @State private var showCodeReveal = false
     
-    // 👇 New navigation states
-    @State private var navigateToMenu = false
+    // Remove navigateToMenu since we'll use dismiss
     @State private var navigateToHighScores = false
     
     // Initialize with proper dependency injection
@@ -231,20 +231,22 @@ struct DecodeGameView: View {
                     .zIndex(1)
                 }
                 
-                // How-to-Play Overlay
+                // How-to-Play Overlay ▢ ▢ ▢ ▢ ▢  ➜
                 if showHowToPlay {
                     HowToPlayOverlay(
                         gameID: game.gameInfo.id,
                         instructions: """
-                        The goal is to crack the secret color code! 
-                        \n\nEach turn:
-                        \nTap a square to assign a color.
-                        Tap the circle to check if your guess is right!
-                        \n ▢ ▢ ▢ ▢ ▢  ➜   ⃝ 
-                        \nHint dots will guide you:
-                          \nGreen ● for every correct color, correct spot
-                          \nYellow ● for every correct color, wrong spot
-                        \n\nCan you figure it out?
+                        Crack the secret color code! 
+                        
+                        Each turn, tap a square to assign a color. Check your pattern by tapping the circle.
+                        
+                        🟪 🟪 🟦 🟨  ➜   ⃝
+                                                
+                        Hints will appear to guide you:
+                        🟢 : correct color & spot
+                        🟡 : correct color but wrong spot 
+                        
+                        Less guesses = higher scores!
                         """,
                         isVisible: $showHowToPlay
                     )
@@ -280,16 +282,17 @@ struct DecodeGameView: View {
                         isVisible: $showEndGameOverlay,
                         onPlayAgain: { startNewGame() },
                         onHighScores: { navigateToHighScores = true },
-                        onMenu: { navigateToMenu = true }
+                        onMenu: {
+                            // Use dismiss instead of navigation
+                            showEndGameOverlay = false
+                            dismiss()
+                        }
                     )
                     .transition(.opacity)
                     .zIndex(3)
                 }
             }
-            // Hidden navigation links (triggered by state)
-            .navigationDestination(isPresented: $navigateToMenu) {
-                MainMenuView()
-            }
+            // Remove the navigationDestination for menu, keep only high scores
             .navigationDestination(isPresented: $navigateToHighScores) {
                 MultiGameLeaderboardView(selectedGameID: game.gameInfo.id)
             }
@@ -376,4 +379,3 @@ struct CodeRevealOverlay: View {
         }
     }
 }
-

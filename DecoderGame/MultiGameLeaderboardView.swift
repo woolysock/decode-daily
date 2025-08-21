@@ -163,9 +163,9 @@ struct MultiGameLeaderboardView: View {
                         currentTabIndex = (currentTabIndex - 1 + games.count) % games.count
                     }
                 }) {
-                    Image(systemName: "arrowshape.left.fill")
+                    Image(systemName: "arrowshape.backward.circle.fill")
                         .foregroundColor(.black) // always enabled now
-                        .font(.title2)
+                        .font(.system(size: 22))
                 }
 
                 Spacer()
@@ -180,9 +180,9 @@ struct MultiGameLeaderboardView: View {
                         currentTabIndex = (currentTabIndex + 1) % games.count
                     }
                 }) {
-                    Image(systemName: "arrowshape.right.fill")
+                    Image(systemName: "arrowshape.forward.circle.fill")
                         .foregroundColor(.black) // always enabled now
-                        .font(.title2)
+                        .font(.system(size: 22))
                 }
             }
             .padding(.horizontal, 20)

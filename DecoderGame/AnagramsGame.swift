@@ -29,6 +29,7 @@ class AnagramsGame: GameProtocol, ObservableObject {
     @Published var gameTimeRemaining: Int = 60      // main game timer (sec)
     @Published var isPreCountdownActive: Bool = false
     @Published var isGameActive: Bool = false
+    @Published var isGamePaused: Bool = false       // NEW: Track pause state
 
     private var preCountdownTimer: Timer?
     private var gameTimer: Timer?
@@ -66,6 +67,7 @@ class AnagramsGame: GameProtocol, ObservableObject {
         stopAllTimers()
         gameOver = 0
         attempts = 0
+        isGamePaused = false  // Reset pause state
         userAnswer = ""
         usedLetterIndices = []
         statusText = "Get ready…"
@@ -81,6 +83,10 @@ class AnagramsGame: GameProtocol, ObservableObject {
 
         preCountdownTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] t in
             guard let self = self else { return }
+            
+            // Don't decrement countdown if paused
+            if self.isGamePaused { return }
+            
             if self.countdownValue > 1 {
                 self.countdownValue -= 1
             } else {
@@ -91,12 +97,27 @@ class AnagramsGame: GameProtocol, ObservableObject {
         }
     }
 
+    /// NEW: Pause the game timers
+    func pauseGame() {
+        guard !isGamePaused else { return }
+        isGamePaused = true
+        print("Game paused")
+    }
+
+    /// NEW: Resume the game timers
+    func resumeGame() {
+        guard isGamePaused else { return }
+        isGamePaused = false
+        print("Game resumed")
+    }
+
     func resetGame() { startGame() }
 
     func endGame() {
         stopAllTimers()
         isGameActive = false
         isPreCountdownActive = false
+        isGamePaused = false  // Clear pause state
         gameOver = 1
         
         // Update the display with final score
@@ -175,17 +196,21 @@ class AnagramsGame: GameProtocol, ObservableObject {
         let isCorrect = userAnswer.uppercased() == currentWord.uppercased()
         if isCorrect {
             attempts += 1
-            statusText = "✅ Correct! (\(attempts))"
+            statusText = "Correct! (\(attempts))"
             
             // Brief pause before next question
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                print("calling newQuestion()")
                 self.newQuestion()
             }
         } else {
-            statusText = "❌ Wrong! Try again."
-            // Return letters to available state
-            usedLetterIndices.removeAll()
-            userAnswer = ""
+            statusText = "Wrong! Try again."
+            
+            // Give the UI a moment to flash the wrong answer before resetting
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                self.usedLetterIndices.removeAll()
+                self.userAnswer = ""
+            }
         }
     }
 
@@ -199,6 +224,10 @@ class AnagramsGame: GameProtocol, ObservableObject {
 
         gameTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] t in
             guard let self = self else { return }
+            
+            // Don't decrement timer if paused
+            if self.isGamePaused { return }
+            
             if self.gameTimeRemaining > 0 {
                 self.gameTimeRemaining -= 1
             } else {

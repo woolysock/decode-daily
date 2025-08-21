@@ -32,6 +32,14 @@ class DecodeGame: ObservableObject, GameProtocol {
     init(scoreManager: GameScoreManager) {
         self.scoreManager = scoreManager
         startGame()
+        
+        //this is nothing to do with the game, just lists post-script names of fonts in the console
+//        for family in UIFont.familyNames {
+//            print("Family: \(family)")
+//            for name in UIFont.fontNames(forFamilyName: family) {
+//                print("  Font: \(name)")
+//            }
+//        }
     }
     
     let gameInfo = GameInfo(
@@ -40,7 +48,7 @@ class DecodeGame: ObservableObject, GameProtocol {
            description: "crack the color code",
            isAvailable: true,
            gameLocation: AnyView(DecodeGameView()),
-           gameIcon: Image(systemName: "moonphase.first.quarter")
+           gameIcon: Image(systemName: "circle.hexagonpath")
        )
 
 

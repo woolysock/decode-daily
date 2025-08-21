@@ -4,6 +4,7 @@
 <dict>
 	<key>UIAppFonts</key>
 	<array>
+		<string>Sole-Light.otf</string>
 		<string>LuloOne.otf</string>
 		<string>LuloOne-Bold.otf</string>
 	</array>

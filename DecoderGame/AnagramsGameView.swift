@@ -1,37 +1,44 @@
+//
+//  AnagramsGameView.swift
+//  Decode! Daily iOS
+//
+//  Created by Megan Donahue on 8/12/25.
+//
+
 import SwiftUI
 
 struct AnagramsGameView: View {
     @StateObject private var game = AnagramsGame(scoreManager: GameScoreManager.shared)
     @EnvironmentObject var scoreManager: GameScoreManager
+    @Environment(\.dismiss) private var dismiss
     
     @State private var showHowToPlay = false
     @State private var showEndGameOverlay = false
-    @State private var hasStartedRound = false   // ensure we only auto-start once
-    
-    // 👇 New navigation states
-    @State private var navigateToMenu = false
+    @State private var hasStartedRound = false
     @State private var navigateToHighScores = false
-
-    // Instructions specific to Anagrams
+    
+    // Flash color for whole word
+    @State private var answerFlashColor: Color? = nil
+    
     private let instructionsText = """
-    Race against the clock to unscramble as many words as you can.
+    Unscramble as many words as you can in 60 seconds! ⏲
     
-    How to play:
-    You'll see a scrambled set of letters. Tap letters to spell the correct word in the boxes at the top.
+    Each turn, a set of scrambled letters will appear. Tap the letters to spell the correct word in the boxes a above.
     
-    O R W D  →  W O R D 
+    O  R  W  D   ➜   W  O  R  D 
 
-    Tap letters in your answer to remove them, or tap clear to remove all letters.
+    If you make a mistake, tap "clear" to remove the letters and try again. 
     
-    The more words you unscramble, the higher your score!
+    Less guesses = Higher scores!
     """
-
+    
     var body: some View {
-        NavigationStack {
-            ZStack {
-                Color.black.ignoresSafeArea()
-
-                VStack(spacing: 15) {
+        ZStack {
+            NavigationStack {
+                ZStack {
+                    Color.black.ignoresSafeArea()
+                    
+                    VStack(spacing: 0) {
                     Spacer().frame(height:5)
                     
                     // Title + Timer + Help button
@@ -69,18 +76,47 @@ struct AnagramsGameView: View {
                         }
                     }
                     .padding(.horizontal, 20)
-
+                    
                     Divider().background(.white).padding(5)
+                    
+                    Spacer().frame(height: 10)
+                    
+                    // Status text + symbol
+                    VStack(spacing: 5) {
+                        Text(game.statusText)
+                            .foregroundColor(.white)
+                            .font(.custom("LuloOne", size: 12))
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal, 20)
+                            .padding(.vertical, 4)
 
-                    // Status text
-                    Text(game.statusText)
-                        .foregroundColor(.white)
-                        .font(.custom("LuloOne", size: 12))
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal, 20)
-
-                    Spacer()
-
+                        if game.statusText.contains("Wrong") {
+                            Image(systemName: "wrongwaysign.fill")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 20, height: 20)
+                                .foregroundColor(.red)
+                        } else if game.statusText.contains("Correct"){
+                            Image(systemName: "checkmark.seal.fill")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 20, height: 20)
+                                .foregroundColor(Color.myAccentColor1)
+                        } else if game.statusText.contains("Unscramble"){
+                            Image(systemName: "shuffle.circle.fill")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 20, height: 20)
+                                .foregroundColor(.white)
+                        } else {
+                            Image(systemName: "shuffle.circle.fill")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 20, height: 20)
+                                .foregroundColor(.clear)
+                        }
+                    }
+                    
                     // === GAME BOARD ===
                     ZStack {
                         Color.black.ignoresSafeArea()
@@ -93,14 +129,15 @@ struct AnagramsGameView: View {
                                     .scaleEffect(1.05)
                                     .transition(.scale)
                             } else if game.isGameActive {
-                                // Game area when game is active
+                                Spacer().frame(height:5)
                                 gameArea
+                                Spacer()
                             }
                         }
                         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
                         .padding([.leading, .trailing, .bottom], 20)
                     }
-
+                    
                     Spacer()
                 }
                 .onAppear {
@@ -112,9 +149,19 @@ struct AnagramsGameView: View {
                         showHowToPlay = true
                     }
                 }
+                // UPDATED: Pause/resume game when overlay shows/hides
                 .onChange(of: showHowToPlay, initial: false) { oldValue, newValue in
-                    if !newValue && !hasStartedRound {
-                        startRound()
+                    if newValue {
+                        // Overlay is showing - pause the game
+                        game.pauseGame()
+                    } else {
+                        // Overlay is hiding - resume the game
+                        game.resumeGame()
+                        
+                        // Start only AFTER HowTo is dismissed at launch
+                        if !hasStartedRound {
+                            startRound()
+                        }
                     }
                 }
                 .onChange(of: game.gameOver, initial: false) { oldValue, newValue in
@@ -122,52 +169,75 @@ struct AnagramsGameView: View {
                        showEndGameOverlay = true
                     }
                 }
+                .onChange(of: game.statusText) {
+                    if game.statusText.contains("Correct") {
+                        flashAnswer(correct: true)
+                    } else if game.statusText.contains("Wrong") {
+                        flashAnswer(correct: false)
+                        
+                        // Delay clearing so the red flash is visible
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                            print("Wrong answer detected")
+                            game.usedLetterIndices.removeAll()
+                            game.userAnswer = ""
+                            game.statusText = "Try again."
+                        }
+                    }
+                }
 
-                // Overlays
-                if showHowToPlay {
+                }
+                .navigationDestination(isPresented: $navigateToHighScores) {
+                    MultiGameLeaderboardView(selectedGameID: game.gameInfo.id)
+                }
+            }
+            
+            // Move overlays outside NavigationStack to root ZStack level
+            if showEndGameOverlay {
+                EndGameOverlay(
+                    gameID: game.gameInfo.id,
+                    finalScore: game.attempts,
+                    displayName: game.gameInfo.displayName,
+                    isVisible: $showEndGameOverlay,
+                    onPlayAgain: { startNewGame() },
+                    onHighScores: { navigateToHighScores = true },
+                    onMenu: {
+                        showEndGameOverlay = false
+                        dismiss()
+                    }
+                )
+                .transition(.opacity)
+            }
+
+            if showHowToPlay {
+                GeometryReader { geometry in
                     HowToPlayOverlay(
                         gameID: game.gameInfo.id,
-                        //displayName: game.gameInfo.displayName,
                         instructions: instructionsText,
                         isVisible: $showHowToPlay
                     )
                     .transition(.opacity)
                 }
-                
-                if showEndGameOverlay {
-                    EndGameOverlay(
-                        gameID: game.gameInfo.id,
-                        finalScore: game.attempts,
-                        displayName: game.gameInfo.displayName,
-                        isVisible: $showEndGameOverlay,
-                        onPlayAgain: { startNewGame() },
-                        onHighScores: { navigateToHighScores = true },
-                        onMenu: { navigateToMenu = true }               
-                    )
-                    .transition(.opacity)
-                }
             }
-            // Hidden navigation links (triggered by state)
-            .navigationDestination(isPresented: $navigateToMenu) {
-                MainMenuView()
-            }
-            .navigationDestination(isPresented: $navigateToHighScores) {
-                MultiGameLeaderboardView(selectedGameID: game.gameInfo.id)
-            }
-            
         }
     }
-
-    // MARK: - Letter Button Component
-    private func letterButton(_ letter: String, isScrambled: Bool, isUsed: Bool, action: @escaping () -> Void) -> some View {
+    
+    // MARK: - Letter Button
+    private func letterButton(
+        _ letter: String,
+        isScrambled: Bool,
+        isUsed: Bool,
+        flashColor: Color? = nil,
+        action: @escaping () -> Void
+    ) -> some View {
         Button(action: action) {
             Text(isUsed ? "" : letter)
                 .font(.custom("LuloOne-Bold", size: 20))
                 .foregroundColor(.black)
                 .frame(width: isScrambled ? 60 : 45, height: isScrambled ? 60 : 45)
                 .background(
-                    isUsed ? Color.gray.opacity(0.3) :
-                    (isScrambled ? Color.white : Color.myAccentColor1)
+                    (flashColor != nil ? flashColor! :
+                        (isUsed ? Color.gray.opacity(0.3) :
+                            (isScrambled ? Color.white : Color.myAccentColor1)))
                 )
                 .clipShape(isScrambled ? AnyShape(Circle()) : AnyShape(RoundedRectangle(cornerRadius: 5)))
                 .overlay(
@@ -180,11 +250,12 @@ struct AnagramsGameView: View {
                     }
                 )
                 .shadow(radius: isUsed ? 1 : 2)
+                .animation(.easeInOut(duration: 0.3), value: flashColor)
         }
-        .disabled(!game.isGameActive || isUsed)
+        .disabled(!game.isGameActive || game.isGamePaused || isUsed)  // UPDATED: Also disable when paused
     }
     
-    // MARK: - Circular Grid Layout for Scrambled Letters
+    // MARK: - Scrambled Letters Grid
     private var scrambledLettersGrid: some View {
         let columns = Array(repeating: GridItem(.fixed(60), spacing: 5), count: 5)
         
@@ -201,20 +272,19 @@ struct AnagramsGameView: View {
         }
         .padding(.horizontal, 10)
     }
-
+    
     // MARK: - Game Area
     private var gameArea: some View {
         VStack(spacing: 15) {
-            // Score
             if game.isGameActive {
                 Text("Score: \(game.attempts)")
                     .font(.custom("LuloOne-Bold", size: 16))
                     .foregroundColor(.white)
             }
-            Spacer()
-                .frame(height: 40)
             
-            // User's answer
+            Spacer().frame(height: 40)
+            
+            // User Answer Boxes
             VStack(spacing: 10) {
                 Text("Your Answer:")
                     .font(.custom("LuloOne", size: 14))
@@ -222,8 +292,11 @@ struct AnagramsGameView: View {
                 
                 HStack(spacing: 5) {
                     ForEach(0..<game.userAnswer.count, id: \.self) { index in
-                        let letter = String(game.userAnswer[game.userAnswer.index(game.userAnswer.startIndex, offsetBy: index)])
-                        letterButton(letter, isScrambled: false, isUsed: false) {
+                        let letter = String(
+                            game.userAnswer[game.userAnswer.index(game.userAnswer.startIndex, offsetBy: index)]
+                        )
+                        let _ = print("\(letter)") // ✅ allowed in ViewBuilder
+                        letterButton(letter, isScrambled: false, isUsed: false, flashColor: answerFlashColor) {
                             game.removeLetter(at: index)
                         }
                     }
@@ -242,16 +315,16 @@ struct AnagramsGameView: View {
                 }
                 .font(.custom("LuloOne", size: 12))
                 .foregroundColor(game.userAnswer.isEmpty ? .gray : .white)
-                .padding(.horizontal, 20)
-                .padding(.vertical, 8)
                 .background(game.userAnswer.isEmpty ? Color.gray.opacity(0.3) : Color.red.opacity(0.7))
                 .cornerRadius(8)
-                .disabled(game.userAnswer.isEmpty)
+                .padding(.horizontal, 20)
+                .padding(.vertical, 8)
+                .disabled(game.userAnswer.isEmpty || game.isGamePaused)  // UPDATED: Also disable when paused
             }
             
             Spacer().frame(height: 35)
             
-            // Scrambled letters in circular grid
+            // Scrambled letters grid
             VStack(spacing: 10) {
                 Text("Scrambled Letters:")
                     .font(.custom("LuloOne", size: 14))
@@ -261,10 +334,11 @@ struct AnagramsGameView: View {
             }
             
         }
-        .padding(.horizontal, 20)
+        //.padding(.horizontal, 20)
+        .padding(.vertical, 30)
     }
-
-    // MARK: - Start control
+    
+    // MARK: - Start Control
     private func startRound() {
         guard !hasStartedRound else { return }
         hasStartedRound = true
@@ -276,6 +350,16 @@ struct AnagramsGameView: View {
         hasStartedRound = false
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
             startRound()
+        }
+    }
+    
+    // MARK: - Flash Answer
+    private func flashAnswer(correct: Bool) {
+        print("Flashing Answer...")
+        answerFlashColor = correct ? .green : .red
+        print("Answer flash color: \(answerFlashColor?.description ?? "nil")")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            answerFlashColor = nil
         }
     }
 }

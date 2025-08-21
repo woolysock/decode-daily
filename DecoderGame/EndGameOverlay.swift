@@ -69,8 +69,9 @@ struct EndGameOverlay: View {
     var body: some View {
         ZStack {
             // Semi-transparent background
-            Color.black.opacity(0.8)
-                .ignoresSafeArea()
+            Rectangle()
+                .fill(Color.black.opacity(0.8))
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .onTapGesture {
                     dismiss()
                 }
@@ -135,7 +136,7 @@ struct EndGameOverlay: View {
                 // Action buttons
                 VStack(spacing: 15) {
                     Button("Play Again") {
-                        onPlayAgain()
+                        dismiss(startNewGame: true)
                     }
                     .font(.custom("LuloOne-Bold", size: 18))
                     .foregroundColor(.black)
@@ -182,14 +183,16 @@ struct EndGameOverlay: View {
             )
             .padding(.horizontal, 40)
         }
+        .ignoresSafeArea(.all)
         .animation(.easeInOut(duration: 0.3), value: isVisible)
     }
     
-    private func dismiss() {
+    private func dismiss(startNewGame: Bool = false) {
         isVisible = false
-        // Auto-start new game after dismissal
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-            onPlayAgain()
+        if startNewGame {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                onPlayAgain()
+            }
         }
     }
 }

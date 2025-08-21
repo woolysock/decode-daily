@@ -27,7 +27,7 @@ struct HowToPlayOverlay: View {
                 
                 ScrollView {
                     Text(instructions)
-                        .font(.custom("LuloOne", size: 12))
+                        .font(.custom("SoleilLt", size: 20))
                         .foregroundColor(.white)
                         .multilineTextAlignment(.center)
                         .padding()
@@ -35,7 +35,7 @@ struct HowToPlayOverlay: View {
                 .frame(maxHeight: 300)
                 
                 Toggle("do not show again", isOn: $dontShowAgain)
-                    .foregroundColor(.white)
+                    .foregroundColor(.myAccentColor1)
                     .font(.custom("LuloOne-Bold", size: 12))
                     .padding(.horizontal)
                     .onChange(of: dontShowAgain) {
@@ -50,17 +50,23 @@ struct HowToPlayOverlay: View {
                         .font(.custom("LuloOne-Bold", size: 18))
                         .foregroundColor(.black)
                         .padding()
-                        .frame(maxWidth: .infinity)
+                        //.frame(maxWidth: .infinity)
                         .background(Color.white)
                         .cornerRadius(8)
                 }
+                
+                Spacer()
+                    .frame(height: 2)
             }
-            .padding()
+            .overlay(
+                RoundedRectangle(cornerRadius: 16)
+                            .stroke(Color.white, lineWidth: 1)
+            )
             .background(Color.myAccentColor2)
             .cornerRadius(16)
             .padding(30)
             .contentShape(Rectangle())
-            .onTapGesture {
+                        .onTapGesture {
                 dismissOverlay()
             }
             .onAppear {

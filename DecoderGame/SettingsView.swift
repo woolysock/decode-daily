@@ -15,6 +15,12 @@ struct SettingsView: View {
     @State private var showingEraseConfirmation = false
     @State private var showingEraseSuccess = false
     
+    var appVersion: String {
+            let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "Unknown"
+            let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "Unknown"
+            return "\(version) (\(build))"
+        }
+    
     var body: some View {
         ZStack {
             // Main content
@@ -80,9 +86,12 @@ struct SettingsView: View {
     // MARK: - Settings Content
     private var settingsContent: some View {
         ScrollView {
-            VStack(spacing: 20) {
+            VStack(spacing: 30) {
                 Spacer()
                     .frame(height: 30)
+                
+                Text("Build:\n\(appVersion)")
+                    .font(.custom("LuloOne", size: 12))
                 
                 eraseScoresButton
                 
@@ -189,7 +198,7 @@ struct SettingsView: View {
                 .font(.custom("LuloOne-Bold", size: 20))
                 .foregroundColor(.black)
             
-            Text("For support\nwith the app, please reach out to the team.\n\nClick below to visit our website:")
+            Text("For support,\nplease reach out to the team.\n\nClick to visit our website:")
                 .font(.custom("LuloOne", size: 14))
                 .foregroundColor(.black)
                 .multilineTextAlignment(.center)

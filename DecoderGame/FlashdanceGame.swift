@@ -5,7 +5,6 @@
 //  Created by Megan Donahue on 8/12/25.
 //
 
-
 import SwiftUI
 import Combine
 
@@ -30,6 +29,7 @@ class FlashdanceGame: GameProtocol, ObservableObject {
     @Published var gameTimeRemaining: Int = 30      // main game timer (sec)
     @Published var isPreCountdownActive: Bool = false
     @Published var isGameActive: Bool = false
+    @Published var isGamePaused: Bool = false       // NEW: Track pause state
 
     private var preCountdownTimer: Timer?
     private var gameTimer: Timer?
@@ -44,7 +44,6 @@ class FlashdanceGame: GameProtocol, ObservableObject {
            gameIcon: Image(systemName: "30.arrow.trianglehead.clockwise")
        )
 
-
     // Initialize with score manager
     init(scoreManager: GameScoreManager) {
         self.scoreManager = scoreManager
@@ -58,6 +57,7 @@ class FlashdanceGame: GameProtocol, ObservableObject {
         stopAllTimers()
         gameOver = 0
         attempts = 0
+        isGamePaused = false  // Reset pause state
         statusText = "Get ready…"
         countdownValue = 3
         isPreCountdownActive = true
@@ -71,6 +71,10 @@ class FlashdanceGame: GameProtocol, ObservableObject {
 
         preCountdownTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] t in
             guard let self = self else { return }
+            
+            // Don't decrement countdown if paused
+            if self.isGamePaused { return }
+            
             if self.countdownValue > 1 {
                 self.countdownValue -= 1
             } else {
@@ -81,12 +85,27 @@ class FlashdanceGame: GameProtocol, ObservableObject {
         }
     }
 
+    /// NEW: Pause the game timers
+    func pauseGame() {
+        guard !isGamePaused else { return }
+        isGamePaused = true
+        print("Game paused")
+    }
+
+    /// NEW: Resume the game timers
+    func resumeGame() {
+        guard isGamePaused else { return }
+        isGamePaused = false
+        print("Game resumed")
+    }
+
     func resetGame() { startGame() }
 
     func endGame() {
         stopAllTimers()
         isGameActive = false
         isPreCountdownActive = false
+        isGamePaused = false  // Clear pause state
         gameOver = 1
         
         // Update the display with final score
@@ -160,6 +179,10 @@ class FlashdanceGame: GameProtocol, ObservableObject {
 
         gameTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] t in
             guard let self = self else { return }
+            
+            // Don't decrement timer if paused
+            if self.isGamePaused { return }
+            
             if self.gameTimeRemaining > 0 {
                 self.gameTimeRemaining -= 1
             } else {
