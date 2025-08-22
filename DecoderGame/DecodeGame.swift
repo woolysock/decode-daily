@@ -126,7 +126,6 @@ class DecodeGame: ObservableObject, GameProtocol {
                     statusText += "\n\nScore: \(score.finalScore) points"
                     statusText += "\nTime: \(score.formattedTime)"
                     statusText += "\nAttempts: \(score.attempts)"
-                    statusText += "\n\nTap to play again."
                 }
                 return
             }

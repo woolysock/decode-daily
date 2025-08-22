@@ -56,7 +56,6 @@ class AnagramsGame: GameProtocol, ObservableObject {
     // Initialize with score manager
     init(scoreManager: GameScoreManager) {
         self.scoreManager = scoreManager
-        print("AnagramsGame initialized with scoreManager: \(type(of: scoreManager))")
     }
     
 
@@ -78,8 +77,6 @@ class AnagramsGame: GameProtocol, ObservableObject {
 
         // Pre-generate the first question so we're ready the moment play starts.
         newQuestion()
-
-        print("AnagramsGame started with scoreManager: \(type(of: scoreManager))")
 
         preCountdownTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] t in
             guard let self = self else { return }
@@ -127,8 +124,7 @@ class AnagramsGame: GameProtocol, ObservableObject {
         usedLetterIndices = []
         userAnswer = ""
 
-        print("Game ended. Saving score: \(attempts) to \(type(of: scoreManager))")
-        
+              
         // --- Save score to ScoreManager ---
        
         let newScore = GameScore(
@@ -200,7 +196,6 @@ class AnagramsGame: GameProtocol, ObservableObject {
             
             // Brief pause before next question
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                print("calling newQuestion()")
                 self.newQuestion()
             }
         } else {

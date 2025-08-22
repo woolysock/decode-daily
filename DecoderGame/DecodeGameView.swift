@@ -246,7 +246,7 @@ struct DecodeGameView: View {
                         🟢 : correct color & spot
                         🟡 : correct color but wrong spot 
                         
-                        Less guesses = higher scores!
+                        Less guesses = Higher scores!
                         """,
                         isVisible: $showHowToPlay
                     )

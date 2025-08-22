@@ -21,11 +21,16 @@ struct FlashdanceGameView: View {
 
     // Instructions specific to Flashdance
     private let instructionsText = """
-    You have 30 seconds to solve the most math problems! ⏲
+    You have 30 seconds to solve the
+    most math problems! ⏲
     
     When a flashcard appears, swipe it towards the correct answer.
     
-    + - × ÷       ⇠ ⇡ ⇢   
+    1         15         7   
+    
+    ⇠ ⇡ ⇢
+    
+    [8 + 7]
 
     More right answers = Higher scores!
     """

@@ -21,15 +21,15 @@ struct AnagramsGameView: View {
     @State private var answerFlashColor: Color? = nil
     
     private let instructionsText = """
-    Unscramble as many words as you can in 60 seconds! ⏲
+    Race against the clock to unscramble as many words as you can!
     
-    Each turn, a set of scrambled letters will appear. Tap the letters to spell the correct word in the boxes a above.
+    Each turn, a new set of scrambled letters will appear. Tap a letter to spell out the correct word in the boxes above.
     
-    O  R  W  D   ➜   W  O  R  D 
+    O R W D  →  W O R D 
 
     If you make a mistake, tap "clear" to remove the letters and try again. 
     
-    Less guesses = Higher scores!
+    The more words you unscramble in 60s, the higher your score!
     """
     
     var body: some View {
@@ -215,8 +215,11 @@ struct AnagramsGameView: View {
                         instructions: instructionsText,
                         isVisible: $showHowToPlay
                     )
-                    .transition(.opacity)
+                    .frame(width: geometry.size.width, height: geometry.size.height)
+                    .position(x: geometry.size.width / 2, y: geometry.size.height / 2)
                 }
+                .ignoresSafeArea(.all)
+                .transition(.opacity)
             }
         }
     }
@@ -282,7 +285,7 @@ struct AnagramsGameView: View {
                     .foregroundColor(.white)
             }
             
-            Spacer().frame(height: 40)
+            Spacer().frame(height: 20)
             
             // User Answer Boxes
             VStack(spacing: 10) {
@@ -295,7 +298,7 @@ struct AnagramsGameView: View {
                         let letter = String(
                             game.userAnswer[game.userAnswer.index(game.userAnswer.startIndex, offsetBy: index)]
                         )
-                        let _ = print("\(letter)") // ✅ allowed in ViewBuilder
+//                        let _ = print("\(letter)") // ✅ allowed in ViewBuilder
                         letterButton(letter, isScrambled: false, isUsed: false, flashColor: answerFlashColor) {
                             game.removeLetter(at: index)
                         }
@@ -315,14 +318,14 @@ struct AnagramsGameView: View {
                 }
                 .font(.custom("LuloOne", size: 12))
                 .foregroundColor(game.userAnswer.isEmpty ? .gray : .white)
-                .background(game.userAnswer.isEmpty ? Color.gray.opacity(0.3) : Color.red.opacity(0.7))
-                .cornerRadius(8)
                 .padding(.horizontal, 20)
                 .padding(.vertical, 8)
+                .background(game.userAnswer.isEmpty ? Color.gray.opacity(0.3) : Color.red.opacity(0.7))
+                .cornerRadius(8)
                 .disabled(game.userAnswer.isEmpty || game.isGamePaused)  // UPDATED: Also disable when paused
             }
             
-            Spacer().frame(height: 35)
+            Spacer().frame(height: 25)
             
             // Scrambled letters grid
             VStack(spacing: 10) {
@@ -334,8 +337,8 @@ struct AnagramsGameView: View {
             }
             
         }
-        //.padding(.horizontal, 20)
-        .padding(.vertical, 30)
+        .padding(.horizontal, 20)
+        .padding(.vertical, 10)
     }
     
     // MARK: - Start Control
@@ -355,9 +358,7 @@ struct AnagramsGameView: View {
     
     // MARK: - Flash Answer
     private func flashAnswer(correct: Bool) {
-        print("Flashing Answer...")
         answerFlashColor = correct ? .green : .red
-        print("Answer flash color: \(answerFlashColor?.description ?? "nil")")
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
             answerFlashColor = nil
         }
