@@ -20,6 +20,10 @@ struct FlashdanceGameView: View {
     // Navigation state (pushes leaderboard)
     @State private var navigateToHighScores = false
 
+    // === Flash feedback state (kept) ===
+    @State private var flashCardColor: Color = .white
+    @State private var circleFlashColors: [Int: Color] = [:]
+
     // Instructions specific to Flashdance
     private let instructionsText = """
     You have 30 seconds to solve the
@@ -27,18 +31,28 @@ struct FlashdanceGameView: View {
     
     When a flashcard appears, swipe it towards the correct answer.
     
-    1         15         7   
+    [8 + 7]
     
     ⇠ ⇡ ⇢
     
-    [8 + 7]
+    1         15         7
 
-    More right answers = Higher scores!
+    Get streaks for bonus points!
+    More right answers yield higher scores!
     """
 
     // Initialize with proper dependency injection
     init() {
         self._game = StateObject(wrappedValue: FlashdanceGame(scoreManager: GameScoreManager.shared))
+    }
+
+    // Render-time cleanup: remove trailing "Score: ..." from status text
+    private var cleanedStatusText: String {
+        let txt = game.statusText
+        if let r = txt.range(of: "Score:") {
+            return String(txt[..<r.lowerBound]).trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+        return txt
     }
 
     var body: some View {
@@ -90,86 +104,93 @@ struct FlashdanceGameView: View {
 
                         Divider().background(.white).padding(5)
 
-                        // Status text
-                        Text(game.statusText)
+                        // Status text (no score content)
+                        Text(cleanedStatusText)
                             .foregroundColor(.white)
                             .font(.custom("LuloOne", size: 12))
                             .multilineTextAlignment(.center)
                             .padding(.horizontal, 20)
 
-                        Spacer()
+                        Spacer(minLength: 0)
 
                         // === GAME BOARD ===
                         ZStack {
-                            // Outer "border" area (keeps 20pt on L/R/B to create frame)
                             Color.black.ignoresSafeArea()
 
-                            ZStack {
-                                // Gameboard background color
-                                Color.black.ignoresSafeArea()
+                            GeometryReader { geo in
+                                // Answer circles (only while playing)
+                                if game.isGameActive {
+                                    answerCircle(game.answers[safe: 0] ?? 0)
+                                        .position(x: 40, y: geo.size.height / 3)
 
-                                GeometryReader { geo in
-                                    // Answer circles (only while playing)
-                                    if game.isGameActive {
-                                        answerCircle(game.answers[safe: 0] ?? 0)
-                                            .position(x: 40, y: geo.size.height / 3)
+                                    answerCircle(game.answers[safe: 1] ?? 0)
+                                        .position(x: geo.size.width / 2, y: 60)
 
-                                        answerCircle(game.answers[safe: 1] ?? 0)
-                                            .position(x: geo.size.width / 2, y: 60)
-
-                                        answerCircle(game.answers[safe: 2] ?? 0)
-                                            .position(x: geo.size.width - 40, y: geo.size.height / 3)
-                                    }
-
-                                    // Center content: either big countdown or the flashcard
-                                    Group {
-                                        if game.isPreCountdownActive {
-                                            Text("\(game.countdownValue)")
-                                                .font(.custom("LuloOne-Bold", size: 100))
-                                                .foregroundColor(.white)
-                                                .monospacedDigit()
-                                                .scaleEffect(1.05)
-                                                .transition(.scale)
-                                        } else if game.isGameActive {
-                                            // Flashcard
-                                            Text(game.currentEquation)
-                                                .padding(5)
-                                                .foregroundColor(.black)
-                                                .font(.custom("LuloOne-Bold", size: 40))
-                                                .frame(width: 240, height: 300)
-                                                .background(Color.white)
-                                                .multilineTextAlignment(.center)
-                                                .cornerRadius(5)
-                                                .overlay(
-                                                    RoundedRectangle(cornerRadius: 5)
-                                                        .stroke(Color.myAccentColor1, lineWidth: 5)
-                                                )
-                                                .shadow(radius: 6)
-                                                .offset(dragOffset)
-                                                .gesture(
-                                                    DragGesture()
-                                                        .onChanged { value in
-                                                            guard game.isGameActive && !game.isGamePaused else { return }
-                                                            dragOffset = value.translation
-                                                        }
-                                                        .onEnded { value in
-                                                            guard game.isGameActive && !game.isGamePaused else {
-                                                                dragOffset = .zero
-                                                                return
-                                                            }
-                                                            handleSwipe(value: value, geoSize: geo.size)
-                                                        }
-                                                )
-                                                .animation(.spring(response: 0.3, dampingFraction: 0.8), value: dragOffset)
-                                        }
-                                    }
-                                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+                                    answerCircle(game.answers[safe: 2] ?? 0)
+                                        .position(x: geo.size.width - 40, y: geo.size.height / 3)
                                 }
+
+                                // Center content: either big countdown or the flashcard
+                                Group {
+                                    if game.isPreCountdownActive {
+                                        Text("\(game.countdownValue)")
+                                            .font(.custom("LuloOne-Bold", size: 100))
+                                            .foregroundColor(.white)
+                                            .monospacedDigit()
+                                            .scaleEffect(1.05)
+                                            .transition(.scale)
+                                    } else if game.isGameActive {
+                                        // Flashcard
+                                        Text(game.currentEquation)
+                                            .padding(5)
+                                            .foregroundColor(.black)
+                                            .font(.custom("LuloOne-Bold", size: 40))
+                                            .frame(width: 240, height: 300)
+                                            .background(flashCardColor)
+                                            .multilineTextAlignment(.center)
+                                            .cornerRadius(5)
+                                            .overlay(
+                                                RoundedRectangle(cornerRadius: 5)
+                                                    .stroke(Color.myAccentColor1, lineWidth: 5)
+                                            )
+                                            .shadow(radius: 6)
+                                            .offset(dragOffset)
+                                            .gesture(
+                                                DragGesture()
+                                                    .onChanged { value in
+                                                        guard game.isGameActive && !game.isGamePaused else { return }
+                                                        dragOffset = value.translation
+                                                    }
+                                                    .onEnded { value in
+                                                        guard game.isGameActive && !game.isGamePaused else {
+                                                            dragOffset = .zero
+                                                            return
+                                                        }
+                                                        handleSwipe(value: value, geoSize: geo.size)
+                                                    }
+                                            )
+                                            .animation(.spring(response: 0.3, dampingFraction: 0.8), value: dragOffset)
+                                    }
+                                }
+                                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
                             }
-                            .padding([.leading, .trailing, .bottom], 20) // 20pt "border" on three sides
+                            .padding([.leading, .trailing, .bottom], 20)
                         }
 
-                        Spacer()
+                        // === NEW: Scoreboard (bottom half area) ===
+                        if game.isGameActive || game.gameOver == 1 {
+                            Scoreboard(
+                                score: game.totalScore,
+                                correct: game.correctAttempts,
+                                incorrect: game.incorrectAttempts,
+                                streak: game.currentStreak
+                            )
+                            .padding(.horizontal, 20)
+                            .padding(.top, 6)
+                            .transition(.move(edge: .bottom).combined(with: .opacity))
+                        }
+
+                        Spacer(minLength: 8)
                     }
                     .onAppear {
                         // Inject the real scoreManager into the game
@@ -220,7 +241,7 @@ struct FlashdanceGameView: View {
             if showEndGameOverlay {
                 EndGameOverlay(
                     gameID: game.gameInfo.id,
-                    finalScore: game.attempts,
+                    finalScore: game.lastScore?.finalScore ?? game.totalScore,
                     displayName: game.gameInfo.displayName,
                     isVisible: $showEndGameOverlay,
                     onPlayAgain: { startNewGame() },
@@ -233,7 +254,8 @@ struct FlashdanceGameView: View {
                         // Return to Main Menu
                         showEndGameOverlay = false
                         dismiss()
-                    }
+                    },
+                    gameScore: game.lastScore   // ✅ pass the rich score object
                 )
                 .transition(.opacity)
             }
@@ -266,6 +288,7 @@ struct FlashdanceGameView: View {
         }
 
         if game.checkAnswer(selected: selectedAnswer) {
+            flash(correct: true, selectedAnswer: selectedAnswer)
             withAnimation(.easeInOut(duration: 0.25)) {
                 dragOffset = offsetForDirection(chosen)
             }
@@ -274,6 +297,7 @@ struct FlashdanceGameView: View {
                 game.newQuestion()
             }
         } else {
+            flash(correct: false, selectedAnswer: selectedAnswer)
             withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
                 dragOffset = .zero
             }
@@ -288,6 +312,22 @@ struct FlashdanceGameView: View {
         }
     }
 
+    // MARK: - Flash helper (kept)
+
+    private func flash(correct: Bool, selectedAnswer: Int) {
+        let color: Color = correct ? .green : .red
+
+        flashCardColor = color
+        circleFlashColors[selectedAnswer] = color
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+            withAnimation(.easeInOut(duration: 0.25)) {
+                flashCardColor = .white
+                circleFlashColors[selectedAnswer] = .white
+            }
+        }
+    }
+
     // MARK: - Answer Circles
 
     private func answerCircle(_ value: Int) -> some View {
@@ -295,7 +335,7 @@ struct FlashdanceGameView: View {
             .font(.system(size: 20, weight: .bold))
             .foregroundColor(.black)
             .frame(width: 50, height: 50)
-            .background(Color.white.opacity(0.9))
+            .background(circleFlashColors[value] ?? Color.white.opacity(0.9))
             .clipShape(Circle())
             .overlay(Circle().stroke(Color.black, lineWidth: 1))
             .shadow(radius: 2)
@@ -317,6 +357,79 @@ struct FlashdanceGameView: View {
             startRound()
         }
     }
+}
+
+// MARK: - Scoreboard (bottom half)
+private struct Scoreboard: View {
+    let score: Int
+    let correct: Int
+    let incorrect: Int
+    let streak: Int
+
+    var body: some View {
+        VStack(spacing: 10) {
+            HStack(spacing: 12) {
+                StatPill(title: "Score", value: "\(score)")
+                StatPill(title: "Correct", value: "\(correct)")
+            }
+            HStack(spacing: 12) {
+                StatPill(
+                    title: "Incorrect",
+                    value: "\(incorrect)",
+                    emphasize: incorrect > 0 ? .red : nil
+                )
+                StatPill(
+                    title: "Streak",
+                    value: "\(streak)",
+                    emphasize: streak > 0 ? .green : nil
+                )
+            }
+        }
+        .animation(.easeInOut(duration: 0.2), value: score)
+        .animation(.easeInOut(duration: 0.2), value: correct)
+        .animation(.easeInOut(duration: 0.2), value: incorrect)
+        .animation(.easeInOut(duration: 0.2), value: streak)
+    }
+}
+
+private struct StatPill: View {
+    enum Emphasis { case green, red }
+    let title: String
+    let value: String
+    var emphasize: Emphasis? = nil
+
+    var body: some View {
+        VStack(spacing: 4) {
+            Text(title.uppercased())
+                .font(.system(size: 10, weight: .semibold, design: .rounded))
+                .foregroundColor(.white.opacity(0.9))
+                .kerning(1)
+
+            Text(value)
+                .font(.system(size: 22, weight: .heavy, design: .rounded))
+                .foregroundColor(.white)
+                .monospacedDigit()
+                .minimumScaleFactor(0.7)
+        }
+        .frame(maxWidth: .infinity, minHeight: 56)
+        .padding(.vertical, 8)
+        .background(backgroundColor)
+        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .stroke(.white.opacity(0.15), lineWidth: 1)
+        )
+        .shadow(color: .black.opacity(0.35), radius: 6, x: 0, y: 3)
+    }
+
+    private var backgroundColor: Color {
+        switch emphasize {
+        case .green: return Color.green.opacity(0.35)
+        case .red:   return Color.red.opacity(0.35)
+        case .none:  return Color.white.opacity(0.10)
+        }
+    }
+
 }
 
 // Safe subscript so we don't crash

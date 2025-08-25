@@ -1,3 +1,11 @@
+
+//
+//  DecodeGame.swift
+//  Decode! Daily iOS
+//
+//  Created by Megan Donahue on 8/14/25.
+//
+
 import SwiftUI
 
 class DecodeGame: ObservableObject, GameProtocol {
@@ -10,10 +18,18 @@ class DecodeGame: ObservableObject, GameProtocol {
 
     @Published var gameStartTime: Date?
     @Published var lastScore: GameScore?
+    
+    // Animation state
+    @Published var isAnimating = false
+    @Published var animatedCode: [Int] = []
+    @Published var gameInteractive = false
 
     // Make scoreManager mutable so it can be injected after initialization
     var scoreManager: GameScoreManager
     
+    // Animation timer
+    private var animationTimer: Timer?
+    private var animationStartTime: Date?
 
     // Colors
     let myPegColor1 = Color(red:49/255,green:52/255,blue:66/255)
@@ -26,8 +42,8 @@ class DecodeGame: ObservableObject, GameProtocol {
     @Published var pegShades: [Color] = []
     @Published var scoreShades: [Color] = [.clear, .yellow, .green]
 
-    let numRows = 8
-    let numCols = 4
+    let numRows = 7
+    let numCols = 5
 
     init(scoreManager: GameScoreManager) {
         self.scoreManager = scoreManager
@@ -59,9 +75,12 @@ class DecodeGame: ObservableObject, GameProtocol {
         theCode = (0..<numCols).map { _ in Int.random(in: 1..<pegShades.count) }
         theBoard = Array(repeating: Array(repeating: 0, count: numCols), count: numRows)
         theScore = Array(repeating: Array(repeating: 0, count: numCols), count: numRows)
-        statusText = "Try to guess the hidden color code ➜ tap each square to assign a color."
+        statusText = "Try to guess the hidden color code"
         gameStartTime = Date()
         lastScore = nil
+        
+        // Start the code animation
+        startCodeAnimation()
         
         // Debug logging to verify scoreManager is connected
         print("DecodeGame initialized with scoreManager: \(type(of: scoreManager))")
@@ -69,6 +88,64 @@ class DecodeGame: ObservableObject, GameProtocol {
 
     func resetGame() {
         startGame()
+    }
+    
+    private func startCodeAnimation() {
+        isAnimating = true
+        gameInteractive = false
+        animationStartTime = Date()
+        
+        // Initialize animated code with random colors
+        animatedCode = (0..<numCols).map { _ in Int.random(in: 1..<pegShades.count) }
+        
+        // Start the animation timer
+        animationTimer = Timer.scheduledTimer(withTimeInterval: 0.08, repeats: true) { [weak self] timer in
+            self?.updateAnimation()
+        }
+    }
+    
+    private func updateAnimation() {
+        guard let startTime = animationStartTime else { return }
+        
+        let elapsed = Date().timeIntervalSince(startTime)
+        let totalDuration: TimeInterval = 2.2
+        let fastPhase: TimeInterval = 1.8
+        
+        if elapsed < fastPhase {
+            // Fast shuffling phase - update all colors randomly
+            animatedCode = (0..<numCols).map { _ in Int.random(in: 1..<pegShades.count) }
+        } else if elapsed < totalDuration {
+            // Slower phase - reduce frequency of updates
+            let slowPhaseProgress = (elapsed - fastPhase) / (totalDuration - fastPhase)
+            let updateProbability = 1.0 - slowPhaseProgress * 0.8 // Gradually reduce update frequency
+            
+            for i in 0..<numCols {
+                if Double.random(in: 0...1) < updateProbability {
+                    animatedCode[i] = Int.random(in: 1..<pegShades.count)
+                }
+            }
+        } else {
+            // Animation complete
+            completeAnimation()
+        }
+    }
+    
+    private func completeAnimation() {
+        animationTimer?.invalidate()
+        animationTimer = nil
+        
+        // Transition to final gray state
+        withAnimation(.easeOut(duration: 0.3)) {
+            isAnimating = false
+        }
+        
+        // Make game interactive after a brief delay
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            withAnimation(.easeIn(duration: 0.2)) {
+                self.gameInteractive = true
+                self.statusText = "Tap each square to assign a color."
+            }
+        }
     }
 
     func checkRow(_ row: Int) -> Bool {
@@ -113,7 +190,7 @@ class DecodeGame: ObservableObject, GameProtocol {
             for col in exactMatches..<(exactMatches + partialMatches) { theScore[row][col] = 1 } // Yellow dots
 
             // Update status text
-            statusText = "You got \(exactMatches) color\(exactMatches == 1 ? " " : "s ")in the RIGHT spot.\nYou got \(partialMatches) color\(partialMatches == 1 ? " " : "s ")in the WRONG spot.\n\nTry again."
+            statusText = "You got \(exactMatches) color\(exactMatches == 1 ? " " : "s ")in the RIGHT spot.\nYou got \(partialMatches) color\(partialMatches == 1 ? " " : "s ")in the WRONG spot.\n\nTry again (\(7 - self.currentTurn) turns left)."
             currentTurn += 1
 
             // Check win condition
@@ -165,14 +242,25 @@ class DecodeGame: ObservableObject, GameProtocol {
 
         print("Saving game score: \(finalScore) points, won: \(won), attempts: \(attempts)")
         
-        // Save the score using the injected score manager
-        scoreManager.saveScore(gameScore)
-        lastScore = gameScore
+        // Save the score using the enhanced score manager with additional properties
+        scoreManager.saveDecodeScore(
+            attempts: attempts,
+            timeElapsed: timeElapsed,
+            won: won,
+            finalScore: finalScore,
+            turnsToSolve: attempts,
+            codeLength: numCols
+        )
+        lastScore = scoreManager.getScores(for: "decode").first
         
         print("Score saved successfully to \(type(of: scoreManager))")
     }
 
     func getRecentScores() -> [GameScore] {
         return scoreManager.getScores(for: "decode")
+    }
+    
+    deinit {
+        animationTimer?.invalidate()
     }
 }

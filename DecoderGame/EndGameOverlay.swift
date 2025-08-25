@@ -20,6 +20,9 @@ struct EndGameOverlay: View {
     let timeElapsed: TimeInterval?
     let additionalInfo: String?
     
+    // NEW: Optional GameScore for additional properties
+    let gameScore: GameScore?
+    
     // Button activation delay
     @State private var buttonsAreActive: Bool = false
     
@@ -27,6 +30,7 @@ struct EndGameOverlay: View {
     @State private var showCelebration: Bool = false
     @State private var animationPhase: Double = 0
     
+    // Original init (backwards compatible)
     init(
         gameID: String,
         finalScore: Int,
@@ -47,31 +51,91 @@ struct EndGameOverlay: View {
         self.onMenu = onMenu
         self.timeElapsed = timeElapsed
         self.additionalInfo = additionalInfo
+        self.gameScore = nil
     }
     
-       
+    // NEW: Init with GameScore
+    init(
+        gameID: String,
+        finalScore: Int,
+        displayName: String,
+        isVisible: Binding<Bool>,
+        onPlayAgain: @escaping () -> Void,
+        onHighScores: @escaping () -> Void,
+        onMenu: @escaping () -> Void,
+        timeElapsed: TimeInterval? = nil,
+        additionalInfo: String? = nil,
+        gameScore: GameScore?
+    ) {
+        self.gameID = gameID
+        self.finalScore = finalScore
+        self.displayName = displayName
+        self._isVisible = isVisible
+        self.onPlayAgain = onPlayAgain
+        self.onHighScores = onHighScores
+        self.onMenu = onMenu
+        self.timeElapsed = timeElapsed
+        self.additionalInfo = additionalInfo
+        self.gameScore = gameScore
+    }
+    
+    
     private var scoreText: String {
         switch gameID {
         case "anagrams":
             return "Words Solved"
         case "decode":
-            return "Turns"
+            return "Score"
         case "numbers":
             return "Score"
         case "flashdance":
-            return "Equations Solved"
+            return "Final Score"
         default:
             return "Score"
         }
     }
     
+    // NEW: Computed property for additional score details
+    private var additionalScoreDetails: String? {
+        print("🔍 DEBUG: gameScore = \(String(describing: gameScore))")
+        print("🔍 DEBUG: gameID = \(gameID)")
+        
+        guard let gameScore = gameScore else {
+            print("🔍 DEBUG: gameScore is nil, returning nil")
+            return nil
+        }
+        
+        switch gameID {
+        case "decode":
+            print("🔍 DEBUG: In decode case")
+            guard let decodeProps = gameScore.decodeProperties else {
+                print("🔍 DEBUG: decodeProps is nil")
+                return nil
+            }
+            print("🔍 DEBUG: decodeProps = \(decodeProps)")
+            let formattedTime = formatDuration(decodeProps.gameDuration)
+            return "Turns: \(decodeProps.turnsToSolve)/7 • Time: \(formattedTime) • Code Length: \(decodeProps.codeLength)"
+            
+        case "flashdance":
+            guard let flashProps = gameScore.flashdanceProperties else { return nil }
+            return "Correct: \(flashProps.correctAnswers) • Wrong: \(flashProps.incorrectAnswers) • Best Streak: \(flashProps.longestStreak)"
+            
+        case "anagrams":
+            guard let theseProps = gameScore.anagramsProperties else { return nil }
+            return "Longest Word: \(theseProps.longestWord)"
+            
+        default:
+            print("🔍 DEBUG: In default case")
+            return "Good Job!"
+        }
+    }
     
-    private var timeText: String? {
-        guard let time = timeElapsed else { return nil }
-        let minutes = Int(time) / 60
-        let seconds = Int(time) % 60
+    private func formatDuration(_ duration: TimeInterval) -> String {
+        let minutes = Int(duration) / 60
+        let seconds = Int(duration) % 60
         return String(format: "%d:%02d", minutes, seconds)
     }
+    
     
     var body: some View {
         ZStack {
@@ -79,11 +143,11 @@ struct EndGameOverlay: View {
             Rectangle()
                 .fill(Color.black.opacity(0.8))
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .onTapGesture {
-                    if buttonsAreActive {
-                        dismiss()
-                    }
-                }
+//                .onTapGesture {
+//                    if buttonsAreActive {
+//                        dismiss()
+//                    }
+//                }
             
             // Celebration animation layer - simplified version
             if showCelebration {
@@ -119,28 +183,19 @@ struct EndGameOverlay: View {
                             .font(.custom("LuloOne-Bold", size: 48))
                             .foregroundColor(.white)
                             .monospacedDigit()
-                    }
-                    
-                    // Time elapsed (if provided)
-                    if let timeText = timeText {
-                        VStack(spacing: 5) {
-                            Text("Time")
-                                .font(.custom("LuloOne", size: 12))
-                                .foregroundColor(.white.opacity(0.8))
-                            
-                            Text(timeText)
-                                .font(.custom("LuloOne-Bold", size: 20))
-                                .foregroundColor(.white)
-                                .monospacedDigit()
+                        
+                        // NEW: Additional score details
+                        if let details = additionalScoreDetails {
+                            Text(details)
+                                .font(.custom("LuloOne", size: 10))
+                                .foregroundColor(.white.opacity(0.6))
+                                .multilineTextAlignment(.center)
+                                .padding(.top, 8)
                         }
-                    }
-                    
-                    // Additional info (if provided)
-                    if let info = additionalInfo {
-                        Text(info)
-                            .font(.custom("LuloOne", size: 12))
+                        
+                        Text("★ ★ ★")
+                            .font(.custom("LuloOne", size: 16))
                             .foregroundColor(.white.opacity(0.8))
-                            .multilineTextAlignment(.center)
                     }
                 }
                 
@@ -183,7 +238,7 @@ struct EndGameOverlay: View {
                         .foregroundColor(buttonsAreActive ? .white : .gray)
                         .padding(.horizontal, 20)
                         .padding(.vertical, 12)
-                        .background(buttonsAreActive ? Color.myAccentColor2 : Color.gray.opacity(0.4))
+                        .background(buttonsAreActive ? Color.black.opacity(0.3) : Color.gray.opacity(0.4))
                         .cornerRadius(8)
                         .disabled(!buttonsAreActive)
                         .animation(.easeInOut(duration: 0.3), value: buttonsAreActive)
@@ -191,7 +246,7 @@ struct EndGameOverlay: View {
                 }
             }
             .padding(30)
-            .background(Color.black)
+            .background(Color.myAccentColor2)
             .cornerRadius(15)
             .overlay(
                 RoundedRectangle(cornerRadius: 15)
@@ -222,13 +277,13 @@ struct EndGameOverlay: View {
         // Show the content box first (without celebration)
         // No celebration animation yet - just show the content
         
-        // Start celebration when buttons become active (after 1 second)
+        // Start celebration sequence
+        
+        withAnimation {
+            showCelebration = true
+        }
+        
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-            print("Starting celebration animation now") // Debug print
-            withAnimation {
-                showCelebration = true
-            }
-            
             // Activate buttons at the same time
             buttonsAreActive = true
         }
@@ -264,14 +319,14 @@ struct CelebrationAnimationView: View {
                     .rotationEffect(.degrees(angle))
                     .opacity(burstOpacity)
                     .scaleEffect(showBurst ? 1.0 : 0.2, anchor: .bottom)
-                    .animation(
-                        .easeOut(duration: 1.2).delay(Double(index) * 0.03),
-                        value: showBurst
-                    )
-                    .animation(
-                        .easeOut(duration: 1.8).delay(1.2),
-                        value: burstOpacity
-                    )
+                //                    .animation(
+                //                        .easeOut(duration: 1.0).delay(Double(index) * 0.03),
+                //                        value: showBurst
+                //                    )
+                //                    .animation(
+                //                        .easeOut(duration: 1.0).delay(1.2),
+                //                        value: burstOpacity
+                //                    )
             }
         }
         .onAppear {
@@ -286,7 +341,7 @@ struct CelebrationAnimationView: View {
             }
             
             // Trigger the burst expansion
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            DispatchQueue.main.asyncAfter(deadline: .now()) {
                 showBurst = true
             }
             
@@ -295,55 +350,5 @@ struct CelebrationAnimationView: View {
                 burstOpacity = 0.0
             }
         }
-    }
-}
-
-// Star shape for celebration sparkles
-struct CelebrationStar: Shape {
-    func path(in rect: CGRect) -> Path {
-        var path = Path()
-        let center = CGPoint(x: rect.width / 2, y: rect.height / 2)
-        let outerRadius = min(rect.width, rect.height) / 2
-        let innerRadius = outerRadius * 0.4
-        
-        for i in 0..<10 {
-            let angle = Double(i) * .pi / 5
-            let radius = i % 2 == 0 ? outerRadius : innerRadius
-            let x = center.x + cos(angle - .pi / 2) * radius
-            let y = center.y + sin(angle - .pi / 2) * radius
-            
-            if i == 0 {
-                path.move(to: CGPoint(x: x, y: y))
-            } else {
-                path.addLine(to: CGPoint(x: x, y: y))
-            }
-        }
-        path.closeSubpath()
-        return path
-    }
-}
-
-// Star shape for sparkles
-struct Star: Shape {
-    func path(in rect: CGRect) -> Path {
-        var path = Path()
-        let center = CGPoint(x: rect.width / 2, y: rect.height / 2)
-        let outerRadius = min(rect.width, rect.height) / 2
-        let innerRadius = outerRadius * 0.4
-        
-        for i in 0..<10 {
-            let angle = Double(i) * .pi / 5
-            let radius = i % 2 == 0 ? outerRadius : innerRadius
-            let x = center.x + cos(angle - .pi / 2) * radius
-            let y = center.y + sin(angle - .pi / 2) * radius
-            
-            if i == 0 {
-                path.move(to: CGPoint(x: x, y: y))
-            } else {
-                path.addLine(to: CGPoint(x: x, y: y))
-            }
-        }
-        path.closeSubpath()
-        return path
     }
 }

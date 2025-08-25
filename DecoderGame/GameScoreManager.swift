@@ -8,6 +8,26 @@
 import Foundation
 import SwiftUI
 
+// MARK: - Game-specific additional properties structures
+struct FlashdanceAdditionalProperties: Codable {
+    let gameDuration: Int        // Duration in seconds
+    let correctAnswers: Int      // Number of correct answers
+    let incorrectAnswers: Int    // Number of incorrect answers
+    let longestStreak: Int       // Longest consecutive correct streak
+}
+
+struct DecodeAdditionalProperties: Codable {
+    let gameDuration: TimeInterval // Duration of the game
+    let turnsToSolve: Int         // Number of turns taken to solve
+    let codeLength: Int           // Number of squares in the code
+}
+
+struct AnagramsAdditionalProperties: Codable {
+    let gameDuration: TimeInterval // Duration of the game
+    let longestWord: Int         // not used anywhere yet
+}
+
+// MARK: - Enhanced GameScore with additional properties
 struct GameScore: Codable, Identifiable, Equatable {
     let id: UUID
     let gameId: String           // "flashdance", "decode", "numbers", "anagrams"
@@ -16,8 +36,11 @@ struct GameScore: Codable, Identifiable, Equatable {
     let timeElapsed: TimeInterval // Seconds to complete
     let won: Bool                // Did they win?
     let finalScore: Int          // Calculated score (higher = better)
+    
+    // NEW: Additional game-specific properties stored as JSON data
+    let additionalPropertiesData: Data?
 
-    // MARK: - Init
+    // MARK: - Init (backwards compatible)
     init(gameId: String, date: Date, attempts: Int, timeElapsed: TimeInterval, won: Bool, finalScore: Int) {
         self.id = UUID()
         self.gameId = gameId
@@ -26,6 +49,50 @@ struct GameScore: Codable, Identifiable, Equatable {
         self.timeElapsed = timeElapsed
         self.won = won
         self.finalScore = finalScore
+        self.additionalPropertiesData = nil
+    }
+    
+    // MARK: - Init with additional properties
+    init(gameId: String, date: Date, attempts: Int, timeElapsed: TimeInterval, won: Bool, finalScore: Int, additionalProperties: Codable?) {
+        self.id = UUID()
+        self.gameId = gameId
+        self.date = date
+        self.attempts = attempts
+        self.timeElapsed = timeElapsed
+        self.won = won
+        self.finalScore = finalScore
+        
+        // Encode additional properties to Data
+        if let properties = additionalProperties {
+            do {
+                self.additionalPropertiesData = try JSONEncoder().encode(properties)
+            } catch {
+                print("❌ Failed to encode additional properties: \(error)")
+                self.additionalPropertiesData = nil
+            }
+        } else {
+            self.additionalPropertiesData = nil
+        }
+    }
+
+    // MARK: - Additional Properties Accessors
+    
+    /// Get Flashdance-specific additional properties
+    var flashdanceProperties: FlashdanceAdditionalProperties? {
+        guard gameId == "flashdance", let data = additionalPropertiesData else { return nil }
+        return try? JSONDecoder().decode(FlashdanceAdditionalProperties.self, from: data)
+    }
+    
+    /// Get Decode-specific additional properties
+    var decodeProperties: DecodeAdditionalProperties? {
+        guard gameId == "decode", let data = additionalPropertiesData else { return nil }
+        return try? JSONDecoder().decode(DecodeAdditionalProperties.self, from: data)
+    }
+    
+    /// Get Anagrams-specific additional properties
+    var anagramsProperties: AnagramsAdditionalProperties? {
+        guard gameId == "anagrams", let data = additionalPropertiesData else { return nil }
+        return try? JSONDecoder().decode(AnagramsAdditionalProperties.self, from: data)
     }
 
     // MARK: - Display helpers
@@ -40,6 +107,30 @@ struct GameScore: Codable, Identifiable, Equatable {
         formatter.dateStyle = .medium
         formatter.timeStyle = .short
         return formatter.string(from: date)
+    }
+    
+    // MARK: - Enhanced Display Helpers for Additional Properties
+    
+    /// Get formatted additional info string for display
+    var additionalInfoString: String? {
+        switch gameId {
+        case "flashdance":
+            guard let props = flashdanceProperties else { return nil }
+            return "Correct: \(props.correctAnswers) • Wrong: \(props.incorrectAnswers) • Best Streak: \(props.longestStreak)"
+            
+        case "decode":
+            guard let props = decodeProperties else { return nil }
+            return "Turns: \(props.turnsToSolve)/7 • Code Length: \(props.codeLength) • Time: \(formatDuration(props.gameDuration))"
+            
+        default:
+            return nil
+        }
+    }
+    
+    private func formatDuration(_ duration: TimeInterval) -> String {
+        let minutes = Int(duration) / 60
+        let seconds = Int(duration) % 60
+        return String(format: "%d:%02d", minutes, seconds)
     }
 }
 
@@ -57,6 +148,8 @@ class GameScoreManager: ObservableObject {
         loadScores()
     }
 
+    // MARK: - Enhanced Save Methods
+    
     // Save a new score - FIXED to ensure main thread updates
     func saveScore(_ score: GameScore) {
         print("🔄 About to save score: \(score.finalScore) for \(score.gameId)")
@@ -74,6 +167,68 @@ class GameScoreManager: ObservableObject {
             // Force an additional UI update notification
             self.objectWillChange.send()
         }
+    }
+    
+    // MARK: - Convenience Save Methods for Specific Games
+    
+    /// Save a Flashdance score with additional properties
+    func saveFlashdanceScore(
+        date: Date = Date(),
+        attempts: Int,
+        timeElapsed: TimeInterval,
+        finalScore: Int,
+        gameDuration: Int,
+        correctAnswers: Int,
+        incorrectAnswers: Int,
+        longestStreak: Int
+    ) {
+        let additionalProps = FlashdanceAdditionalProperties(
+            gameDuration: gameDuration,
+            correctAnswers: correctAnswers,
+            incorrectAnswers: incorrectAnswers,
+            longestStreak: longestStreak
+        )
+        
+        let score = GameScore(
+            gameId: "flashdance",
+            date: date,
+            attempts: attempts,
+            timeElapsed: timeElapsed,
+            won: true, // Flashdance is always a "win" when completed
+            finalScore: finalScore,
+            additionalProperties: additionalProps
+        )
+        
+        saveScore(score)
+    }
+    
+    /// Save a Decode score with additional properties
+    func saveDecodeScore(
+        date: Date = Date(),
+        attempts: Int,
+        timeElapsed: TimeInterval,
+        won: Bool,
+        finalScore: Int,
+        turnsToSolve: Int,
+        codeLength: Int
+    ) {
+        let additionalProps = DecodeAdditionalProperties(
+            gameDuration: timeElapsed,
+            turnsToSolve: turnsToSolve,
+            codeLength: codeLength
+        )
+        
+        let score = GameScore(
+            gameId: "decode",
+            date: date,
+            attempts: attempts,
+            timeElapsed: timeElapsed,
+            won: won,
+            finalScore: finalScore,
+            additionalProperties: additionalProps
+        )
+        
+        saveScore(score)
     }
 
     // Get scores for a specific game

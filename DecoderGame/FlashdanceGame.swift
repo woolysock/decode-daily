@@ -17,12 +17,17 @@ class FlashdanceGame: GameProtocol, ObservableObject {
     // MARK: - GameProtocol basics
     @Published var gameOver: Int = 0
     @Published var statusText: String = ""
+    @Published var lastScore: GameScore?
 
     // MARK: - Gameplay
     @Published var currentEquation: String = ""
     @Published var answers: [Int] = []
     @Published var correctAnswer: Int = 0
-    @Published var attempts: Int = 0   // use as "score" (correct answers)
+    @Published var correctAttempts: Int = 0      // Correct answers
+    @Published var incorrectAttempts: Int = 0    // NEW: Incorrect answers
+    @Published var currentStreak: Int = 0        // NEW: Current consecutive correct streak
+    @Published var maxStreak: Int = 0           // NEW: Best streak this game
+    @Published var totalScore: Int = 0          // NEW: Running calculated score
 
     // MARK: - Timers / phases
     @Published var countdownValue: Int = 3          // 3…2…1 pre-round
@@ -56,18 +61,23 @@ class FlashdanceGame: GameProtocol, ObservableObject {
     func startGame() {
         stopAllTimers()
         gameOver = 0
-        attempts = 0
+        correctAttempts = 0
+        incorrectAttempts = 0
+        currentStreak = 0
+        maxStreak = 0
+        totalScore = 0
         isGamePaused = false  // Reset pause state
         statusText = "Get ready…"
         countdownValue = 3
         isPreCountdownActive = true
         isGameActive = false
         roundStart = nil
+        lastScore = nil
 
         // Pre-generate the first question so we're ready the moment play starts.
         newQuestion()
 
-        print("FlashdanceGame started with scoreManager: \(type(of: scoreManager))")
+        //print("FlashdanceGame started with scoreManager: \(type(of: scoreManager))")
 
         preCountdownTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] t in
             guard let self = self else { return }
@@ -105,27 +115,95 @@ class FlashdanceGame: GameProtocol, ObservableObject {
         stopAllTimers()
         isGameActive = false
         isPreCountdownActive = false
-        isGamePaused = false  // Clear pause state
+        isGamePaused = false
         gameOver = 1
         
-        // Update the display with final score
+        calculateFinalScore()
         statusText = "Game over!"
-        currentEquation = "Final\nScore\n\n\(attempts)"
-
-        print("Game ended. Saving score: \(attempts) to \(type(of: scoreManager))")
         
-        // --- Save score to ScoreManager ---
-        let newScore = GameScore(
-            gameId: "flashdance",
-            date: Date(),
-            attempts: attempts,
-            timeElapsed: 30.0,
-            won: true,  // In Flashdance, finishing the game is always a "win"
-            finalScore: attempts  // Score is the number of correct answers
+        // Wrap extra stats in FlashdanceAdditionalProperties
+        let additionalProps = FlashdanceAdditionalProperties(
+            gameDuration: 30,                 // fixed duration in your game
+            correctAnswers: correctAttempts,
+            incorrectAnswers: incorrectAttempts,
+            longestStreak: maxStreak
         )
         
-        scoreManager.saveScore(newScore)
-        print("Score saved successfully: \(attempts) points")
+        // Create GameScore directly
+        let final = GameScore(
+            gameId: "flashdance",
+            date: Date(),
+            attempts: correctAttempts + incorrectAttempts,
+            timeElapsed: 30.0,
+            won: true,                        // Flashdance is always "completed"
+            finalScore: totalScore,
+            additionalProperties: additionalProps
+        )
+        
+        // Assign so EndGameOverlay can use it
+        lastScore = final
+        
+        // Persist to manager if desired
+        scoreManager.saveScore(final)
+        
+        print("Score saved successfully: \(totalScore) points")
+    }
+
+
+    
+    // MARK: - Scoring System
+    
+    private func calculateFinalScore() {
+        // Base scoring: 10 points per correct answer
+        let baseScore = correctAttempts * 10
+        
+        // Penalty for incorrect answers: -3 points each
+        let penalty = incorrectAttempts * 3
+        
+        // Streak bonus: Award extra points for best streak
+        let streakBonus = calculateStreakBonus(maxStreak)
+        
+        // Accuracy bonus: Extra points for high accuracy
+        let accuracyBonus = calculateAccuracyBonus()
+        
+        totalScore = max(0, baseScore - penalty + streakBonus + accuracyBonus)
+        
+        print("Score breakdown - Base: \(baseScore), Penalty: -\(penalty), Streak: +\(streakBonus), Accuracy: +\(accuracyBonus), Final: \(totalScore)")
+    }
+    
+    private func calculateStreakBonus(_ streak: Int) -> Int {
+        switch streak {
+        case 0...2: return 0
+        case 3...4: return 5
+        case 5...7: return 15
+        case 8...10: return 30
+        case 11...15: return 50
+        default: return 75 // 16+ streak
+        }
+    }
+    
+    private func calculateAccuracyBonus() -> Int {
+        let totalAttempts = correctAttempts + incorrectAttempts
+        guard totalAttempts > 0 else { return 0 }
+        
+        let accuracy = Double(correctAttempts) / Double(totalAttempts)
+        
+        switch accuracy {
+        case 0.95...1.0: return 25  // 95-100%
+        case 0.90..<0.95: return 15 // 90-94%
+        case 0.80..<0.90: return 10 // 80-89%
+        case 0.70..<0.80: return 5  // 70-79%
+        default: return 0           // Below 70%
+        }
+    }
+    
+    private func updateRunningScore() {
+        // Update the running score display during gameplay
+        let baseScore = correctAttempts * 10
+        let penalty = incorrectAttempts * 3
+        let streakBonus = calculateStreakBonus(currentStreak)
+        
+        totalScore = max(0, baseScore - penalty + streakBonus)
     }
     
     // MARK: - Gameplay helpers
@@ -155,16 +233,33 @@ class FlashdanceGame: GameProtocol, ObservableObject {
             options.insert(wrong)
         }
         answers = Array(options).shuffled()
-        statusText = "Swipe toward the correct answer!"
+        statusText = "Swipe toward the correct answer! Score: \(totalScore)"
     }
 
     func checkAnswer(selected: Int) -> Bool {
         let isCorrect = selected == correctAnswer
         if isCorrect {
-            attempts += 1
-            statusText = "✅ Correct! (\(attempts))"
+            correctAttempts += 1
+            currentStreak += 1
+            maxStreak = max(maxStreak, currentStreak)
+            
+            updateRunningScore()
+            
+            // Enhanced status text with streak info
+            var message = "✅ Correct! (\(correctAttempts)/\(correctAttempts + incorrectAttempts))"
+            if currentStreak >= 3 {
+                message += " 🔥\(currentStreak)"  // Show streak with fire emoji
+            }
+            message += " Score: \(totalScore)"
+            statusText = message
+            
         } else {
-            statusText = "❌ Try again!"
+            incorrectAttempts += 1
+            currentStreak = 0  // Reset streak on wrong answer
+            
+            updateRunningScore()
+            
+            statusText = "❌ Wrong! (\(correctAttempts)/\(correctAttempts + incorrectAttempts)) Score: \(totalScore)"
         }
         return isCorrect
     }
@@ -174,7 +269,7 @@ class FlashdanceGame: GameProtocol, ObservableObject {
     private func startMainGame() {
         gameTimeRemaining = 30
         isGameActive = true
-        statusText = "Go!"
+        statusText = "Go! Score: \(totalScore)"
         roundStart = Date()  // Track when the actual game started
 
         gameTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] t in

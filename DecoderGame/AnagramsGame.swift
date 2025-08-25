@@ -15,6 +15,7 @@ class AnagramsGame: GameProtocol, ObservableObject {
     // MARK: - GameProtocol basics
     @Published var gameOver: Int = 0
     @Published var statusText: String = ""
+    @Published var lastScore: GameScore?
 
     // MARK: - Gameplay
     @Published var currentWord: String = ""
@@ -29,20 +30,20 @@ class AnagramsGame: GameProtocol, ObservableObject {
     @Published var gameTimeRemaining: Int = 60      // main game timer (sec)
     @Published var isPreCountdownActive: Bool = false
     @Published var isGameActive: Bool = false
-    @Published var isGamePaused: Bool = false       // NEW: Track pause state
+    @Published var isGamePaused: Bool = false       // Track pause state
 
     private var preCountdownTimer: Timer?
     private var gameTimer: Timer?
     private var roundStart: Date?
 
     let gameInfo = GameInfo(
-           id: "anagrams",
-           displayName: "letters",
-           description: "rearrange letters into words",
-           isAvailable: true,
-           gameLocation: AnyView(AnagramsGameView()),
-           gameIcon: Image(systemName: "60.arrow.trianglehead.clockwise")
-       )
+        id: "anagrams",
+        displayName: "letters",
+        description: "rearrange letters into words",
+        isAvailable: true,
+        gameLocation: AnyView(EmptyView()), // replace with real view if needed
+        gameIcon: Image(systemName: "60.arrow.trianglehead.clockwise")
+    )
 
     // Word list for anagrams
     private let wordList = [
@@ -57,16 +58,14 @@ class AnagramsGame: GameProtocol, ObservableObject {
     init(scoreManager: GameScoreManager) {
         self.scoreManager = scoreManager
     }
-    
 
     // MARK: - Public API
 
-    /// Call this to begin a fresh round (will run 3-2-1 first, then 60s game).
     func startGame() {
         stopAllTimers()
         gameOver = 0
         attempts = 0
-        isGamePaused = false  // Reset pause state
+        isGamePaused = false
         userAnswer = ""
         usedLetterIndices = []
         statusText = "Get ready…"
@@ -74,14 +73,12 @@ class AnagramsGame: GameProtocol, ObservableObject {
         isPreCountdownActive = true
         isGameActive = false
         roundStart = nil
+        lastScore = nil
 
-        // Pre-generate the first question so we're ready the moment play starts.
         newQuestion()
 
         preCountdownTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] t in
             guard let self = self else { return }
-            
-            // Don't decrement countdown if paused
             if self.isGamePaused { return }
             
             if self.countdownValue > 1 {
@@ -94,18 +91,14 @@ class AnagramsGame: GameProtocol, ObservableObject {
         }
     }
 
-    /// NEW: Pause the game timers
     func pauseGame() {
         guard !isGamePaused else { return }
         isGamePaused = true
-        print("Game paused")
     }
 
-    /// NEW: Resume the game timers
     func resumeGame() {
         guard isGamePaused else { return }
         isGamePaused = false
-        print("Game resumed")
     }
 
     func resetGame() { startGame() }
@@ -114,46 +107,47 @@ class AnagramsGame: GameProtocol, ObservableObject {
         stopAllTimers()
         isGameActive = false
         isPreCountdownActive = false
-        isGamePaused = false  // Clear pause state
+        isGamePaused = false
         gameOver = 1
         
-        // Update the display with final score
+        // Update display
         statusText = "Game over!"
         currentWord = "Final\nScore\n\n\(attempts)"
         scrambledLetters = []
         usedLetterIndices = []
         userAnswer = ""
-
-              
-        // --- Save score to ScoreManager ---
-       
+        
+        // Compute longest word length (simple example: currentWord's length)
+        let longestWordLength = currentWord.count
+        
+        // Save score to ScoreManager
         let newScore = GameScore(
             gameId: "anagrams",
             date: Date(),
             attempts: attempts,
             timeElapsed: 60.0,
-            won: true,  // In Anagrams, finishing the game is always a "win"
-            finalScore: attempts  // Score is the number of correct answers
+            won: true,
+            finalScore: attempts,
+            additionalProperties: AnagramsAdditionalProperties(
+                gameDuration: 60.0,
+                longestWord: longestWordLength
+            )
         )
         
         scoreManager.saveScore(newScore)
+        lastScore = newScore  // save locally for display
         print("Score saved successfully: \(attempts) points")
     }
-    
+
+
     // MARK: - Gameplay helpers
 
     func newQuestion() {
-        // Pick a random word
         currentWord = wordList.randomElement() ?? "SWIFT"
-        
-        // Scramble the letters
         scrambledLetters = currentWord.map { String($0) }.shuffled()
-        
-        // Make sure it's actually scrambled (not the same as original)
         while scrambledLetters.joined() == currentWord && currentWord.count > 1 {
             scrambledLetters.shuffle()
         }
-        
         userAnswer = ""
         usedLetterIndices = []
         currentLetterIndex = 0
@@ -165,7 +159,6 @@ class AnagramsGame: GameProtocol, ObservableObject {
         userAnswer += scrambledLetters[index]
         usedLetterIndices.insert(index)
         
-        // Check if word is complete
         if usedLetterIndices.count == scrambledLetters.count {
             checkAnswer()
         }
@@ -177,7 +170,6 @@ class AnagramsGame: GameProtocol, ObservableObject {
         let letter = String(userAnswer[letterIndex])
         userAnswer.remove(at: letterIndex)
         
-        // Find the corresponding index in scrambled letters and mark as unused
         if let scrambledIndex = scrambledLetters.firstIndex(where: { $0 == letter && usedLetterIndices.contains(scrambledLetters.firstIndex(of: $0) ?? -1) }) {
             usedLetterIndices.remove(scrambledIndex)
         }
@@ -194,14 +186,11 @@ class AnagramsGame: GameProtocol, ObservableObject {
             attempts += 1
             statusText = "Correct! (\(attempts))"
             
-            // Brief pause before next question
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
                 self.newQuestion()
             }
         } else {
             statusText = "Wrong! Try again."
-            
-            // Give the UI a moment to flash the wrong answer before resetting
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                 self.usedLetterIndices.removeAll()
                 self.userAnswer = ""
@@ -215,14 +204,11 @@ class AnagramsGame: GameProtocol, ObservableObject {
         gameTimeRemaining = 60
         isGameActive = true
         statusText = "Go!"
-        roundStart = Date()  // Track when the actual game started
+        roundStart = Date()
 
         gameTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] t in
             guard let self = self else { return }
-            
-            // Don't decrement timer if paused
             if self.isGamePaused { return }
-            
             if self.gameTimeRemaining > 0 {
                 self.gameTimeRemaining -= 1
             } else {
@@ -241,6 +227,5 @@ class AnagramsGame: GameProtocol, ObservableObject {
 
     deinit {
         stopAllTimers()
-        print("AnagramsGame deinitialized")
     }
 }

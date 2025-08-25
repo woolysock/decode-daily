@@ -195,7 +195,7 @@ struct AnagramsGameView: View {
             if showEndGameOverlay {
                 EndGameOverlay(
                     gameID: game.gameInfo.id,
-                    finalScore: game.attempts,
+                    finalScore: game.lastScore?.finalScore ?? game.attempts,
                     displayName: game.gameInfo.displayName,
                     isVisible: $showEndGameOverlay,
                     onPlayAgain: { startNewGame() },
@@ -203,7 +203,8 @@ struct AnagramsGameView: View {
                     onMenu: {
                         showEndGameOverlay = false
                         dismiss()
-                    }
+                    },
+                    gameScore: game.lastScore   // ✅ now overlay can read longestWord
                 )
                 .transition(.opacity)
             }

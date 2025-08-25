@@ -57,24 +57,35 @@ struct DecodeGameView: View {
                                 .foregroundColor(.white)
                                 .font(.title2)
                         }
+                        .disabled(!game.gameInteractive)
+                        .opacity(game.gameInteractive ? 1.0 : 0.5)
                     }
                     .padding(.horizontal, 20)
                     
                     Divider().background(.white).padding(5)
                     
-                    // Code display
+                    // Code display with animation
                     HStack(spacing: 10) {
                         ForEach(0..<game.numCols, id: \.self) { col in
                             Rectangle()
                                 .frame(width: 40, height: 40)
-                                .foregroundColor(game.gameOver != 0 ? game.pegShades[game.theCode[col]] : game.myPegColor1)
+                                .foregroundColor(
+                                    game.isAnimating
+                                    ? game.pegShades[game.animatedCode[col]]
+                                    : (game.gameOver != 0 ? game.pegShades[game.theCode[col]] : game.myPegColor1)
+                                )
                                 .overlay(
                                     Text("?")
                                         .font(.custom("LuloOne-Bold", size: 14))
-                                        .foregroundColor(game.gameOver == 0 ? .white : .clear)
+                                        .foregroundColor(
+                                            game.isAnimating || game.gameOver != 0 ? .clear : .white
+                                        )
                                 )
+                                .animation(.easeInOut(duration: 0.1), value: game.animatedCode)
                         }
                     }
+                    .scaleEffect(game.isAnimating ? 1.05 : 1.0)
+                    .animation(.easeInOut(duration: 0.3), value: game.isAnimating)
                     
                     // Status text
                     Rectangle()
@@ -106,6 +117,7 @@ struct DecodeGameView: View {
                                             ? (row <= game.currentTurn ? currentColor : .clear)
                                             : (row != game.currentTurn - 1 ? currentColor.opacity(0.6) : currentColor)
                                         )
+                                        .opacity(game.gameInteractive ? 1.0 : 0.7)
                                         .contentShape(Rectangle())
                                         .overlay(
                                             GeometryReader { geometry in
@@ -138,7 +150,7 @@ struct DecodeGameView: View {
                                                         
                                                         game.statusText = "Choose a color for this square."
                                                     }
-                                                    .allowsHitTesting(!showingColorPicker && !showHowToPlay && !showEndGameOverlay)
+                                                    .allowsHitTesting(game.gameInteractive && !showingColorPicker && !showHowToPlay && !showEndGameOverlay)
                                             }
                                         )
                                     
@@ -153,18 +165,21 @@ struct DecodeGameView: View {
                                         HStack {
                                             Circle()
                                                 .frame(width: 10, height: 10)
-                                                .foregroundColor(row < game.currentTurn ? game.scoreShades[game.theScore[row][0]] : .clear)
-                                            Circle()
-                                                .frame(width: 10, height: 10)
-                                                .foregroundColor(row < game.currentTurn ? game.scoreShades[game.theScore[row][1]] : .clear)
-                                        }
-                                        HStack {
+                                                .foregroundColor(row < game.currentTurn ? game.scoreShades[game.theScore[row][3]] : .clear)
                                             Circle()
                                                 .frame(width: 10, height: 10)
                                                 .foregroundColor(row < game.currentTurn ? game.scoreShades[game.theScore[row][2]] : .clear)
                                             Circle()
                                                 .frame(width: 10, height: 10)
-                                                .foregroundColor(row < game.currentTurn ? game.scoreShades[game.theScore[row][3]] : .clear)
+                                                .foregroundColor(row < game.currentTurn ? game.scoreShades[game.theScore[row][4]] : .clear)
+                                        }
+                                        HStack {
+                                            Circle()
+                                                .frame(width: 10, height: 10)
+                                                .foregroundColor(row < game.currentTurn ? game.scoreShades[game.theScore[row][0]] : .clear)
+                                            Circle()
+                                                .frame(width: 10, height: 10)
+                                                .foregroundColor(row < game.currentTurn ? game.scoreShades[game.theScore[row][1]] : .clear)
                                         }
                                     }
                                     
@@ -172,13 +187,14 @@ struct DecodeGameView: View {
                                     Circle()
                                         .frame(width: 50)
                                         .foregroundColor(row == game.currentTurn ? (game.gameOver == 0 ? .gray : .clear) : .clear)
+                                        .opacity(game.gameInteractive ? 1.0 : 0.5)
                                         .contentShape(Circle())
                                         .onTapGesture {
                                             if row == game.currentTurn {
                                                 game.scoreRow(row)
                                             }
                                         }
-                                        .allowsHitTesting(!showingColorPicker && !showHowToPlay && !showEndGameOverlay)
+                                        .allowsHitTesting(game.gameInteractive && !showingColorPicker && !showHowToPlay && !showEndGameOverlay)
                                 }
                             }
                         }
@@ -192,11 +208,21 @@ struct DecodeGameView: View {
                     // Show the How-to-Play overlay if the user hasn't dismissed it before
                     let key = "hasSeenHowToPlay_decode"
                     if !UserDefaults.standard.bool(forKey: key) {
-                        showHowToPlay = true
+                        // Delay showing how-to-play until after animation
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+                            if game.gameInteractive {
+                                showHowToPlay = true
+                            }
+                        }
                     }
                 }
                 .onChange(of: game.gameOver, initial: false) { oldValue, newValue in
                     if newValue != 0 {
+                        
+                        print("🔍 DEBUG: game.gameOver = \(newValue)")
+                        print("🔍 DEBUG: game.lastScore = \(String(describing: game.lastScore))")
+                        print("🔍 DEBUG: game.lastScore?.finalScore = \(String(describing: game.lastScore?.finalScore))")
+                        
                         // Show Code Reveal first
                         showCodeReveal = true
 
@@ -210,6 +236,7 @@ struct DecodeGameView: View {
                     }
                 }
                 
+                
                 // Color Picker Overlay
                 if showingColorPicker {
                     ColorPickerOverlay(
@@ -219,7 +246,7 @@ struct DecodeGameView: View {
                         onColorSelected: { colorIndex in
                             let gameColorIndex = colorIndex + 1
                             game.theBoard[selectedSquare.row][selectedSquare.col] = gameColorIndex
-                            game.statusText = "Tap the circle when you're ready to submit a guess."
+                            game.statusText = "Tap the circle when you're ready to submit a guess. You have \(7 - game.currentTurn) guesses left."
                         }
                     )
                     .background(
@@ -238,7 +265,7 @@ struct DecodeGameView: View {
                         instructions: """
                         Crack the secret color code! 
                         
-                        Each turn, tap a square to assign a color. Check your pattern by tapping the circle.
+                        You get 7 tries. Each turn, tap a square to assign a color. Check your pattern by tapping the circle.
                         
                         🟪 🟪 🟦 🟨  ➜   ⃝
                                                 
@@ -246,7 +273,7 @@ struct DecodeGameView: View {
                         🟢 : correct color & spot
                         🟡 : correct color but wrong spot 
                         
-                        Less guesses = Higher scores!
+                        Less guesses yield higher scores!
                         """,
                         isVisible: $showHowToPlay
                     )
@@ -277,7 +304,7 @@ struct DecodeGameView: View {
                 if showEndGameOverlay {
                     EndGameOverlay(
                         gameID: game.gameInfo.id,
-                        finalScore: game.currentTurn, // Using currentTurn as the score (number of attempts)
+                        finalScore: game.lastScore?.finalScore ?? game.currentTurn,
                         displayName: game.gameInfo.displayName,
                         isVisible: $showEndGameOverlay,
                         onPlayAgain: { startNewGame() },
@@ -286,7 +313,8 @@ struct DecodeGameView: View {
                             // Use dismiss instead of navigation
                             showEndGameOverlay = false
                             dismiss()
-                        }
+                        },
+                        gameScore: game.lastScore
                     )
                     .transition(.opacity)
                     .zIndex(3)

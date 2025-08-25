@@ -112,6 +112,29 @@ struct ScoreRowView: View {
                 Text("\(Int(score.timeElapsed))s game")
                     .font(.custom("LuloOne", size: 12))
                     .foregroundColor(.secondary)
+                
+                // CUSTOM SCORE EXTRAS
+                
+                if let flashdanceProps = score.flashdanceProperties {
+                    Text("Longest Streak: \(flashdanceProps.longestStreak)")
+                        .font(.custom("LuloOne", size: 12))
+                        .foregroundColor(.secondary)
+                    Text("Correct Answers: \(flashdanceProps.correctAnswers)")
+                        .font(.custom("LuloOne", size: 12))
+                        .foregroundColor(.secondary)
+                    Text("Incorrect Answers: \(flashdanceProps.incorrectAnswers)")
+                        .font(.custom("LuloOne", size: 12))
+                        .foregroundColor(.secondary)
+                }
+                
+                if let decodeProps = score.decodeProperties {
+                    Text("Guesses: \(decodeProps.turnsToSolve)")
+                        .font(.custom("LuloOne", size: 12))
+                        .foregroundColor(.secondary)
+                    Text("Code Size: \(decodeProps.codeLength)")
+                        .font(.custom("LuloOne", size: 12))
+                        .foregroundColor(.secondary)
+                }
                
             }
             Spacer()
