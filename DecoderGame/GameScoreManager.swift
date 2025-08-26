@@ -122,6 +122,10 @@ struct GameScore: Codable, Identifiable, Equatable {
             guard let props = decodeProperties else { return nil }
             return "Turns: \(props.turnsToSolve)/7 • Code Length: \(props.codeLength) • Time: \(formatDuration(props.gameDuration))"
             
+        case "anagrams":
+            //guard let props = anagramsProperties else { return nil }
+            return "Nailed it!"
+            
         default:
             return nil
         }

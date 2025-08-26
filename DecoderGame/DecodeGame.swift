@@ -231,14 +231,14 @@ class DecodeGame: ObservableObject, GameProtocol {
             maxAttempts: numRows
         )
 
-        let gameScore = GameScore(
-            gameId: "decode",
-            date: Date(),
-            attempts: attempts,
-            timeElapsed: timeElapsed,
-            won: won,
-            finalScore: finalScore
-        )
+//        let gameScore = GameScore(
+//            gameId: "decode",
+//            date: Date(),
+//            attempts: attempts,
+//            timeElapsed: timeElapsed,
+//            won: won,
+//            finalScore: finalScore
+//        )
 
         print("Saving game score: \(finalScore) points, won: \(won), attempts: \(attempts)")
         

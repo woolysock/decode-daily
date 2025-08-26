@@ -2,7 +2,7 @@
 //  FlashdanceGameView.swift
 //  Decode! Daily iOS
 //
-//  Created by Megan Donahue on 8/12/25.
+//  Redesigned floating flashcard with pill answers
 //
 
 import SwiftUI
@@ -11,42 +11,39 @@ struct FlashdanceGameView: View {
     @StateObject private var game: FlashdanceGame
     @EnvironmentObject var scoreManager: GameScoreManager
     @Environment(\.dismiss) private var dismiss
-
+    
     @State private var dragOffset: CGSize = .zero
     @State private var showHowToPlay = false
     @State private var showEndGameOverlay = false
     @State private var hasStartedRound = false
-
-    // Navigation state (pushes leaderboard)
+    @State private var highlightedAnswer: Int? = nil
+    
     @State private var navigateToHighScores = false
-
-    // === Flash feedback state (kept) ===
+    
+    // Flash feedback
     @State private var flashCardColor: Color = .white
     @State private var circleFlashColors: [Int: Color] = [:]
-
-    // Instructions specific to Flashdance
+    
+    // Animation states
+    @State private var isAnimatingCorrect = false
+    @State private var finalOffset: CGSize = .zero
+    @State private var cardOpacity: Double = 1.0
+    @State private var cardScale: CGFloat = 1.0
+    
     private let instructionsText = """
     You have 30 seconds to solve the
     most math problems! ⏲
     
     When a flashcard appears, swipe it towards the correct answer.
     
-    [8 + 7]
-    
-    ⇠ ⇡ ⇢
-    
-    1         15         7
-
     Get streaks for bonus points!
     More right answers yield higher scores!
     """
-
-    // Initialize with proper dependency injection
+    
     init() {
         self._game = StateObject(wrappedValue: FlashdanceGame(scoreManager: GameScoreManager.shared))
     }
-
-    // Render-time cleanup: remove trailing "Score: ..." from status text
+    
     private var cleanedStatusText: String {
         let txt = game.statusText
         if let r = txt.range(of: "Score:") {
@@ -54,46 +51,41 @@ struct FlashdanceGameView: View {
         }
         return txt
     }
-
+    
     var body: some View {
         ZStack {
-            // === Navigation container matches Anagrams ===
             NavigationStack {
                 ZStack {
                     Color.black.ignoresSafeArea()
-
+                    
                     VStack(spacing: 15) {
                         Spacer().frame(height: 5)
-
-                        // Title + Timer + Help button
+                        
+                        // === Header: Title + Timer + Help ===
                         HStack {
                             Text("\(game.gameInfo.displayName)")
                                 .foregroundColor(.white)
                                 .font(.custom("LuloOne-Bold", size: 20))
                                 .onTapGesture { startRound() }
-
+                            
                             Spacer()
-
-                            // Top-center game clock (shows only while playing)
-                            Group {
-                                if game.isGameActive {
-                                    Text("\(game.gameTimeRemaining)")
-                                        .font(.custom("LuloOne-Bold", size: 20))
-                                        .foregroundColor(.white)
-                                        .monospacedDigit()
-                                        .frame(minWidth: 54, alignment: .center)
-                                        .transition(.opacity)
-                                } else {
-                                    // keep layout stable
-                                    Text(" ")
-                                        .font(.custom("LuloOne-Bold", size: 20))
-                                        .frame(minWidth: 54)
-                                        .opacity(0)
-                                }
+                            
+                            if game.isGameActive {
+                                Text("\(game.gameTimeRemaining)")
+                                    .font(.custom("LuloOne-Bold", size: 20))
+                                    .foregroundColor(.white)
+                                    .monospacedDigit()
+                                    .frame(minWidth: 54)
+                                    .transition(.opacity)
+                            } else {
+                                Text(" ")
+                                    .font(.custom("LuloOne-Bold", size: 20))
+                                    .frame(minWidth: 54)
+                                    .opacity(0)
                             }
-
+                            
                             Spacer()
-
+                            
                             Button { showHowToPlay = true } label: {
                                 Image(systemName: "questionmark.circle")
                                     .foregroundColor(.white)
@@ -101,37 +93,48 @@ struct FlashdanceGameView: View {
                             }
                         }
                         .padding(.horizontal, 20)
-
+                        
                         Divider().background(.white).padding(5)
-
-                        // Status text (no score content)
+                        
+                        // Status text
                         Text(cleanedStatusText)
                             .foregroundColor(.white)
                             .font(.custom("LuloOne", size: 12))
                             .multilineTextAlignment(.center)
                             .padding(.horizontal, 20)
-
-                        Spacer(minLength: 0)
-
+                        
+                        Spacer().frame(height: 1)
+                        
                         // === GAME BOARD ===
                         ZStack {
                             Color.black.ignoresSafeArea()
-
+                            
                             GeometryReader { geo in
-                                // Answer circles (only while playing)
-                                if game.isGameActive {
-                                    answerCircle(game.answers[safe: 0] ?? 0)
-                                        .position(x: 40, y: geo.size.height / 3)
-
-                                    answerCircle(game.answers[safe: 1] ?? 0)
-                                        .position(x: geo.size.width / 2, y: 60)
-
-                                    answerCircle(game.answers[safe: 2] ?? 0)
-                                        .position(x: geo.size.width - 40, y: geo.size.height / 3)
-                                }
-
-                                // Center content: either big countdown or the flashcard
-                                Group {
+                                let cardWidth: CGFloat = min(geo.size.width * 0.6, 300)
+                                let cardHeight: CGFloat = min(geo.size.height * 0.4, 420)
+                                let pillWidth: CGFloat = min(geo.size.width * 0.25, 120)
+                                let pillHeight: CGFloat = 160
+                                let spacing: CGFloat = 10
+                                
+                                VStack {
+                                    Spacer().frame(height: geo.size.height * 0.05)
+                                    
+                                    // === Answer Pills Row ===
+                                    if game.isGameActive {
+                                        HStack(spacing: spacing) {
+                                            answerPill(game.answers[safe: 0] ?? 0)
+                                                .frame(width: pillWidth, height: pillHeight)
+                                            answerPill(game.answers[safe: 1] ?? 0)
+                                                .frame(width: pillWidth, height: pillHeight)
+                                            answerPill(game.answers[safe: 2] ?? 0)
+                                                .frame(width: pillWidth, height: pillHeight)
+                                        }
+                                        .opacity(0.85)
+                                    }
+                                    
+                                    Spacer().frame(height: 20)
+                                    
+                                    // === Flashcard Center ===
                                     if game.isPreCountdownActive {
                                         Text("\(game.countdownValue)")
                                             .font(.custom("LuloOne-Bold", size: 100))
@@ -140,44 +143,52 @@ struct FlashdanceGameView: View {
                                             .scaleEffect(1.05)
                                             .transition(.scale)
                                     } else if game.isGameActive {
-                                        // Flashcard
                                         Text(game.currentEquation)
-                                            .padding(5)
+                                            .padding(10)
                                             .foregroundColor(.black)
                                             .font(.custom("LuloOne-Bold", size: 40))
-                                            .frame(width: 240, height: 300)
+                                            .frame(width: cardWidth, height: cardHeight)
                                             .background(flashCardColor)
-                                            .multilineTextAlignment(.center)
-                                            .cornerRadius(5)
+                                            .cornerRadius(8)
                                             .overlay(
-                                                RoundedRectangle(cornerRadius: 5)
+                                                RoundedRectangle(cornerRadius: 8)
                                                     .stroke(Color.myAccentColor1, lineWidth: 5)
                                             )
                                             .shadow(radius: 6)
-                                            .offset(dragOffset)
+                                            .scaleEffect(cardScale)
+                                            .opacity(cardOpacity)
+                                            .offset(isAnimatingCorrect ? finalOffset : dragOffset)
                                             .gesture(
-                                                DragGesture()
+                                                DragGesture(coordinateSpace: .named("GameBoard"))
                                                     .onChanged { value in
-                                                        guard game.isGameActive && !game.isGamePaused else { return }
+                                                        guard game.isGameActive && !game.isGamePaused && !isAnimatingCorrect else { return }
                                                         dragOffset = value.translation
+                                                        
+                                                        // Use absolute location in GameBoard coordinate space
+                                                        highlightPillUnderDrag(location: value.location, geo: geo)
                                                     }
                                                     .onEnded { value in
-                                                        guard game.isGameActive && !game.isGamePaused else {
-                                                            dragOffset = .zero
+                                                        guard game.isGameActive && !game.isGamePaused && !isAnimatingCorrect else {
                                                             return
                                                         }
-                                                        handleSwipe(value: value, geoSize: geo.size)
+
+                                                        handleSwipeWithPills(location: value.location, geo: geo, currentDragOffset: value.translation, geoSize: geo.size)
+                                                        highlightedAnswer = nil
                                                     }
                                             )
-                                            .animation(.spring(response: 0.3, dampingFraction: 0.8), value: dragOffset)
+                                            .animation(.easeOut(duration: 0.8), value: isAnimatingCorrect ? finalOffset : dragOffset)
+                                            .animation(.easeInOut(duration: 0.25), value: cardOpacity)
+                                            .animation(.easeInOut(duration: 0.25), value: cardScale)
                                     }
+                                    
+                                    Spacer()
                                 }
-                                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+                                .frame(width: geo.size.width, height: geo.size.height)
                             }
-                            .padding([.leading, .trailing, .bottom], 20)
                         }
-
-                        // === NEW: Scoreboard (bottom half area) ===
+                        .coordinateSpace(name: "GameBoard")
+                        
+                        // === Scoreboard at Bottom ===
                         if game.isGameActive || game.gameOver == 1 {
                             Scoreboard(
                                 score: game.totalScore,
@@ -189,46 +200,29 @@ struct FlashdanceGameView: View {
                             .padding(.top, 6)
                             .transition(.move(edge: .bottom).combined(with: .opacity))
                         }
-
+                        
                         Spacer(minLength: 8)
                     }
                     .onAppear {
-                        // Inject the real scoreManager into the game
                         game.scoreManager = scoreManager
-
-                        // If user has already seen HowTo, start automatically after a small delay.
                         if UserDefaults.standard.bool(forKey: "hasSeenHowToPlay_flashdance") {
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                                startRound()
-                            }
-                        } else {
-                            showHowToPlay = true
-                        }
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { startRound() }
+                        } else { showHowToPlay = true }
                     }
-                    // Pause/resume game when overlay shows/hides
                     .onChange(of: showHowToPlay, initial: false) { _, newValue in
-                        if newValue {
-                            game.pauseGame()
-                        } else {
-                            game.resumeGame()
-                            if !hasStartedRound {
-                                startRound()
-                            }
-                        }
+                        if newValue { game.pauseGame() }
+                        else { game.resumeGame(); if !hasStartedRound { startRound() } }
                     }
                     .onChange(of: game.gameOver, initial: false) { _, newValue in
-                        if newValue == 1 {
-                            showEndGameOverlay = true
-                        }
+                        if newValue == 1 { showEndGameOverlay = true }
                     }
                 }
-                // Leaderboard lives on this stack
                 .navigationDestination(isPresented: $navigateToHighScores) {
                     MultiGameLeaderboardView(selectedGameID: game.gameInfo.id)
                 }
             }
-
-            // === Overlays OUTSIDE the NavigationStack (match Anagrams) ===
+            
+            // === Overlays ===
             if showHowToPlay {
                 HowToPlayOverlay(
                     gameID: game.gameInfo.id,
@@ -237,7 +231,7 @@ struct FlashdanceGameView: View {
                 )
                 .transition(.opacity)
             }
-
+            
             if showEndGameOverlay {
                 EndGameOverlay(
                     gameID: game.gameInfo.id,
@@ -246,80 +240,181 @@ struct FlashdanceGameView: View {
                     isVisible: $showEndGameOverlay,
                     onPlayAgain: { startNewGame() },
                     onHighScores: {
-                        // Push leaderboard; no dismiss-on-pop handler
                         showEndGameOverlay = false
                         navigateToHighScores = true
                     },
-                    onMenu: {
-                        // Return to Main Menu
-                        showEndGameOverlay = false
-                        dismiss()
-                    },
-                    gameScore: game.lastScore   // ✅ pass the rich score object
+                    onMenu: { showEndGameOverlay = false; dismiss() },
+                    gameScore: game.lastScore
                 )
                 .transition(.opacity)
             }
         }
     }
-
-    // MARK: - Swipe Logic
-
-    private func handleSwipe(value: DragGesture.Value, geoSize: CGSize) {
-        let horizontal = value.translation.width
-        let vertical = value.translation.height
-
-        var chosenPosition: AnswerPosition?
-        if abs(horizontal) > abs(vertical) {
-            chosenPosition = horizontal > 0 ? .right : .left
-        } else if vertical < 0 {
-            chosenPosition = .top
+    
+    
+    // MARK: - Pill answer helpers
+    private func answerPill(_ value: Int) -> some View {
+        let isHighlighted = highlightedAnswer == value
+        return Text("\(value)")
+            .font(.system(size: 24, weight: .bold))
+            .foregroundColor(.white)
+            .frame(maxWidth: .infinity)
+            .frame(height: 160)
+            .background(isHighlighted ? Color.myAccentColor2.opacity(0.9) : Color.myAccentColor1.opacity(0.3))
+            .clipShape(RoundedRectangle(cornerRadius: 20))
+            .overlay(RoundedRectangle(cornerRadius: 20).stroke(Color.white.opacity(0.2), lineWidth: 2))
+            .shadow(radius: 3)
+            .accessibilityLabel(Text("Answer \(value)"))
+    }
+    
+    private func highlightPillUnderDrag(location: CGPoint, geo: GeometryProxy) {
+        // Match the exact same calculations used in the UI layout
+        let pillWidth: CGFloat = min(geo.size.width * 0.25, 120)
+        let pillHeight: CGFloat = 160
+        let spacing: CGFloat = 10 // Match the HStack spacing exactly
+        
+        // Calculate the total width of all pills including spacing
+        let totalPillsWidth = pillWidth * 3 + spacing * 2
+        let startX = (geo.size.width - totalPillsWidth) / 2
+        
+        // Calculate Y position to match the actual pill layout
+        // Pills are positioned at: Spacer(height: geo.size.height * 0.05) + pillHeight/2
+        let pillRowY = geo.size.height * 0.05 + pillHeight / 2
+        
+        highlightedAnswer = nil
+        
+        for (i, val) in game.answers.enumerated() {
+            // Calculate the center X position for each pill
+            let pillCenterX = startX + pillWidth/2 + CGFloat(i) * (pillWidth + spacing)
+            
+            // Create the pill frame
+            let pillFrame = CGRect(
+                x: pillCenterX - pillWidth/2,
+                y: pillRowY - pillHeight/2,
+                width: pillWidth + 10,
+                height: pillHeight + 40
+            )
+            
+            if pillFrame.contains(location) {
+                highlightedAnswer = val
+                break
+            }
         }
-
-        guard let chosen = chosenPosition else {
-            dragOffset = .zero
+    }
+    
+    private func handleSwipeWithPills(location: CGPoint, geo: GeometryProxy, currentDragOffset: CGSize, geoSize: CGSize) {
+        // Make it more forgiving - use swipe direction and minimum threshold
+        let minSwipeThreshold: CGFloat = 40
+        let upwardThreshold: CGFloat = -30 // How far up to trigger answer selection
+        
+        // Check if we have enough swipe motion
+        let swipeMagnitude = sqrt(currentDragOffset.width * currentDragOffset.width + currentDragOffset.height * currentDragOffset.height)
+        
+        guard swipeMagnitude >= minSwipeThreshold else {
+            // Not enough swipe - bounce back
+            animateWrongAnswer()
             return
         }
-
-        let selectedAnswer: Int
-        switch chosen {
-        case .left:  selectedAnswer = game.answers[safe: 0] ?? Int.min
-        case .top:   selectedAnswer = game.answers[safe: 1] ?? Int.min
-        case .right: selectedAnswer = game.answers[safe: 2] ?? Int.min
-        }
-
-        if game.checkAnswer(selected: selectedAnswer) {
-            flash(correct: true, selectedAnswer: selectedAnswer)
-            withAnimation(.easeInOut(duration: 0.25)) {
-                dragOffset = offsetForDirection(chosen)
-            }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.28) {
-                dragOffset = .zero
-                game.newQuestion()
+        
+        // Determine answer based on swipe direction (more forgiving)
+        var selectedAnswer: Int?
+        
+        if currentDragOffset.height <= upwardThreshold {
+            // Swiping upward enough - determine which pill based on horizontal direction
+            let pillWidth: CGFloat = min(geo.size.width * 0.25, 120)
+            let spacing: CGFloat = 10
+            let totalPillsWidth = pillWidth * 3 + spacing * 2
+            
+            // Create wider zones for each pill
+            let leftZoneEnd = -(totalPillsWidth / 3)
+            let rightZoneStart = (totalPillsWidth / 3)
+            
+            if currentDragOffset.width <= leftZoneEnd {
+                selectedAnswer = game.answers[safe: 0] // Left pill
+            } else if currentDragOffset.width >= rightZoneStart {
+                selectedAnswer = game.answers[safe: 2] // Right pill
+            } else {
+                selectedAnswer = game.answers[safe: 1] // Center pill
             }
         } else {
-            flash(correct: false, selectedAnswer: selectedAnswer)
-            withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                dragOffset = .zero
+            // Not swiping up enough, but check if we're still over a highlighted pill
+            selectedAnswer = highlightedAnswer
+        }
+        
+        guard let selectedValue = selectedAnswer else {
+            // No valid selection - bounce back
+            animateWrongAnswer()
+            return
+        }
+        
+        if game.checkAnswer(selected: selectedValue) {
+            // Correct answer - fly away
+            animateCorrectAnswer(dragOffset: currentDragOffset, geoSize: geoSize)
+            flash(correct: true, selectedAnswer: selectedValue)
+            
+            // Delay the new question until animation completes
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.9) {
+                game.newQuestion()
+                resetCardAnimation()
             }
+        } else {
+            // Wrong answer - bounce back
+            animateWrongAnswer()
+            flash(correct: false, selectedAnswer: selectedValue)
         }
     }
-
-    private func offsetForDirection(_ pos: AnswerPosition) -> CGSize {
-        switch pos {
-        case .left:  return CGSize(width: -320, height: 0)
-        case .top:   return CGSize(width: 0, height: -320)
-        case .right: return CGSize(width: 320, height: 0)
+    
+    // MARK: - Animation Methods
+    private func animateCorrectAnswer(dragOffset: CGSize, geoSize: CGSize) {
+        isAnimatingCorrect = true
+        
+        // Calculate direction to fly offscreen
+        let magnitude = sqrt(dragOffset.width * dragOffset.width + dragOffset.height * dragOffset.height)
+        let normalizedX = magnitude > 0 ? dragOffset.width / magnitude : 0.0
+        let normalizedY = magnitude > 0 ? dragOffset.height / magnitude : -1.0
+        
+        // Fly offscreen in the drag direction
+        let flyDistance: CGFloat = max(geoSize.width, geoSize.height) + 200
+        finalOffset = CGSize(
+            width: normalizedX * flyDistance,
+            height: normalizedY * flyDistance
+        )
+        
+        // Use smoother, slower animations
+        withAnimation(.easeOut(duration: 0.8)) {
+            // Move the card offscreen
+        }
+        
+        // Slightly delay and animate the scaling/opacity for better effect
+        withAnimation(.easeInOut(duration: 0.6).delay(0.1)) {
+            cardScale = 0.4
+        }
+        
+        withAnimation(.easeOut(duration: 0.7).delay(0.2)) {
+            cardOpacity = 0.0
         }
     }
-
-    // MARK: - Flash helper (kept)
-
+    
+    private func animateWrongAnswer() {
+        // Bounce back to center
+        withAnimation(.spring(response: 0.4, dampingFraction: 0.6)) {
+            dragOffset = .zero
+        }
+    }
+    
+    private func resetCardAnimation() {
+        isAnimatingCorrect = false
+        finalOffset = .zero
+        dragOffset = .zero
+        cardOpacity = 1.0
+        cardScale = 1.0
+    }
+    
+    // MARK: - Flash
     private func flash(correct: Bool, selectedAnswer: Int) {
         let color: Color = correct ? .green : .red
-
         flashCardColor = color
         circleFlashColors[selectedAnswer] = color
-
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
             withAnimation(.easeInOut(duration: 0.25)) {
                 flashCardColor = .white
@@ -327,35 +422,19 @@ struct FlashdanceGameView: View {
             }
         }
     }
-
-    // MARK: - Answer Circles
-
-    private func answerCircle(_ value: Int) -> some View {
-        Text("\(value)")
-            .font(.system(size: 20, weight: .bold))
-            .foregroundColor(.black)
-            .frame(width: 50, height: 50)
-            .background(circleFlashColors[value] ?? Color.white.opacity(0.9))
-            .clipShape(Circle())
-            .overlay(Circle().stroke(Color.black, lineWidth: 1))
-            .shadow(radius: 2)
-            .accessibilityLabel(Text("Answer \(value)"))
-    }
-
+    
     // MARK: - Start control
-
     private func startRound() {
         guard !hasStartedRound else { return }
         hasStartedRound = true
         game.startGame()
     }
-
+    
     private func startNewGame() {
         showEndGameOverlay = false
         hasStartedRound = false
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            startRound()
-        }
+        resetCardAnimation() // Reset animation state for new game
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { startRound() }
     }
 }
 
@@ -365,7 +444,7 @@ private struct Scoreboard: View {
     let correct: Int
     let incorrect: Int
     let streak: Int
-
+    
     var body: some View {
         VStack(spacing: 10) {
             HStack(spacing: 12) {
@@ -397,14 +476,14 @@ private struct StatPill: View {
     let title: String
     let value: String
     var emphasize: Emphasis? = nil
-
+    
     var body: some View {
         VStack(spacing: 4) {
             Text(title.uppercased())
                 .font(.system(size: 10, weight: .semibold, design: .rounded))
                 .foregroundColor(.white.opacity(0.9))
                 .kerning(1)
-
+            
             Text(value)
                 .font(.system(size: 22, weight: .heavy, design: .rounded))
                 .foregroundColor(.white)
@@ -421,7 +500,7 @@ private struct StatPill: View {
         )
         .shadow(color: .black.opacity(0.35), radius: 6, x: 0, y: 3)
     }
-
+    
     private var backgroundColor: Color {
         switch emphasize {
         case .green: return Color.green.opacity(0.35)
@@ -429,10 +508,8 @@ private struct StatPill: View {
         case .none:  return Color.white.opacity(0.10)
         }
     }
-
 }
 
-// Safe subscript so we don't crash
 extension Collection {
     subscript(safe index: Index) -> Element? {
         indices.contains(index) ? self[index] : nil

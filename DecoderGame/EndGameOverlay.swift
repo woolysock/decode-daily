@@ -118,7 +118,7 @@ struct EndGameOverlay: View {
             
         case "flashdance":
             guard let flashProps = gameScore.flashdanceProperties else { return nil }
-            return "Correct: \(flashProps.correctAnswers) • Wrong: \(flashProps.incorrectAnswers) • Best Streak: \(flashProps.longestStreak)"
+            return "Correct: \(flashProps.correctAnswers) • Wrong: \(flashProps.incorrectAnswers)\nBest Streak: \(flashProps.longestStreak)"
             
         case "anagrams":
             guard let theseProps = gameScore.anagramsProperties else { return nil }
