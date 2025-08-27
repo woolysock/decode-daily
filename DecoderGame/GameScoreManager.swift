@@ -24,7 +24,8 @@ struct DecodeAdditionalProperties: Codable {
 
 struct AnagramsAdditionalProperties: Codable {
     let gameDuration: TimeInterval // Duration of the game
-    let longestWord: Int         // not used anywhere yet
+    let longestWord: Int
+    let totalWordsInSet: Int
 }
 
 // MARK: - Enhanced GameScore with additional properties
@@ -116,16 +117,15 @@ struct GameScore: Codable, Identifiable, Equatable {
         switch gameId {
         case "flashdance":
             guard let props = flashdanceProperties else { return nil }
-            return "Correct: \(props.correctAnswers) • Wrong: \(props.incorrectAnswers) • Best Streak: \(props.longestStreak)"
+            return "Correct: \(props.correctAnswers) • Wrong: \(props.incorrectAnswers)\nBest Streak: \(props.longestStreak)"
             
         case "decode":
             guard let props = decodeProperties else { return nil }
-            return "Turns: \(props.turnsToSolve)/7 • Code Length: \(props.codeLength) • Time: \(formatDuration(props.gameDuration))"
+            return "Turns: \(props.turnsToSolve)/7\nCode Length: \(props.codeLength) • Time: \(formatDuration(props.gameDuration))"
             
         case "anagrams":
-            //guard let props = anagramsProperties else { return nil }
-            return "Nailed it!"
-            
+            guard let props = anagramsProperties else { return nil }
+            return "Longest word: \(props.longestWord)\n Total possible words: \(props.totalWordsInSet)"
         default:
             return nil
         }
@@ -174,6 +174,33 @@ class GameScoreManager: ObservableObject {
     }
     
     // MARK: - Convenience Save Methods for Specific Games
+    
+    /// Save an Anagrams score with additional properties
+    func saveAnagramsScore(
+        date: Date = Date(),
+        attempts: Int,
+        timeElapsed: TimeInterval,
+        finalScore: Int,
+        gameDuration: TimeInterval, // Duration of the game
+        longestWord: Int,
+        totalWordsInSet: Int
+    ) {
+        let additionalProps = AnagramsAdditionalProperties(
+            gameDuration: gameDuration,
+            longestWord: longestWord,
+            totalWordsInSet: totalWordsInSet
+        )
+        let score = GameScore(
+            gameId: "anagrams",
+            date: date,
+            attempts: attempts,
+            timeElapsed: timeElapsed,
+            won: true, // Anagrams is always a "win" when completed
+            finalScore: finalScore,
+            additionalProperties: additionalProps
+        )
+        saveScore(score)
+    }
     
     /// Save a Flashdance score with additional properties
     func saveFlashdanceScore(
@@ -235,6 +262,7 @@ class GameScoreManager: ObservableObject {
         saveScore(score)
     }
 
+    
     // Get scores for a specific game
     func getScores(for gameId: String) -> [GameScore] {
         let filteredScores = allScores

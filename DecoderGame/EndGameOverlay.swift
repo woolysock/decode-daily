@@ -107,12 +107,12 @@ struct EndGameOverlay: View {
         
         switch gameID {
         case "decode":
-            print("🔍 DEBUG: In decode case")
+            //print("🔍 DEBUG: In decode case")
             guard let decodeProps = gameScore.decodeProperties else {
                 print("🔍 DEBUG: decodeProps is nil")
                 return nil
             }
-            print("🔍 DEBUG: decodeProps = \(decodeProps)")
+           // print("🔍 DEBUG: decodeProps = \(decodeProps)")
             let formattedTime = formatDuration(decodeProps.gameDuration)
             return "Turns: \(decodeProps.turnsToSolve)/7 • Time: \(formattedTime) • Code Length: \(decodeProps.codeLength)"
             
@@ -122,10 +122,10 @@ struct EndGameOverlay: View {
             
         case "anagrams":
             guard let theseProps = gameScore.anagramsProperties else { return nil }
-            return "Longest Word: \(theseProps.longestWord)"
+            return "Longest Word: \(theseProps.longestWord)\nPossible words:\(theseProps.totalWordsInSet)"
             
         default:
-            print("🔍 DEBUG: In default case")
+            //print("🔍 DEBUG: In default case")
             return "Good Job!"
         }
     }

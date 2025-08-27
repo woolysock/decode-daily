@@ -6,11 +6,13 @@
 //
 
 import SwiftUI
+import Combine
 
 struct AnagramsGameView: View {
-    @StateObject private var game = AnagramsGame(scoreManager: GameScoreManager.shared)
+    @ObservedObject private var wordsetManager = DailyWordsetManager.shared
     @EnvironmentObject var scoreManager: GameScoreManager
     @Environment(\.dismiss) private var dismiss
+    @StateObject private var game = GameContainer()
     
     @State private var showHowToPlay = false
     @State private var showEndGameOverlay = false
@@ -23,7 +25,7 @@ struct AnagramsGameView: View {
     private let instructionsText = """
     Race against the clock to unscramble as many words as you can!
     
-    Each turn, a new set of scrambled letters will appear. Tap a letter to spell out the correct word in the boxes above.
+    Each day brings a fresh set of words to challenge you. Tap a letter to spell out the correct word in the boxes above.
     
     O R W D  →  W O R D 
 
@@ -38,189 +40,329 @@ struct AnagramsGameView: View {
                 ZStack {
                     Color.black.ignoresSafeArea()
                     
-                    VStack(spacing: 0) {
-                    Spacer().frame(height:5)
-                    
-                    // Title + Timer + Help button
-                    HStack {
-                        Text(game.gameInfo.displayName)
-                            .foregroundColor(.white)
-                            .font(.custom("LuloOne-Bold", size: 20))
-                            .onTapGesture { startRound() }
-
-                        Spacer()
-
-                        // Top-center game clock
-                        Group {
-                            if game.isGameActive {
-                                Text("\(game.gameTimeRemaining)")
-                                    .font(.custom("LuloOne-Bold", size: 20))
-                                    .foregroundColor(.white)
-                                    .monospacedDigit()
-                                    .frame(minWidth: 54, alignment: .center)
-                                    .transition(.opacity)
-                            } else {
-                                Text(" ")
-                                    .font(.custom("LuloOne-Bold", size: 20))
-                                    .frame(minWidth: 54)
-                                    .opacity(0)
-                            }
-                        }
-
-                        Spacer()
-
-                        Button { showHowToPlay = true } label: {
-                            Image(systemName: "questionmark.circle")
-                                .foregroundColor(.white)
-                                .font(.title2)
-                        }
-                    }
-                    .padding(.horizontal, 20)
-                    
-                    Divider().background(.white).padding(5)
-                    
-                    Spacer().frame(height: 10)
-                    
-                    // Status text + symbol
-                    VStack(spacing: 5) {
-                        Text(game.statusText)
-                            .foregroundColor(.white)
-                            .font(.custom("LuloOne", size: 12))
-                            .multilineTextAlignment(.center)
-                            .padding(.horizontal, 20)
-                            .padding(.vertical, 4)
-
-                        if game.statusText.contains("Wrong") {
-                            Image(systemName: "wrongwaysign.fill")
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: 20, height: 20)
-                                .foregroundColor(.red)
-                        } else if game.statusText.contains("Correct"){
-                            Image(systemName: "checkmark.seal.fill")
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: 20, height: 20)
-                                .foregroundColor(Color.myAccentColor1)
-                        } else if game.statusText.contains("Unscramble"){
-                            Image(systemName: "shuffle.circle.fill")
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: 20, height: 20)
-                                .foregroundColor(.white)
+                    Group {
+                        if let anagramsGame = game.anagramsGame {
+                            gameContent(with: anagramsGame)
                         } else {
-                            Image(systemName: "shuffle.circle.fill")
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: 20, height: 20)
-                                .foregroundColor(.clear)
+                            ProgressView("Loading game...")
+                                .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                .scaleEffect(2.0)
                         }
                     }
-                    
-                    // === GAME BOARD ===
-                    ZStack {
-                        Color.black.ignoresSafeArea()
-                        VStack(spacing: 30) {
-                            if game.isPreCountdownActive {
-                                Text("\(game.countdownValue)")
-                                    .font(.custom("LuloOne-Bold", size: 100))
-                                    .foregroundColor(.white)
-                                    .monospacedDigit()
-                                    .scaleEffect(1.05)
-                                    .transition(.scale)
-                            } else if game.isGameActive {
-                                Spacer().frame(height:5)
-                                gameArea
-                                Spacer()
-                            }
-                        }
-                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
-                        .padding([.leading, .trailing, .bottom], 20)
+                    .onAppear {
+                        initializeGame()
                     }
-                    
-                    Spacer()
-                }
-                .onAppear {
-                    if UserDefaults.standard.bool(forKey: "hasSeenHowToPlay_anagrams") {
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                            startRound()
-                        }
-                    } else {
-                        showHowToPlay = true
-                    }
-                }
-                // UPDATED: Pause/resume game when overlay shows/hides
-                .onChange(of: showHowToPlay, initial: false) { oldValue, newValue in
-                    if newValue {
-                        // Overlay is showing - pause the game
-                        game.pauseGame()
-                    } else {
-                        // Overlay is hiding - resume the game
-                        game.resumeGame()
-                        
-                        // Start only AFTER HowTo is dismissed at launch
-                        if !hasStartedRound {
-                            startRound()
-                        }
-                    }
-                }
-                .onChange(of: game.gameOver, initial: false) { oldValue, newValue in
-                    if newValue == 1 {
-                       showEndGameOverlay = true
-                    }
-                }
-                .onChange(of: game.statusText) {
-                    if game.statusText.contains("Correct") {
-                        flashAnswer(correct: true)
-                    } else if game.statusText.contains("Wrong") {
-                        flashAnswer(correct: false)
-                        
-                        // Delay clearing so the red flash is visible
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                            print("Wrong answer detected")
-                            game.usedLetterIndices.removeAll()
-                            game.userAnswer = ""
-                            game.statusText = "Try again."
-                        }
-                    }
-                }
-
                 }
                 .navigationDestination(isPresented: $navigateToHighScores) {
-                    MultiGameLeaderboardView(selectedGameID: game.gameInfo.id)
+                    if let anagramsGame = game.anagramsGame {
+                        MultiGameLeaderboardView(selectedGameID: anagramsGame.gameInfo.id)
+                    }
                 }
             }
             
             // Move overlays outside NavigationStack to root ZStack level
-            if showEndGameOverlay {
-                EndGameOverlay(
-                    gameID: game.gameInfo.id,
-                    finalScore: game.lastScore?.finalScore ?? game.attempts,
-                    displayName: game.gameInfo.displayName,
-                    isVisible: $showEndGameOverlay,
-                    onPlayAgain: { startNewGame() },
-                    onHighScores: { navigateToHighScores = true },
-                    onMenu: {
-                        showEndGameOverlay = false
-                        dismiss()
-                    },
-                    gameScore: game.lastScore   // ✅ now overlay can read longestWord
-                )
-                .transition(.opacity)
-            }
-
-            if showHowToPlay {
-                GeometryReader { geometry in
-                    HowToPlayOverlay(
-                        gameID: game.gameInfo.id,
-                        instructions: instructionsText,
-                        isVisible: $showHowToPlay
+            if let anagramsGame = game.anagramsGame {
+                if showEndGameOverlay {
+                    EndGameOverlay(
+                        gameID: anagramsGame.gameInfo.id,
+                        finalScore: anagramsGame.lastScore?.finalScore ?? anagramsGame.attempts,
+                        displayName: anagramsGame.gameInfo.displayName,
+                        isVisible: $showEndGameOverlay,
+                        onPlayAgain: { startNewGame() },
+                        onHighScores: { navigateToHighScores = true },
+                        onMenu: {
+                            showEndGameOverlay = false
+                            dismiss()
+                        },
+                        gameScore: anagramsGame.lastScore
                     )
-                    .frame(width: geometry.size.width, height: geometry.size.height)
-                    .position(x: geometry.size.width / 2, y: geometry.size.height / 2)
+                    .transition(.opacity)
                 }
-                .ignoresSafeArea(.all)
-                .transition(.opacity)
+
+                if showHowToPlay {
+                    GeometryReader { geometry in
+                        HowToPlayOverlay(
+                            gameID: anagramsGame.gameInfo.id,
+                            instructions: instructionsText,
+                            isVisible: $showHowToPlay
+                        )
+                        .frame(width: geometry.size.width, height: geometry.size.height)
+                        .position(x: geometry.size.width / 2, y: geometry.size.height / 2)
+                    }
+                    .ignoresSafeArea(.all)
+                    .transition(.opacity)
+                }
+            }
+        }
+    }
+    
+    // MARK: - Initialization
+    private func initializeGame() {
+        print("🔧 Initializing game...")
+        
+        if game.anagramsGame == nil {
+            game.anagramsGame = AnagramsGame(scoreManager: scoreManager)
+        }
+        
+        print("📊 WordsetManager Status:")
+        print("   - currentWordset: \(wordsetManager.currentWordset?.words.count ?? 0) words")
+        print("   - isGeneratingWordsets: \(wordsetManager.isGeneratingWordsets)")
+        
+        // Show how to play or start game
+        if UserDefaults.standard.bool(forKey: "hasSeenHowToPlay_anagrams") {
+            // If we already have a wordset, start immediately
+            if wordsetManager.currentWordset != nil && !wordsetManager.isGeneratingWordsets {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    tryToStartGame()
+                }
+            }
+            // Otherwise, the onChange handler will start the game when the wordset loads
+        } else {
+            showHowToPlay = true
+        }
+    }
+    
+    private func tryToStartGame() {
+        guard !hasStartedRound,
+              let anagramsGame = game.anagramsGame,
+              wordsetManager.currentWordset != nil,
+              !wordsetManager.isGeneratingWordsets else {
+            print("❌ Cannot start game yet - conditions not met")
+            return
+        }
+        
+        print("✅ Starting game...")
+        hasStartedRound = true
+        anagramsGame.startGame()
+    }
+    
+    @ViewBuilder
+    private func gameContent(with anagramsGame: AnagramsGame) -> some View {
+        
+        //DEBUG TEXT
+        //        let _ = print("🖥️ UI Update - gameContent called")
+        //        let _ = print("   - isPreCountdownActive: \(anagramsGame.isPreCountdownActive)")
+        //        let _ = print("   - isGameActive: \(anagramsGame.isGameActive)")
+        //        let _ = print("   - countdownValue: \(anagramsGame.countdownValue)")
+        //        let _ = print("   - statusText: '\(anagramsGame.statusText)'")
+        
+        VStack(spacing: 0) {
+            Spacer().frame(height:5)
+            
+            // Title + Timer + Help button
+            HStack {
+                Spacer().frame(width: 5)
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(anagramsGame.gameInfo.displayName)
+                        .foregroundColor(.white)
+                        .font(.custom("LuloOne-Bold", size: 20))
+                        .onTapGesture { tryToStartGame() }
+                    
+                    // Daily indicator
+                    if wordsetManager.currentWordset != nil {
+                        Text("Daily Challenge")
+                            .foregroundColor(.gray)
+                            .font(.custom("LuloOne", size: 10))
+                    }
+                }
+
+                Spacer()
+
+                // Top-center game clock
+                Group {
+                    if anagramsGame.isGameActive {
+                        Text("\(anagramsGame.gameTimeRemaining)")
+                            .font(.custom("LuloOne-Bold", size: 20))
+                            .foregroundColor(.white)
+                            .monospacedDigit()
+                            .frame(minWidth: 54, alignment: .center)
+                            .transition(.opacity)
+                    } else {
+                        Text(" ")
+                            .font(.custom("LuloOne-Bold", size: 20))
+                            .frame(minWidth: 54)
+                            .opacity(0)
+                    }
+                }
+
+                Spacer()
+
+                Button { showHowToPlay = true } label: {
+                    Image(systemName: "questionmark.circle")
+                        .foregroundColor(.white)
+                        .font(.title2)
+                }
+            }
+            .padding(.horizontal, 20)
+            
+            Spacer().frame(height:5)
+            
+            Divider().background(.white).padding(5)
+            
+            Spacer().frame(height: 10)
+            
+            // Status text + symbol + wordset loading indicator
+            VStack(spacing: 5) {
+                if wordsetManager.isGeneratingWordsets {
+                    HStack(spacing: 8) {
+                        ProgressView()
+                            .scaleEffect(0.8)
+                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                        
+                        Text("Loading today's words...")
+                            .foregroundColor(.white)
+                            .font(.custom("LuloOne", size: 12))
+                    }
+                } else {
+                    Text(anagramsGame.statusText)
+                        .foregroundColor(.white)
+                        .font(.custom("LuloOne", size: 12))
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 4)
+                }
+
+                if anagramsGame.statusText.contains("Wrong") {
+                    Image(systemName: "wrongwaysign.fill")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 20, height: 20)
+                        .foregroundColor(.red)
+                } else if anagramsGame.statusText.contains("Correct"){
+                    Image(systemName: "checkmark.seal.fill")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 20, height: 20)
+                        .foregroundColor(Color.myAccentColor1)
+                } else if anagramsGame.statusText.contains("Unscramble") || anagramsGame.statusText.contains("Loading") || anagramsGame.statusText.contains("Get ready") {
+                    Image(systemName: "shuffle.circle.fill")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 20, height: 20)
+                        .foregroundColor(wordsetManager.isGeneratingWordsets ? .gray : .white)
+                } else {
+                    Image(systemName: "shuffle.circle.fill")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 20, height: 20)
+                        .foregroundColor(.clear)
+                }
+            }
+            
+            // === GAME BOARD ===
+            ZStack {
+                Color.black.ignoresSafeArea()
+                VStack(spacing: 30) {
+                    //let _ = print("🎮 UI Condition Check - isPreCountdownActive: \(anagramsGame.isPreCountdownActive), isGameActive: \(anagramsGame.isGameActive)")
+                    
+                    if anagramsGame.isPreCountdownActive {
+                        //let _ = print("   → UI showing countdown")
+                        Text("\(anagramsGame.countdownValue)")
+                            .font(.custom("LuloOne-Bold", size: 100))
+                            .foregroundColor(.white)
+                            .monospacedDigit()
+                            .scaleEffect(1.05)
+                            .transition(.scale)
+                    } else if anagramsGame.isGameActive {
+                        //let _ = print("   → UI should show game area")
+                        Spacer().frame(height:5)
+                        gameArea(with: anagramsGame)
+                        Spacer()
+                    } else if wordsetManager.isGeneratingWordsets {
+                        //let _ = print("   → UI showing wordset loading")
+                        VStack(spacing: 20) {
+                            ProgressView()
+                                .scaleEffect(2.0)
+                                .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                            
+                            Text("Preparing today's challenge...")
+                                .font(.custom("LuloOne", size: 16))
+                                .foregroundColor(.white)
+                        }
+                    } else {
+                        //let _ = print("   → UI showing default state")
+                        // Show a default state with instructions
+                        VStack(spacing: 20) {
+                            Text("Tap the title to start!")
+                                .font(.custom("LuloOne", size: 16))
+                                .foregroundColor(.white.opacity(0.7))
+                        }
+                    }
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+                .padding([.leading, .trailing, .bottom], 20)
+            }
+            
+            Spacer()
+        }
+        // FIXED: Watch for wordset changes and try to start game
+        .onChange(of: wordsetManager.currentWordset) { oldValue, newValue in
+            print("📝 wordsetManager.currentWordset changed:")
+            print("   - New wordset: \(newValue?.words.count ?? 0) words")
+            print("   - hasStartedRound: \(hasStartedRound)")
+            
+            if !hasStartedRound && newValue != nil && !wordsetManager.isGeneratingWordsets {
+                // If how-to-play is not showing, start the game
+                if !showHowToPlay {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                        tryToStartGame()
+                    }
+                }
+            }
+        }
+        
+        // FIXED: Watch for generation completion
+        .onChange(of: wordsetManager.isGeneratingWordsets) { oldValue, newValue in
+            print("📝 isGeneratingWordsets changed: \(oldValue) → \(newValue)")
+            
+            // If generation just finished and we have a wordset, try to start
+            if oldValue == true && newValue == false &&
+               !hasStartedRound &&
+               wordsetManager.currentWordset != nil &&
+               !showHowToPlay {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    tryToStartGame()
+                }
+            }
+        }
+        
+        // UPDATED: Pause/resume game when overlay shows/hides
+        .onChange(of: showHowToPlay, initial: false) { oldValue, newValue in
+            if newValue {
+                // Overlay is showing - pause the game
+                anagramsGame.pauseGame()
+            } else {
+                // Overlay is hiding - resume the game
+                anagramsGame.resumeGame()
+                
+                // Start game if conditions are right
+                if !hasStartedRound &&
+                   wordsetManager.currentWordset != nil &&
+                   !wordsetManager.isGeneratingWordsets {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                        tryToStartGame()
+                    }
+                }
+            }
+        }
+        .onChange(of: anagramsGame.gameOver, initial: false) { oldValue, newValue in
+            if newValue == 1 {
+                showEndGameOverlay = true
+            }
+        }
+        .onChange(of: anagramsGame.statusText) { oldValue, newValue in
+            if newValue.contains("Correct") {
+                flashAnswer(correct: true)
+            } else if newValue.contains("Wrong") {
+                flashAnswer(correct: false)
+                
+                // Delay clearing so the red flash is visible
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    print("Wrong answer detected")
+                    anagramsGame.usedLetterIndices.removeAll()
+                    anagramsGame.userAnswer = ""
+                    anagramsGame.statusText = "Try again."
+                }
             }
         }
     }
@@ -237,7 +379,7 @@ struct AnagramsGameView: View {
             Text(isUsed ? "" : letter)
                 .font(.custom("LuloOne-Bold", size: 20))
                 .foregroundColor(.black)
-                .frame(width: isScrambled ? 60 : 45, height: isScrambled ? 60 : 45)
+                .frame(width: isScrambled ? 60 : 35, height: isScrambled ? 60 : 35)
                 .background(
                     (flashColor != nil ? flashColor! :
                         (isUsed ? Color.gray.opacity(0.3) :
@@ -256,21 +398,21 @@ struct AnagramsGameView: View {
                 .shadow(radius: isUsed ? 1 : 2)
                 .animation(.easeInOut(duration: 0.3), value: flashColor)
         }
-        .disabled(!game.isGameActive || game.isGamePaused || isUsed)  // UPDATED: Also disable when paused
+        .disabled(!game.anagramsGame!.isGameActive || game.anagramsGame!.isGamePaused || isUsed || wordsetManager.isGeneratingWordsets)
     }
     
     // MARK: - Scrambled Letters Grid
-    private var scrambledLettersGrid: some View {
-        let columns = Array(repeating: GridItem(.fixed(60), spacing: 5), count: 5)
+    private func scrambledLettersGrid(with anagramsGame: AnagramsGame) -> some View {
+        let columns = Array(repeating: GridItem(.flexible(minimum: 50), spacing: 10), count: 4)
         
-        return LazyVGrid(columns: columns, spacing: 5) {
-            ForEach(0..<game.scrambledLetters.count, id: \.self) { index in
+        return LazyVGrid(columns: columns, spacing: 10) { // vertical spacing = 10
+            ForEach(0..<anagramsGame.scrambledLetters.count, id: \.self) { index in
                 letterButton(
-                    game.scrambledLetters[index],
+                    anagramsGame.scrambledLetters[index],
                     isScrambled: true,
-                    isUsed: game.usedLetterIndices.contains(index)
+                    isUsed: anagramsGame.usedLetterIndices.contains(index)
                 ) {
-                    game.selectLetter(at: index)
+                    anagramsGame.selectLetter(at: index)
                 }
             }
         }
@@ -278,12 +420,29 @@ struct AnagramsGameView: View {
     }
     
     // MARK: - Game Area
-    private var gameArea: some View {
+    private func gameArea(with anagramsGame: AnagramsGame) -> some View {
         VStack(spacing: 15) {
-            if game.isGameActive {
-                Text("Score: \(game.attempts)")
-                    .font(.custom("LuloOne-Bold", size: 16))
-                    .foregroundColor(.white)
+            if anagramsGame.isGameActive {
+                
+//                let _ = print("   → gameArea: isGameActive")
+//                let _ = print("anagramsGame.userAnswer.isEmpty: \(anagramsGame.userAnswer.isEmpty), anagramsGame.isGamePaused: \(anagramsGame.isGamePaused), wordsetManager.isGeneratingWordsets: \(wordsetManager.isGeneratingWordsets)")
+                
+                HStack {
+                    Text("Score: \(anagramsGame.attempts)")
+                        .font(.custom("LuloOne-Bold", size: 16))
+                        .foregroundColor(.white)
+                    
+                    Spacer()
+                    
+                    // Show progress through daily words
+                    
+                    if let wordset = wordsetManager.currentWordset {
+                        //let _ = print("   → gameArea: using wordset \(wordsetManager.currentWordset?.words ?? [])")
+                        Text("\(anagramsGame.currentWordIndex + 1) of \(wordset.words.count)")
+                            .font(.custom("LuloOne", size: 12))
+                            .foregroundColor(.gray)
+                    }
+                }
             }
             
             Spacer().frame(height: 20)
@@ -294,36 +453,39 @@ struct AnagramsGameView: View {
                     .font(.custom("LuloOne", size: 14))
                     .foregroundColor(.white)
                 
+                //let _ = print("anagramsGame.userAnswer.count: \(anagramsGame.userAnswer.count) - \(anagramsGame.userAnswer)")
+                
                 HStack(spacing: 5) {
-                    ForEach(0..<game.userAnswer.count, id: \.self) { index in
+                    ForEach(0..<anagramsGame.userAnswer.count, id: \.self) { index in
                         let letter = String(
-                            game.userAnswer[game.userAnswer.index(game.userAnswer.startIndex, offsetBy: index)]
+                            anagramsGame.userAnswer[anagramsGame.userAnswer.index(anagramsGame.userAnswer.startIndex, offsetBy: index)]
                         )
-//                        let _ = print("\(letter)") // ✅ allowed in ViewBuilder
                         letterButton(letter, isScrambled: false, isUsed: false, flashColor: answerFlashColor) {
-                            game.removeLetter(at: index)
+                            anagramsGame.removeLetter(at: index)
                         }
                     }
                     
-                    ForEach(game.userAnswer.count..<game.currentWord.count, id: \.self) { _ in
-                        Rectangle()
+                    // Show empty boxes for remaining letters - make them smaller for long words
+                    ForEach(anagramsGame.userAnswer.count..<anagramsGame.currentWord.count, id: \.self) { _ in
+                        //let boxSize: CGFloat = anagramsGame.currentWord.count > 6 ? 35 : 45
+                                                Rectangle()
                             .fill(Color.white.opacity(0.3))
-                            .frame(width: 45, height: 45)
+                            .frame(width: 35, height: 35)
                             .cornerRadius(0)
                     }
                 }
                 .frame(minHeight: 55)
                 
                 Button("Clear all") {
-                    game.clearAnswer()
+                    anagramsGame.clearAnswer()
                 }
                 .font(.custom("LuloOne", size: 12))
-                .foregroundColor(game.userAnswer.isEmpty ? .gray : .white)
+                .foregroundColor(anagramsGame.userAnswer.isEmpty ? .gray : .white)
                 .padding(.horizontal, 20)
                 .padding(.vertical, 8)
-                .background(game.userAnswer.isEmpty ? Color.gray.opacity(0.3) : Color.red.opacity(0.7))
+                .background(anagramsGame.userAnswer.isEmpty ? Color.gray.opacity(0.3) : Color.red.opacity(0.7))
                 .cornerRadius(8)
-                .disabled(game.userAnswer.isEmpty || game.isGamePaused)  // UPDATED: Also disable when paused
+                .disabled(anagramsGame.userAnswer.isEmpty || anagramsGame.isGamePaused || wordsetManager.isGeneratingWordsets)
             }
             
             Spacer().frame(height: 25)
@@ -334,26 +496,25 @@ struct AnagramsGameView: View {
                     .font(.custom("LuloOne", size: 14))
                     .foregroundColor(.white)
                 
-                scrambledLettersGrid
+                scrambledLettersGrid(with: anagramsGame)
             }
             
         }
         .padding(.horizontal, 20)
-        .padding(.vertical, 10)
+        //.padding(.vertical, 10)
     }
     
-    // MARK: - Start Control
-    private func startRound() {
-        guard !hasStartedRound else { return }
-        hasStartedRound = true
-        game.startGame()
-    }
-    
+    // MARK: - Game Control Methods
     private func startNewGame() {
+        guard let anagramsGame = game.anagramsGame else { return }
         showEndGameOverlay = false
         hasStartedRound = false
+        
+        // Reset game state
+        anagramsGame.resetGame()
+        
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            startRound()
+            tryToStartGame()
         }
     }
     
@@ -364,6 +525,22 @@ struct AnagramsGameView: View {
             answerFlashColor = nil
         }
     }
+}
+
+// Container class to hold the AnagramsGame and make it properly observable
+class GameContainer: ObservableObject {
+    @Published var anagramsGame: AnagramsGame? {
+        didSet {
+            // When anagramsGame is set, forward its objectWillChange to our own
+            anagramsGame?.objectWillChange.sink { [weak self] in
+                DispatchQueue.main.async {
+                    self?.objectWillChange.send()
+                }
+            }.store(in: &cancellables)
+        }
+    }
+    
+    private var cancellables = Set<AnyCancellable>()
 }
 
 // Helper struct to allow both Circle and RoundedRectangle in clipShape

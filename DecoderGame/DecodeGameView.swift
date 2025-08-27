@@ -219,10 +219,10 @@ struct DecodeGameView: View {
                 .onChange(of: game.gameOver, initial: false) { oldValue, newValue in
                     if newValue != 0 {
                         
-                        print("🔍 DEBUG: game.gameOver = \(newValue)")
-                        print("🔍 DEBUG: game.lastScore = \(String(describing: game.lastScore))")
-                        print("🔍 DEBUG: game.lastScore?.finalScore = \(String(describing: game.lastScore?.finalScore))")
-                        
+//                        print("🔍 DEBUG: game.gameOver = \(newValue)")
+//                        print("🔍 DEBUG: game.lastScore = \(String(describing: game.lastScore))")
+//                        print("🔍 DEBUG: game.lastScore?.finalScore = \(String(describing: game.lastScore?.finalScore))")
+//                        
                         // Show Code Reveal first
                         showCodeReveal = true
 
