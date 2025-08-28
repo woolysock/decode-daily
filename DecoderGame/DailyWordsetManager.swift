@@ -5,9 +5,6 @@
 //  Manages daily wordsets loaded from a bundled JSON file (DailyWordsets.json).
 //  Falls back to generating a set from a bundled MasterWordList.json (or a small in-code fallback).
 //
-//  - Exposes the same public API your game expects (initializeWordsets(), loadTodaysWordset(),
-//    generateWordsetForDate(_:), markWordsetCompleted(...), getWordset(for:), etc.).
-//
 
 import Foundation
 import Combine
@@ -61,6 +58,21 @@ final class DailyWordsetManager: ObservableObject {
 
     // MARK: - Public API
 
+    /// Call this when a new day is detected to refresh the current wordset
+    func refreshForNewDay() {
+        print("DailyWordsetManager: Refreshing for new day")
+        
+        // Ensure all UI updates happen on main thread
+        DispatchQueue.main.async { [weak self] in
+            // Clear any cached wordset data and reset loading state
+            self?.currentWordset = nil
+            self?.isLoadingTodaysWordset = false
+            
+            // Force regenerate/reload today's wordset
+            self?.loadTodaysWordset()
+        }
+    }
+
     /// Ensures today's wordset is loaded into `currentWordset`.
     func loadTodaysWordset() {
         // Prevent infinite loops from multiple calls
@@ -84,7 +96,6 @@ final class DailyWordsetManager: ObservableObject {
         } else {
             print("🔄 No existing wordset found for today, generating new one...")
             // If not prebuilt in JSON, generate one from master list
-            // This is already async, so no need to wrap it
             generateWordsetForDate(today)
             isLoadingTodaysWordset = false
         }

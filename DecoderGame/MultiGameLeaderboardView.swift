@@ -56,15 +56,19 @@ struct NoScoresView: View {
                 .font(.custom("LuloOne-Bold", size: 12))
                 .foregroundColor(.secondary)
 
+            Spacer()
+                .frame(height:10)
+            
             NavigationLink(destination: gameDestination) {
                 VStack(spacing: 5) {
                     Text("play")
                         .font(.custom("LuloOne-Bold", size: 16))
-                    Text("")
-                        .font(.custom("LuloOne", size: 10))
+                    Text("now")
+                        .font(.custom("LuloOne-Bold", size: 16))
                 }
                 .padding()
                 .frame(height: 60)
+                .frame(width: 220)
                 .background(Color.myAccentColor2)
                 .foregroundColor(.white)
                 .cornerRadius(10)
@@ -97,6 +101,7 @@ struct ScoreRowView: View {
             Spacer()
                 .frame(width: 20)
             VStack(alignment: .leading) {
+                
                 HStack(spacing: 4) {
                     Text(dateOnlyFormatter.string(from: score.date))
                         .font(.custom("LuloOne-Bold", size: 12))
@@ -108,34 +113,47 @@ struct ScoreRowView: View {
                     Text(timeFormatter.string(from: score.date))
                         .font(.custom("LuloOne-Bold", size: 12))
                 }
-
-                Text("\(Int(score.timeElapsed))s game")
-                    .font(.custom("LuloOne", size: 12))
-                    .foregroundColor(.secondary)
                 
                 // CUSTOM SCORE EXTRAS
                 
                 if let flashdanceProps = score.flashdanceProperties {
-                    Text("Longest Streak: \(flashdanceProps.longestStreak)")
-                        .font(.custom("LuloOne", size: 12))
+                    Text("Equations solved: \(flashdanceProps.correctAnswers)")
+                        .font(.custom("LuloOne", size: 10))
                         .foregroundColor(.secondary)
-                    Text("Correct Answers: \(flashdanceProps.correctAnswers)")
-                        .font(.custom("LuloOne", size: 12))
+                    Text("Longest Streak: \(flashdanceProps.longestStreak) in a row")
+                        .font(.custom("LuloOne", size: 10))
                         .foregroundColor(.secondary)
                     Text("Incorrect Answers: \(flashdanceProps.incorrectAnswers)")
-                        .font(.custom("LuloOne", size: 12))
+                        .font(.custom("LuloOne", size: 10))
                         .foregroundColor(.secondary)
                 }
                 
                 if let decodeProps = score.decodeProperties {
                     Text("Guesses: \(decodeProps.turnsToSolve)")
-                        .font(.custom("LuloOne", size: 12))
+                        .font(.custom("LuloOne", size: 10))
                         .foregroundColor(.secondary)
                     Text("Code Size: \(decodeProps.codeLength)")
-                        .font(.custom("LuloOne", size: 12))
+                        .font(.custom("LuloOne", size: 10))
                         .foregroundColor(.secondary)
                 }
-               
+                
+                if let anagramsProps = score.anagramsProperties {
+                    Text("Solved: \(Int(anagramsProps.wordsCompleted)) words")
+                        .font(.custom("LuloOne", size: 10))
+                        .foregroundColor(.black)
+                    Text("  (\(anagramsProps.totalWordsInSet) words possible)")
+                        .font(.custom("LuloOne", size: 12))
+                        .foregroundColor(.secondary)
+                    Text("Longest word solved: \(anagramsProps.longestWord) letters")
+                        .font(.custom("LuloOne", size: 10))
+                        .foregroundColor(.black)
+                    Text("Timer: \(Int(score.timeElapsed)) seconds")
+                        .font(.custom("LuloOne", size: 10))
+                        .foregroundColor(.black)
+                    
+                }
+            
+                Divider()
             }
             Spacer()
             Text("\(score.finalScore)")
@@ -227,4 +245,13 @@ struct MultiGameLeaderboardView: View {
             .tabViewStyle(.page(indexDisplayMode: .never))
         }
     }
+}
+
+extension DateFormatter {
+    static let dayFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MMMM d, yyyy"
+        formatter.timeZone = TimeZone(secondsFromGMT: 0)  // Match the wordset manager
+        return formatter
+    }()
 }

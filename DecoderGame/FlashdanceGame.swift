@@ -121,30 +121,42 @@ class FlashdanceGame: GameProtocol, ObservableObject {
         calculateFinalScore()
         statusText = "Game over!"
         
-        // Wrap extra stats in FlashdanceAdditionalProperties
-        let additionalProps = FlashdanceAdditionalProperties(
-            gameDuration: 30,                 // fixed duration in your game
+//        // Wrap extra stats in FlashdanceAdditionalProperties
+//        let additionalProps = FlashdanceAdditionalProperties(
+//            gameDuration: 30,                 // fixed duration in your game
+//            correctAnswers: correctAttempts,
+//            incorrectAnswers: incorrectAttempts,
+//            longestStreak: maxStreak
+//        )
+        
+        // Create GameScore directly
+//        let final = GameScore(
+//            gameId: "flashdance",
+//            date: Date(),
+//            attempts: correctAttempts + incorrectAttempts,
+//            timeElapsed: 30.0,
+//            won: true,                        // Flashdance is always "completed"
+//            finalScore: totalScore,
+//            additionalProperties: additionalProps
+//        )
+//        
+//        // Assign so EndGameOverlay can use it
+//        lastScore = final
+//        
+//        // Persist to manager if desired
+//        scoreManager.saveScore(final)
+        
+        scoreManager.saveFlashdanceScore(
+            attempts: correctAttempts + incorrectAttempts,
+            timeElapsed: 30.0,
+            finalScore: totalScore,
+            gameDuration: 30,
             correctAnswers: correctAttempts,
             incorrectAnswers: incorrectAttempts,
             longestStreak: maxStreak
         )
+        lastScore = scoreManager.getScores(for: "flashdance").first
         
-        // Create GameScore directly
-        let final = GameScore(
-            gameId: "flashdance",
-            date: Date(),
-            attempts: correctAttempts + incorrectAttempts,
-            timeElapsed: 30.0,
-            won: true,                        // Flashdance is always "completed"
-            finalScore: totalScore,
-            additionalProperties: additionalProps
-        )
-        
-        // Assign so EndGameOverlay can use it
-        lastScore = final
-        
-        // Persist to manager if desired
-        scoreManager.saveScore(final)
         
         print("Score saved successfully: \(totalScore) points")
     }

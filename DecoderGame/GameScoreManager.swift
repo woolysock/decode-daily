@@ -22,11 +22,12 @@ struct DecodeAdditionalProperties: Codable {
     let codeLength: Int           // Number of squares in the code
 }
 
-struct AnagramsAdditionalProperties: Codable {
-    let gameDuration: TimeInterval // Duration of the game
-    let longestWord: Int
-    let totalWordsInSet: Int
-}
+//MOVED TO THE GAME CODE
+//struct AnagramsAdditionalProperties: Codable {
+//    let gameDuration: TimeInterval // Duration of the game
+//    let longestWord: Int
+//    let totalWordsInSet: Int
+//}
 
 // MARK: - Enhanced GameScore with additional properties
 struct GameScore: Codable, Identifiable, Equatable {
@@ -175,33 +176,7 @@ class GameScoreManager: ObservableObject {
     
     // MARK: - Convenience Save Methods for Specific Games
     
-    /// Save an Anagrams score with additional properties
-    func saveAnagramsScore(
-        date: Date = Date(),
-        attempts: Int,
-        timeElapsed: TimeInterval,
-        finalScore: Int,
-        gameDuration: TimeInterval, // Duration of the game
-        longestWord: Int,
-        totalWordsInSet: Int
-    ) {
-        let additionalProps = AnagramsAdditionalProperties(
-            gameDuration: gameDuration,
-            longestWord: longestWord,
-            totalWordsInSet: totalWordsInSet
-        )
-        let score = GameScore(
-            gameId: "anagrams",
-            date: date,
-            attempts: attempts,
-            timeElapsed: timeElapsed,
-            won: true, // Anagrams is always a "win" when completed
-            finalScore: finalScore,
-            additionalProperties: additionalProps
-        )
-        saveScore(score)
-    }
-    
+
     /// Save a Flashdance score with additional properties
     func saveFlashdanceScore(
         date: Date = Date(),

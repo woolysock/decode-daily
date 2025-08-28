@@ -83,13 +83,13 @@ struct EndGameOverlay: View {
     private var scoreText: String {
         switch gameID {
         case "anagrams":
-            return "Words Solved"
+            return "final score"
         case "decode":
-            return "Score"
+            return "score"
         case "numbers":
-            return "Score"
+            return "score"
         case "flashdance":
-            return "Final Score"
+            return "final score"
         default:
             return "Score"
         }
@@ -122,7 +122,7 @@ struct EndGameOverlay: View {
             
         case "anagrams":
             guard let theseProps = gameScore.anagramsProperties else { return nil }
-            return "Longest Word: \(theseProps.longestWord)\nPossible words:\(theseProps.totalWordsInSet)"
+            return "\(theseProps.wordsCompleted) words solved\n\n(\(theseProps.totalWordsInSet) possible words)\n\nlongest word solved:\n\(theseProps.longestWord) letters\n"
             
         default:
             //print("🔍 DEBUG: In default case")
@@ -164,7 +164,7 @@ struct EndGameOverlay: View {
                         .foregroundColor(.white)
                     
                     Text(displayName)
-                        .font(.custom("LuloOne", size: 16))
+                        .font(.custom("LuloOne", size: 18))
                         .foregroundColor(.white.opacity(0.8))
                 }
                 
@@ -174,9 +174,9 @@ struct EndGameOverlay: View {
                 
                 // Score section
                 VStack(spacing: 15) {
-                    VStack(spacing: 5) {
+                    VStack(spacing: 7) {
                         Text(scoreText)
-                            .font(.custom("LuloOne", size: 14))
+                            .font(.custom("LuloOne", size: 16))
                             .foregroundColor(.white.opacity(0.8))
                         
                         Text("\(finalScore)")
@@ -187,15 +187,14 @@ struct EndGameOverlay: View {
                         // NEW: Additional score details
                         if let details = additionalScoreDetails {
                             Text(details)
-                                .font(.custom("LuloOne", size: 10))
-                                .foregroundColor(.white.opacity(0.6))
+                                .font(.custom("LuloOne", size: 12))
+                                .foregroundColor(.white.opacity(0.8))
                                 .multilineTextAlignment(.center)
-                                .padding(.top, 8)
+                                .padding(.top, 6)
                         }
-                        
-                        Text("★ ★ ★")
-                            .font(.custom("LuloOne", size: 16))
-                            .foregroundColor(.white.opacity(0.8))
+//                        Text("★ ★ ★")
+//                            .font(.custom("LuloOne", size: 16))
+//                            .foregroundColor(.white.opacity(0.8))
                     }
                 }
                 

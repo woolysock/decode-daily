@@ -15,6 +15,8 @@ extension Color {
 struct MainMenuView: View {
     
     @EnvironmentObject var scoreManager: GameScoreManager
+    @EnvironmentObject var gameCoordinator: GameCoordinator
+    
     
     let screenHeight = UIScreen.main.bounds.height
     let screenWidth = UIScreen.main.bounds.width
@@ -33,19 +35,31 @@ struct MainMenuView: View {
     private func gameDestination(for gameId: String) -> some View {
         switch gameId {
         case "decode":
-            DecodeGameView().environmentObject(scoreManager)
+            DecodeGameView()
+                .environmentObject(scoreManager)
+                .onAppear { gameCoordinator.setActiveGame("decode") }
+                .onDisappear { gameCoordinator.clearActiveGame() }
         case "numbers":
-            NumbersGameView().environmentObject(scoreManager)
+            NumbersGameView()
+                .environmentObject(scoreManager)
+                .onAppear { gameCoordinator.setActiveGame("numbers") }
+                .onDisappear { gameCoordinator.clearActiveGame() }
         case "flashdance":
-            FlashdanceGameView().environmentObject(scoreManager)
+            FlashdanceGameView()
+                .environmentObject(scoreManager)
+                .onAppear { gameCoordinator.setActiveGame("flashdance") }
+                .onDisappear { gameCoordinator.clearActiveGame() }
         case "anagrams":
-            AnagramsGameView().environmentObject(scoreManager)
+            AnagramsGameView()
+                .environmentObject(scoreManager)
+                .onAppear { gameCoordinator.setActiveGame("anagrams") }
+                .onDisappear { gameCoordinator.clearActiveGame() }
         default:
             EmptyView()
         }
     }
     
-        
+    
     // Helper function to calculate 3D tilt based on drag position
     private func calculateTilt(dragValue: DragGesture.Value, buttonWidth: CGFloat, buttonHeight: CGFloat) -> (x: Double, y: Double) {
         let maxTilt: Double = 3.0 // Much more subtle tilt in degrees
@@ -230,7 +244,12 @@ struct MainMenuView: View {
                 GeometryReader { geo in
                     VStack(spacing: 25) {
                         Spacer()
-                            .frame(height : 40)
+                            .frame(height : 30)
+                        
+                        Text(DateFormatter.dayFormatter.string(from: Date()))
+                            .font(.custom("LuloOne-Bold", size: 10))
+                            .foregroundColor(Color.myAccentColor1)
+                        
                         //game title header
                         VStack (spacing: 5){
                             Text(" DECODE!")
@@ -239,6 +258,8 @@ struct MainMenuView: View {
                             Text("DAILY")
                                 .font(.custom("LuloOne-Bold", size: 24))
                                 .foregroundColor(.white)
+                            Spacer()
+                                .frame(height: 2)
                             Text("Just Puzzles. No Distractions.")
                                 .font(.custom("LuloOne", size: 10))
                                 .foregroundColor(.white)
@@ -247,13 +268,13 @@ struct MainMenuView: View {
                         .frame(width: (screenWidth))
                         
                         Spacer()
-                            .frame(height: 10)
-                    
+                            .frame(height: 7)
+                        
                         // Dynamic game buttons from GameInfo array with tilt effect
                         ForEach(GameInfo.availableGames.filter { $0.isAvailable }, id: \.id) { gameInfo in
                             tiltableGameButton(for: gameInfo)
                         }
-                      
+                        
                         Spacer()
                             .frame(height: 5)
                         
@@ -272,4 +293,5 @@ struct MainMenuView: View {
         .navigationTitle("return to the main menu")
         .tint(Color.myAccentColor1)
     }
+    
 }

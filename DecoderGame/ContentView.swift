@@ -9,13 +9,17 @@ import SwiftUI
 
 struct ContentView: View {
     @State private var isLoading = true
-
-        var body: some View {
+    @StateObject private var gameCoordinator = GameCoordinator()
+    @StateObject private var dailyCheckManager = DailyCheckManager.shared
+    
+    var body: some View {
+        ZStack {
             Group {
                 if isLoading {
                     LoadingView() //custom load screen goes here
                 } else {
-                    MainMenuView() // app content
+                    MainMenuView()
+                        .environmentObject(gameCoordinator)
                 }
             }
             .onAppear {
@@ -23,10 +27,27 @@ struct ContentView: View {
                     isLoading = false
                 }
             }
+            
+            // New Day Overlay - appears on top of everything
+            if dailyCheckManager.showNewDayOverlay {
+                NewDayOverlay(
+                    isVisible: $dailyCheckManager.showNewDayOverlay,
+                    onLetsPlay: {
+                        dailyCheckManager.dismissNewDayOverlay()
+                    }
+                )
+                .transition(.opacity)
+            }
         }
- //   var body: some View {
- //       MainMenuView()
- //   }
+        // Reset navigation when coordinator says to return to main menu
+        .onChange(of: gameCoordinator.shouldReturnToMainMenu) { oldValue, newValue in
+            if newValue {
+                // This will trigger navigation back to main menu
+                // Reset the flag
+                gameCoordinator.shouldReturnToMainMenu = false
+            }
+        }
+    }
 }
 
 struct LoadingView: View {

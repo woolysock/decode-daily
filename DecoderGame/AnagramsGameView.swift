@@ -10,16 +10,17 @@ import Combine
 
 struct AnagramsGameView: View {
     @ObservedObject private var wordsetManager = DailyWordsetManager.shared
+
     @EnvironmentObject var scoreManager: GameScoreManager
     @Environment(\.dismiss) private var dismiss
+
     @StateObject private var game = GameContainer()
-    
+    @StateObject private var dailyCheckManager = DailyCheckManager.shared
+
     @State private var showHowToPlay = false
     @State private var showEndGameOverlay = false
     @State private var hasStartedRound = false
     @State private var navigateToHighScores = false
-    
-    // Flash color for whole word
     @State private var answerFlashColor: Color? = nil
     
     private let instructionsText = """
@@ -30,8 +31,6 @@ struct AnagramsGameView: View {
     O R W D  →  W O R D 
 
     If you make a mistake, tap "clear" to remove the letters and try again. 
-    
-    The more words you unscramble in 60s, the higher your score!
     """
     
     var body: some View {
@@ -94,6 +93,31 @@ struct AnagramsGameView: View {
                 }
             }
         }
+        .onChange(of: dailyCheckManager.showNewDayOverlay) { oldValue, newValue in
+            guard let anagramsGame = game.anagramsGame else { return }
+            
+            if newValue {
+                // New day overlay is showing - force end the game immediately
+                print("AnagramsGameView: Force ending game due to new day overlay")
+                anagramsGame.endGame()
+                
+                // Hide any other overlays that might be showing
+                showEndGameOverlay = false
+                showHowToPlay = false
+                
+                // Reset the game state
+                hasStartedRound = false
+            }
+        }
+
+        // Also add this onChange to handle when the overlay is dismissed:
+        .onChange(of: dailyCheckManager.showNewDayOverlay) { oldValue, newValue in
+            // When overlay is dismissed (goes from true to false), return to main menu
+            if oldValue == true && newValue == false {
+                print("AnagramsGameView: New day overlay dismissed, returning to main menu")
+                dismiss()
+            }
+        }
     }
     
     // MARK: - Initialization
@@ -127,11 +151,11 @@ struct AnagramsGameView: View {
               let anagramsGame = game.anagramsGame,
               wordsetManager.currentWordset != nil,
               !wordsetManager.isGeneratingWordsets else {
-            print("❌ Cannot start game yet - conditions not met")
+            print("❌ tryToStartGame(): Cannot start - conditions not met")
             return
         }
         
-        print("✅ Starting game...")
+        print("✅ tryToStartGame(): Starting game...")
         hasStartedRound = true
         anagramsGame.startGame()
     }
@@ -147,22 +171,27 @@ struct AnagramsGameView: View {
         //        let _ = print("   - statusText: '\(anagramsGame.statusText)'")
         
         VStack(spacing: 0) {
-            Spacer().frame(height:5)
+            Spacer().frame(height:10)
             
             // Title + Timer + Help button
             HStack {
                 Spacer().frame(width: 5)
-                VStack(alignment: .leading, spacing: 3) {
+                VStack(alignment: .leading, spacing: 4) {
                     Text(anagramsGame.gameInfo.displayName)
                         .foregroundColor(.white)
                         .font(.custom("LuloOne-Bold", size: 20))
                         .onTapGesture { tryToStartGame() }
                     
                     // Daily indicator
-                    if wordsetManager.currentWordset != nil {
-                        Text("Daily Challenge")
+//                    if wordsetManager.currentWordset != nil {
+//                        Text(DateFormatter.dayFormatter.string(from: Date()))
+//                            .font(.custom("LuloOne", size: 12))
+//                            .foregroundColor(.gray)
+                    //                    }
+                    if let wordset = wordsetManager.currentWordset {
+                        Text(DateFormatter.dayFormatter.string(from: wordset.date))
+                            .font(.custom("LuloOne", size: 12))
                             .foregroundColor(.gray)
-                            .font(.custom("LuloOne", size: 10))
                     }
                 }
 
@@ -199,7 +228,7 @@ struct AnagramsGameView: View {
             
             Divider().background(.white).padding(5)
             
-            Spacer().frame(height: 10)
+            Spacer().frame(height: 15)
             
             // Status text + symbol + wordset loading indicator
             VStack(spacing: 5) {
@@ -234,14 +263,14 @@ struct AnagramsGameView: View {
                         .scaledToFit()
                         .frame(width: 20, height: 20)
                         .foregroundColor(Color.myAccentColor1)
-                } else if anagramsGame.statusText.contains("Unscramble") || anagramsGame.statusText.contains("Loading") || anagramsGame.statusText.contains("Get ready") {
-                    Image(systemName: "shuffle.circle.fill")
+                } else if anagramsGame.statusText.contains("Tap"){
+                    Image(systemName: "hand.tap.fill")
                         .resizable()
                         .scaledToFit()
                         .frame(width: 20, height: 20)
                         .foregroundColor(wordsetManager.isGeneratingWordsets ? .gray : .white)
                 } else {
-                    Image(systemName: "shuffle.circle.fill")
+                    Image(systemName: "hare.fill")
                         .resizable()
                         .scaledToFit()
                         .frame(width: 20, height: 20)
@@ -281,13 +310,15 @@ struct AnagramsGameView: View {
                         }
                     } else {
                         //let _ = print("   → UI showing default state")
-                        // Show a default state with instructions
-                        VStack(spacing: 20) {
-                            Text("Tap the title to start!")
-                                .font(.custom("LuloOne", size: 16))
-                                .foregroundColor(.white.opacity(0.7))
-                        }
+//                        // Show a default state with instructions
+//                        VStack(spacing: 20) {
+//                            Text("🎬")
+//                                .font(.custom("LuloOne", size: 86))
+//                                .foregroundColor(.white)
+//                        }
+                        Spacer()
                     }
+                    Spacer()
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
                 .padding([.leading, .trailing, .bottom], 20)
@@ -361,7 +392,7 @@ struct AnagramsGameView: View {
                     print("Wrong answer detected")
                     anagramsGame.usedLetterIndices.removeAll()
                     anagramsGame.userAnswer = ""
-                    anagramsGame.statusText = "Try again."
+                    //anagramsGame.statusText = "Try again."
                 }
             }
         }
@@ -421,14 +452,14 @@ struct AnagramsGameView: View {
     
     // MARK: - Game Area
     private func gameArea(with anagramsGame: AnagramsGame) -> some View {
-        VStack(spacing: 15) {
+        VStack(spacing: 10) {
             if anagramsGame.isGameActive {
                 
 //                let _ = print("   → gameArea: isGameActive")
 //                let _ = print("anagramsGame.userAnswer.isEmpty: \(anagramsGame.userAnswer.isEmpty), anagramsGame.isGamePaused: \(anagramsGame.isGamePaused), wordsetManager.isGeneratingWordsets: \(wordsetManager.isGeneratingWordsets)")
                 
                 HStack {
-                    Text("Score: \(anagramsGame.attempts)")
+                    Text("Solved: \(anagramsGame.attempts)")
                         .font(.custom("LuloOne-Bold", size: 16))
                         .foregroundColor(.white)
                     
@@ -438,11 +469,12 @@ struct AnagramsGameView: View {
                     
                     if let wordset = wordsetManager.currentWordset {
                         //let _ = print("   → gameArea: using wordset \(wordsetManager.currentWordset?.words ?? [])")
-                        Text("\(anagramsGame.currentWordIndex + 1) of \(wordset.words.count)")
+                        Text("On word\n\(anagramsGame.currentWordIndex + 1) of \(wordset.words.count)")
                             .font(.custom("LuloOne", size: 12))
-                            .foregroundColor(.gray)
+                            .foregroundColor(.white)
                     }
                 }
+                Divider().background(Color.myAccentColor1).padding(5)
             }
             
             Spacer().frame(height: 20)
@@ -476,14 +508,14 @@ struct AnagramsGameView: View {
                 }
                 .frame(minHeight: 55)
                 
-                Button("Clear all") {
+                Button("erase") {
                     anagramsGame.clearAnswer()
                 }
                 .font(.custom("LuloOne", size: 12))
                 .foregroundColor(anagramsGame.userAnswer.isEmpty ? .gray : .white)
                 .padding(.horizontal, 20)
                 .padding(.vertical, 8)
-                .background(anagramsGame.userAnswer.isEmpty ? Color.gray.opacity(0.3) : Color.red.opacity(0.7))
+                .background(anagramsGame.userAnswer.isEmpty ? Color.gray.opacity(0.3) : Color.pink.opacity(0.7))
                 .cornerRadius(8)
                 .disabled(anagramsGame.userAnswer.isEmpty || anagramsGame.isGamePaused || wordsetManager.isGeneratingWordsets)
             }

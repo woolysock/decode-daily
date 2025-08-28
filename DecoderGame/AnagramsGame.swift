@@ -18,7 +18,7 @@ class AnagramsGame: GameProtocol, ObservableObject {
 
     // MARK: - GameProtocol basics
     @Published var gameOver: Int = 0
-    @Published var statusText: String = "unscramble the words"
+    @Published var statusText: String = ""
     @Published var lastScore: GameScore?
 
     // MARK: - Gameplay
@@ -28,6 +28,8 @@ class AnagramsGame: GameProtocol, ObservableObject {
     @Published var userAnswer: String = ""
     @Published var attempts: Int = 0   // use as "score" (correct answers)
     @Published var currentLetterIndex: Int = 0  // for letter selection UI
+    @Published var completedWordLengths: [Int] = []
+
     
     // Daily wordset specific
     @Published var dailyWordset: DailyWordset?
@@ -90,16 +92,16 @@ class AnagramsGame: GameProtocol, ObservableObject {
             return
         }
         
-        print("✅ startGame(): Got wordset with \(todaysWordset.words.count) words")
-        print("📝 startGame(): Setting up game state...")
+        //print("✅ startGame(): Got wordset with \(todaysWordset.words.count) words")
+        //print("📝 startGame(): Setting up game state...")
         
         dailyWordset = todaysWordset
         totalWordsInSet = todaysWordset.words.count
         
-        print("🛑 startGame(): Stopping all timers...")
+        //print("🛑 startGame(): Stopping all timers...")
         stopAllTimers()
         
-        print("🔄 startGame(): Resetting game variables...")
+        //print("🔄 startGame(): Resetting game variables...")
         gameOver = 0
         attempts = 0
         wordsCompleted = 0
@@ -110,13 +112,14 @@ class AnagramsGame: GameProtocol, ObservableObject {
         usedLetterIndices = []
         roundStart = nil
         lastScore = nil
+        completedWordLengths = []
 
         print("🎲 startGame(): Calling newQuestion()...")
         newQuestion()
 
         // CRITICAL FIX: Ensure ALL UI updates happen on main thread together
         DispatchQueue.main.async {
-            self.statusText = "Get ready…"
+            self.statusText = "Ready, set. . ."
             self.countdownValue = 3
             self.isPreCountdownActive = true
             self.isGameActive = false
@@ -151,6 +154,26 @@ class AnagramsGame: GameProtocol, ObservableObject {
         print("✅ startGame(): completed setup")
     }
     
+    private func calculateDifficultyScore() -> Double {
+        guard totalWordsInSet > 0 else { return 0.0 }
+        
+        // Base completion rate (0.0 to 1.0)
+        let completionRate = Double(wordsCompleted) / Double(totalWordsInSet)
+        
+        // Word difficulty bonus based on lengths of completed words
+        let averageWordLength = completedWordLengths.isEmpty ?
+            0.0 : Double(completedWordLengths.reduce(0, +)) / Double(completedWordLengths.count)
+        
+        // Length difficulty multiplier (3-letter words = 1.0x, 8-letter words = 2.0x)
+        let lengthMultiplier = max(1.0, (averageWordLength - 2.0) / 4.0)
+        
+        // Combine completion rate with difficulty
+        // Score ranges from 0 to ~200 (100% completion * 2.0 length multiplier * 100 scale factor)
+        let difficultyScore = completionRate * lengthMultiplier * 100.0
+        
+        return difficultyScore
+    }
+    
     func startGameWithWordset(_ wordset: DailyWordset) {
         print("startGameWithWordset: \(wordset)")
         dailyWordset = wordset
@@ -165,7 +188,7 @@ class AnagramsGame: GameProtocol, ObservableObject {
         isGamePaused = false
         userAnswer = ""
         usedLetterIndices = []
-        statusText = "Get ready…"
+        statusText = "Get ready..."
         countdownValue = 3
         isPreCountdownActive = true
         isGameActive = false
@@ -209,13 +232,14 @@ class AnagramsGame: GameProtocol, ObservableObject {
         gameOver = 1
         
         // Calculate final score and statistics
-        let finalScore = wordsCompleted
-        let longestWordLength = getLongestWordCompleted()
-        let gameWon = wordsCompleted >= (totalWordsInSet / 2) // Consider winning if completed at least half
+                let longestWordLength = getLongestWordCompleted()
+        let gameWon = wordsCompleted >= (totalWordsInSet / 2)
+        let difficultyScore = calculateDifficultyScore()
+        let finalScore = Int(difficultyScore) //wordsCompleted <- former score value before difficulty
         
         // Update display
         statusText = gameWon ? "Well done!" : "Game over!"
-        currentWord = "Final\nScore\n\n\(finalScore)/\(totalWordsInSet)"
+        //currentWord = "Final\nScore\n\n\(finalScore)/\(totalWordsInSet)"
         scrambledLetters = []
         usedLetterIndices = []
         userAnswer = ""
@@ -228,25 +252,26 @@ class AnagramsGame: GameProtocol, ObservableObject {
             timeElapsed: 60.0,
             won: gameWon,
             finalScore: finalScore,
-            additionalProperties: AnagramsGameAdditionalProperties(
+            additionalProperties: AnagramsAdditionalProperties(  // Use the GameScoreManager struct
                 gameDuration: 60.0,
                 longestWord: longestWordLength,
                 totalWordsInSet: totalWordsInSet,
                 wordsCompleted: wordsCompleted,
-                wordsetId: dailyWordset?.id ?? ""
+                wordsetId: dailyWordset?.id ?? "",
+                completedWordLengths: completedWordLengths,
+                difficultyScore: difficultyScore
             )
         )
-        print("Anagrams High Score extras: \(longestWordLength), and \(totalWordsInSet)")
         
         scoreManager.saveScore(newScore)
-        lastScore = newScore  // save locally for display
+        lastScore = newScore
         
         // Mark wordset as completed if applicable
         if let wordset = dailyWordset {
             wordsetManager.markWordsetCompleted(wordset, score: finalScore)
         }
         
-        print("Score saved successfully: \(finalScore)/\(totalWordsInSet) words completed")
+        print("Score saved - Words completed: \(wordsCompleted), Difficulty Score: \(difficultyScore), Word Lengths: \(completedWordLengths)")
     }
 
     // MARK: - Gameplay helpers
@@ -285,7 +310,7 @@ class AnagramsGame: GameProtocol, ObservableObject {
         userAnswer = ""
         usedLetterIndices = []
         currentLetterIndex = 0
-        statusText = "Unscramble the letters! (\(wordsCompleted + 1)/\(totalWordsInSet))"
+        statusText = "Tap the letters\n to unscramble the word"
         print("✅ newQuestion() completed - statusText: '\(statusText)'")
     }
     
@@ -328,14 +353,18 @@ class AnagramsGame: GameProtocol, ObservableObject {
         if isCorrect {
             wordsCompleted += 1
             attempts += 1
+            
+            // NEW: Track the length of the completed word
+            completedWordLengths.append(currentWord.count)
+            
             currentWordIndex += 1
-            statusText = "Correct! (\(wordsCompleted)/\(totalWordsInSet))"
+            statusText = "Correct!\n"
             
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
                 self.newQuestion()
             }
         } else {
-            statusText = "Wrong! Try again."
+            statusText = "Wrong!\nTry again."
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                 self.usedLetterIndices.removeAll()
                 self.userAnswer = ""
@@ -358,7 +387,7 @@ class AnagramsGame: GameProtocol, ObservableObject {
         // Update properties directly since we're already on main thread
         self.gameTimeRemaining = 60
         self.isGameActive = true
-        self.statusText = "Go! (\(self.wordsCompleted + 1)/\(self.totalWordsInSet))"
+        self.statusText = "Tap the letters\n to unscramble the word"
         self.roundStart = Date()
         print("✅ Game is now active - isGameActive: \(self.isGameActive)")
         print("📊 Game state: timeRemaining=\(self.gameTimeRemaining), statusText='\(self.statusText)'")
@@ -397,12 +426,14 @@ class AnagramsGame: GameProtocol, ObservableObject {
 
 // MARK: - Extended Additional Properties for Anagrams (renamed to avoid conflicts)
 
-struct AnagramsGameAdditionalProperties: Codable {
-    let gameDuration: Double
+struct AnagramsAdditionalProperties: Codable {
+    let gameDuration: TimeInterval
     let longestWord: Int
     let totalWordsInSet: Int
-    let wordsCompleted: Int
-    let wordsetId: String
+    let wordsCompleted: Int        // NEW
+    let wordsetId: String         // NEW
+    let completedWordLengths: [Int]  // NEW
+    let difficultyScore: Double      // NEW
 }
 
 // MARK: - Historical Game Access
