@@ -8,16 +8,17 @@
 import SwiftUI
 
 struct FlashdanceGameView: View {
-    @StateObject private var game: FlashdanceGame
     @EnvironmentObject var scoreManager: GameScoreManager
     @Environment(\.dismiss) private var dismiss
+    
+    @StateObject private var game: FlashdanceGame
+    @StateObject private var dailyCheckManager = DailyCheckManager.shared
     
     @State private var dragOffset: CGSize = .zero
     @State private var showHowToPlay = false
     @State private var showEndGameOverlay = false
     @State private var hasStartedRound = false
     @State private var highlightedAnswer: Int? = nil
-    
     @State private var navigateToHighScores = false
     
     // Flash feedback
@@ -171,7 +172,7 @@ struct FlashdanceGameView: View {
                                                         guard game.isGameActive && !game.isGamePaused && !isAnimatingCorrect else {
                                                             return
                                                         }
-
+                                                        
                                                         handleSwipeWithPills(location: value.location, geo: geo, currentDragOffset: value.translation, geoSize: geo.size)
                                                         highlightedAnswer = nil
                                                     }
@@ -249,6 +250,24 @@ struct FlashdanceGameView: View {
                 .transition(.opacity)
             }
         }
+        .onChange(of: dailyCheckManager.showNewDayOverlay) { oldValue, newValue in
+            if newValue {
+                // New day overlay is showing - force end the game immediately
+                print("FlashdanceGameView: Force ending game due to new day overlay")
+                game.endGame()
+                
+                // Hide any other overlays that might be showing
+                showEndGameOverlay = false
+                showHowToPlay = false
+                
+                // Reset the game state
+                hasStartedRound = false
+            } else if oldValue == true && newValue == false {
+                // Overlay was just dismissed - return to main menu
+                print("FlashdanceGameView: New day overlay dismissed, returning to main menu")
+                dismiss()
+            }
+        }
     }
     
     
@@ -267,98 +286,85 @@ struct FlashdanceGameView: View {
             .accessibilityLabel(Text("Answer \(value)"))
     }
     
+//    private func highlightPillUnderDrag(location: CGPoint, geo: GeometryProxy) {
+//        // Match the exact same calculations used in the UI layout
+//        let pillWidth: CGFloat = min(geo.size.width * 0.25, 120)
+//        let pillHeight: CGFloat = 160
+//        let spacing: CGFloat = 10 // Match the HStack spacing exactly
+//        
+//        // Calculate the total width of all pills including spacing
+//        let totalPillsWidth = pillWidth * 3 + spacing * 2
+//        let startX = (geo.size.width - totalPillsWidth) / 2
+//        
+//        // Calculate Y position to match the actual pill layout
+//        // Pills are positioned at: Spacer(height: geo.size.height * 0.05) + pillHeight/2
+//        let pillRowY = geo.size.height * 0.05 + pillHeight / 2
+//        
+//        highlightedAnswer = nil
+//        
+//        for (i, val) in game.answers.enumerated() {
+//            // Calculate the center X position for each pill
+//            let pillCenterX = startX + pillWidth/2 + CGFloat(i) * (pillWidth + spacing)
+//            
+//            // Create the pill frame
+//            let pillFrame = CGRect(
+//                x: pillCenterX - pillWidth/2,
+//                y: pillRowY - pillHeight/2,
+//                width: pillWidth + 10,
+//                height: pillHeight + 40
+//            )
+//            
+//            if pillFrame.contains(location) {
+//                highlightedAnswer = val
+//                break
+//            }
+//        }
+//    }
+    
     private func highlightPillUnderDrag(location: CGPoint, geo: GeometryProxy) {
-        // Match the exact same calculations used in the UI layout
-        let pillWidth: CGFloat = min(geo.size.width * 0.25, 120)
-        let pillHeight: CGFloat = 160
-        let spacing: CGFloat = 10 // Match the HStack spacing exactly
+        // Calculate card center based on current drag
+        let cardCenterX = geo.size.width / 2 + dragOffset.width
         
-        // Calculate the total width of all pills including spacing
-        let totalPillsWidth = pillWidth * 3 + spacing * 2
-        let startX = (geo.size.width - totalPillsWidth) / 2
-        
-        // Calculate Y position to match the actual pill layout
-        // Pills are positioned at: Spacer(height: geo.size.height * 0.05) + pillHeight/2
-        let pillRowY = geo.size.height * 0.05 + pillHeight / 2
-        
-        highlightedAnswer = nil
-        
-        for (i, val) in game.answers.enumerated() {
-            // Calculate the center X position for each pill
-            let pillCenterX = startX + pillWidth/2 + CGFloat(i) * (pillWidth + spacing)
-            
-            // Create the pill frame
-            let pillFrame = CGRect(
-                x: pillCenterX - pillWidth/2,
-                y: pillRowY - pillHeight/2,
-                width: pillWidth + 10,
-                height: pillHeight + 40
-            )
-            
-            if pillFrame.contains(location) {
-                highlightedAnswer = val
-                break
-            }
-        }
+        highlightedAnswer = getAnswerUnderCardCenter(cardCenterX: cardCenterX, geo: geo)
     }
     
     private func handleSwipeWithPills(location: CGPoint, geo: GeometryProxy, currentDragOffset: CGSize, geoSize: CGSize) {
-        // Make it more forgiving - use swipe direction and minimum threshold
         let minSwipeThreshold: CGFloat = 40
-        let upwardThreshold: CGFloat = -30 // How far up to trigger answer selection
+        let upwardThreshold: CGFloat = -30
         
         // Check if we have enough swipe motion
         let swipeMagnitude = sqrt(currentDragOffset.width * currentDragOffset.width + currentDragOffset.height * currentDragOffset.height)
         
         guard swipeMagnitude >= minSwipeThreshold else {
-            // Not enough swipe - bounce back
             animateWrongAnswer()
             return
         }
         
-        // Determine answer based on swipe direction (more forgiving)
+        // Calculate the CENTER of the flashcard after the drag
+        let cardCenterX = geo.size.width / 2 + currentDragOffset.width
+        let cardCenterY = geo.size.height / 2 + currentDragOffset.height // Approximate card center Y
+        
         var selectedAnswer: Int?
         
         if currentDragOffset.height <= upwardThreshold {
-            // Swiping upward enough - determine which pill based on horizontal direction
-            let pillWidth: CGFloat = min(geo.size.width * 0.25, 120)
-            let spacing: CGFloat = 10
-            let totalPillsWidth = pillWidth * 3 + spacing * 2
-            
-            // Create wider zones for each pill
-            let leftZoneEnd = -(totalPillsWidth / 3)
-            let rightZoneStart = (totalPillsWidth / 3)
-            
-            if currentDragOffset.width <= leftZoneEnd {
-                selectedAnswer = game.answers[safe: 0] // Left pill
-            } else if currentDragOffset.width >= rightZoneStart {
-                selectedAnswer = game.answers[safe: 2] // Right pill
-            } else {
-                selectedAnswer = game.answers[safe: 1] // Center pill
-            }
-        } else {
-            // Not swiping up enough, but check if we're still over a highlighted pill
-            selectedAnswer = highlightedAnswer
+            // Card moved up enough - check which pill the card center is closest to
+            selectedAnswer = getAnswerUnderCardCenter(cardCenterX: cardCenterX, geo: geo)
         }
         
         guard let selectedValue = selectedAnswer else {
-            // No valid selection - bounce back
             animateWrongAnswer()
             return
         }
         
         if game.checkAnswer(selected: selectedValue) {
-            // Correct answer - fly away
             animateCorrectAnswer(dragOffset: currentDragOffset, geoSize: geoSize)
             flash(correct: true, selectedAnswer: selectedValue)
             
-            // Delay the new question until animation completes
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.9) {
                 game.newQuestion()
                 resetCardAnimation()
             }
         } else {
-            // Wrong answer - bounce back
             animateWrongAnswer()
             flash(correct: false, selectedAnswer: selectedValue)
         }
@@ -435,6 +441,29 @@ struct FlashdanceGameView: View {
         hasStartedRound = false
         resetCardAnimation() // Reset animation state for new game
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { startRound() }
+    }
+    
+    private func getAnswerUnderCardCenter(cardCenterX: CGFloat, geo: GeometryProxy) -> Int? {
+        let pillWidth: CGFloat = min(geo.size.width * 0.25, 120)
+        let spacing: CGFloat = 10
+        let totalPillsWidth = pillWidth * 3 + spacing * 2
+        let startX = (geo.size.width - totalPillsWidth) / 2
+        
+        // Check which pill the card center is closest to
+        for (i, val) in game.answers.enumerated() {
+            let pillCenterX = startX + pillWidth/2 + CGFloat(i) * (pillWidth + spacing)
+            let pillLeftEdge = pillCenterX - pillWidth/2
+            let pillRightEdge = pillCenterX + pillWidth/2
+            
+            // Add some tolerance for easier selection
+            let tolerance: CGFloat = 20
+            
+            if cardCenterX >= (pillLeftEdge - tolerance) && cardCenterX <= (pillRightEdge + tolerance) {
+                return val
+            }
+        }
+        
+        return nil
     }
 }
 

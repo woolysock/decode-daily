@@ -246,10 +246,6 @@ struct MainMenuView: View {
                         Spacer()
                             .frame(height : 30)
                         
-                        Text(DateFormatter.dayFormatter.string(from: Date()))
-                            .font(.custom("LuloOne-Bold", size: 10))
-                            .foregroundColor(Color.myAccentColor1)
-                        
                         //game title header
                         VStack (spacing: 5){
                             Text(" DECODE!")
@@ -284,8 +280,11 @@ struct MainMenuView: View {
                         // Settings button with tilt effect
                         tiltableSettingsButton
                         
+                        Text(DateFormatter.dayFormatter.string(from: Date()))
+                            .font(.custom("LuloOne-Bold", size: 10))
+                            .foregroundColor(Color.myAccentColor1)
+                        
                         Spacer()
-                            .frame(height:40)
                     }
                 }
             }

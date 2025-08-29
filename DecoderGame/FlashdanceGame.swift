@@ -16,7 +16,7 @@ class FlashdanceGame: GameProtocol, ObservableObject {
 
     // MARK: - GameProtocol basics
     @Published var gameOver: Int = 0
-    @Published var statusText: String = ""
+    @Published var statusText: String = "\n\n\n"
     @Published var lastScore: GameScore?
 
     // MARK: - Gameplay
@@ -28,37 +28,72 @@ class FlashdanceGame: GameProtocol, ObservableObject {
     @Published var currentStreak: Int = 0        // NEW: Current consecutive correct streak
     @Published var maxStreak: Int = 0           // NEW: Best streak this game
     @Published var totalScore: Int = 0          // NEW: Running calculated score
-
+    
     // MARK: - Timers / phases
     @Published var countdownValue: Int = 3          // 3…2…1 pre-round
     @Published var gameTimeRemaining: Int = 30      // main game timer (sec)
     @Published var isPreCountdownActive: Bool = false
     @Published var isGameActive: Bool = false
     @Published var isGamePaused: Bool = false       // NEW: Track pause state
-
+    
     private var preCountdownTimer: Timer?
     private var gameTimer: Timer?
     private var roundStart: Date?
+    private var cancellables = Set<AnyCancellable>()
+    
+    // Daily equation set manager - use singleton
+    private let equationManager: DailyEquationManager
+    
+    // Daily equation specific
+    @Published var dailyEquationSet: DailyEquationSet?
+    @Published var currentEquationIndex: Int = 0
+    @Published var equationsCompleted: Int = 0
+    @Published var totalEquationsInSet: Int = 0
+    @Published var isEquationSetCompleted: Bool = false
     
     let gameInfo = GameInfo(
-           id: "flashdance",
-           displayName: "flashdance",
-           description: "math flashcard fun",
-           isAvailable: true,
-           gameLocation: AnyView(FlashdanceGameView()),
-           gameIcon: Image(systemName: "30.arrow.trianglehead.clockwise")
-       )
+        id: "flashdance",
+        displayName: "flashdance",
+        description: "math flashcard fun",
+        isAvailable: true,
+        gameLocation: AnyView(FlashdanceGameView()),
+        gameIcon: Image(systemName: "30.arrow.trianglehead.clockwise")
+    )
 
     // Initialize with score manager
     init(scoreManager: GameScoreManager) {
         self.scoreManager = scoreManager
+        self.equationManager = DailyEquationManager.shared  // Use singleton
         print("FlashdanceGame initialized with scoreManager: \(type(of: scoreManager))")
+        
+        // Observe equation manager changes
+        equationManager.$currentEquationSet
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] equationSet in
+                self?.dailyEquationSet = equationSet
+            }
+            .store(in: &cancellables)
+       
     }
-
+    
     // MARK: - Public API
 
     /// Call this to begin a fresh round (will run 3-2-1 first, then 30s game).
     func startGame() {
+        print("🚀 FlashdanceGame.startGame() called")
+        
+        // Load today's equation set
+        guard let todaysEquationSet = equationManager.getTodaysEquationSet() else {
+            print("startGame(): ❌ No equation set available - getTodaysEquationSet() returned nil")
+            statusText = "No equations available for today!"
+            return
+        }
+        
+        print("✅ startGame(): Got equation set with \(todaysEquationSet.equations.count) equations")
+        
+        dailyEquationSet = todaysEquationSet
+        totalEquationsInSet = todaysEquationSet.equations.count
+        
         stopAllTimers()
         gameOver = 0
         correctAttempts = 0
@@ -66,7 +101,10 @@ class FlashdanceGame: GameProtocol, ObservableObject {
         currentStreak = 0
         maxStreak = 0
         totalScore = 0
-        isGamePaused = false  // Reset pause state
+        currentEquationIndex = 0
+        equationsCompleted = 0
+        isEquationSetCompleted = false
+        isGamePaused = false
         statusText = "Get ready…"
         countdownValue = 3
         isPreCountdownActive = true
@@ -74,15 +112,12 @@ class FlashdanceGame: GameProtocol, ObservableObject {
         roundStart = nil
         lastScore = nil
 
-        // Pre-generate the first question so we're ready the moment play starts.
+        // Load the first equation
         newQuestion()
-
-        //print("FlashdanceGame started with scoreManager: \(type(of: scoreManager))")
 
         preCountdownTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] t in
             guard let self = self else { return }
             
-            // Don't decrement countdown if paused
             if self.isGamePaused { return }
             
             if self.countdownValue > 1 {
@@ -120,32 +155,7 @@ class FlashdanceGame: GameProtocol, ObservableObject {
         
         calculateFinalScore()
         statusText = "Game over!"
-        
-//        // Wrap extra stats in FlashdanceAdditionalProperties
-//        let additionalProps = FlashdanceAdditionalProperties(
-//            gameDuration: 30,                 // fixed duration in your game
-//            correctAnswers: correctAttempts,
-//            incorrectAnswers: incorrectAttempts,
-//            longestStreak: maxStreak
-//        )
-        
-        // Create GameScore directly
-//        let final = GameScore(
-//            gameId: "flashdance",
-//            date: Date(),
-//            attempts: correctAttempts + incorrectAttempts,
-//            timeElapsed: 30.0,
-//            won: true,                        // Flashdance is always "completed"
-//            finalScore: totalScore,
-//            additionalProperties: additionalProps
-//        )
-//        
-//        // Assign so EndGameOverlay can use it
-//        lastScore = final
-//        
-//        // Persist to manager if desired
-//        scoreManager.saveScore(final)
-        
+              
         scoreManager.saveFlashdanceScore(
             attempts: correctAttempts + incorrectAttempts,
             timeElapsed: 30.0,
@@ -222,6 +232,40 @@ class FlashdanceGame: GameProtocol, ObservableObject {
 
     /// Randomly choose + or −. For subtraction, keep result ≥ 0.
     func newQuestion() {
+        print("🎲 newQuestion() called")
+        print("   - currentEquationIndex: \(currentEquationIndex)")
+        print("   - dailyEquationSet exists: \(dailyEquationSet != nil)")
+        print("   - dailyEquationSet equation count: \(dailyEquationSet?.equations.count ?? 0)")
+        
+        guard let equationSet = dailyEquationSet,
+              currentEquationIndex < equationSet.equations.count else {
+            print("❌ newQuestion() guard failed - no more equations or no set available")
+            // Continue with current equation or generate random fallback
+            generateFallbackQuestion()
+            return
+        }
+        
+        let dailyEquation = equationSet.equations[currentEquationIndex]
+        currentEquation = dailyEquation.expression
+        correctAnswer = dailyEquation.answer
+        
+        print("✅ newQuestion() set equation to: '\(currentEquation)' = \(correctAnswer)")
+        
+        // Build 2 unique wrong answers near the correct one
+        var options = Set([correctAnswer])
+        while options.count < 3 {
+            let jitter = Int.random(in: -10...10)
+            let wrong = max(0, correctAnswer + jitter) // keep non-negative
+            options.insert(wrong)
+        }
+        answers = Array(options).shuffled()
+        statusText = "Swipe toward the correct answer!\n\n"
+        
+        print("✅ newQuestion() completed - answers: \(answers)")
+    }
+
+    // Fallback for when daily equations aren't available
+    private func generateFallbackQuestion() {
         let a = Int.random(in: 1...20)
         let b = Int.random(in: 1...20)
 
@@ -245,22 +289,26 @@ class FlashdanceGame: GameProtocol, ObservableObject {
             options.insert(wrong)
         }
         answers = Array(options).shuffled()
-        statusText = "Swipe toward the correct answer! Score: \(totalScore)"
+        statusText = "Swipe toward the correct answer!\n\n"
     }
 
     func checkAnswer(selected: Int) -> Bool {
         let isCorrect = selected == correctAnswer
         if isCorrect {
             correctAttempts += 1
+            equationsCompleted += 1
             currentStreak += 1
             maxStreak = max(maxStreak, currentStreak)
+            
+            // Advance to next equation in the daily set
+            currentEquationIndex += 1
             
             updateRunningScore()
             
             // Enhanced status text with streak info
-            var message = "✅ Correct! (\(correctAttempts)/\(correctAttempts + incorrectAttempts))"
+            var message = "Correct!\n🙌\n"
             if currentStreak >= 3 {
-                message += " 🔥\(currentStreak)"  // Show streak with fire emoji
+                message += "\n\n🔥 streak \(currentStreak)! 🔥"  // Show streak with fire emoji
             }
             message += " Score: \(totalScore)"
             statusText = message
@@ -269,9 +317,12 @@ class FlashdanceGame: GameProtocol, ObservableObject {
             incorrectAttempts += 1
             currentStreak = 0  // Reset streak on wrong answer
             
+            // Still advance to next equation even if wrong (for variety during 30 seconds)
+            currentEquationIndex += 1
+            
             updateRunningScore()
             
-            statusText = "❌ Wrong! (\(correctAttempts)/\(correctAttempts + incorrectAttempts)) Score: \(totalScore)"
+            statusText = "❌ Wrong!\nTry Again. . .\n"
         }
         return isCorrect
     }
@@ -281,7 +332,7 @@ class FlashdanceGame: GameProtocol, ObservableObject {
     private func startMainGame() {
         gameTimeRemaining = 30
         isGameActive = true
-        statusText = "Go! Score: \(totalScore)"
+        statusText = "Go!\n\n\n"
         roundStart = Date()  // Track when the actual game started
 
         gameTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] t in

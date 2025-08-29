@@ -1,0 +1,12 @@
+[
+  {
+    "id": "2025-08-28",
+    "date": "2025-08-28",
+    "equations": [
+      {"expression": "7 + 8", "answer": 15},
+      {"expression": "12 - 5", "answer": 7},
+      {"expression": "6 × 4", "answer": 24},
+      {"expression": "18 ÷ 3", "answer": 6}
+    ]
+  }
+]

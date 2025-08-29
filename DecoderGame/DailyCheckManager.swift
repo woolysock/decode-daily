@@ -82,8 +82,9 @@ class DailyCheckManager: ObservableObject {
         if today != lastCheckDay {
             print("Day change detected! Last check: \(lastCheckDay), Today: \(today)")
             
-            // IMPORTANT: Refresh the wordset manager for the new day
+            // IMPORTANT: Refresh the wordset and equation managers for the new day
             DailyWordsetManager.shared.refreshForNewDay()
+            DailyEquationManager.shared.refreshForNewDay() 
             
             // Notify games to pause/end
             gameDelegate?.newDayDetected()

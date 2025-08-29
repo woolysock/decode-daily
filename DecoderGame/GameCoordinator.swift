@@ -41,10 +41,12 @@ class GameCoordinator: ObservableObject, DailyCheckGameDelegate {
             
             switch activeGame {
             case "anagrams":
-                // This will be handled by the AnagramsGameView when it observes the overlay
-                // The game will be force-ended, not paused
+                // Handled by AnagramsGameView
                 break
-            case "decode", "numbers", "flashdance":
+            case "flashdance":
+                // Handled by FlashdanceGameView when it observes the overlay
+                break
+            case "decode", "numbers":
                 // For future implementation when these games have daily features
                 print("GameCoordinator: \(activeGame) doesn't have daily features yet")
                 break
