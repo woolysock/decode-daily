@@ -265,20 +265,48 @@ class GameScoreManager: ObservableObject {
     }
 
     // Example scoring method (customize per game)
-    static func calculateDecodeScore(attempts: Int, timeElapsed: TimeInterval, won: Bool, maxAttempts: Int = 8) -> Int {
+    static func calculateDecodeScore(attempts: Int, timeElapsed: TimeInterval, won: Bool, maxAttempts: Int = 7) -> Int {
         guard won else { return 0 }
-
-        var score = 1000
-        score -= (attempts - 1) * 100
-        score -= Int(timeElapsed / 10)
-
-        if attempts == 1 {
-            score += 500
-        } else if attempts <= 3 {
-            score += 200
+        
+        let baseScore = 1000
+        
+        // Heavy penalty for more attempts (this should be the primary factor)
+        let attemptPenalty = (attempts - 1) * 150  // Increased from 100
+        
+        // Time penalty - but cap it so time doesn't dominate the score
+        // Only penalize time beyond 30 seconds per attempt
+        let reasonableTimePerAttempt = 30.0
+        let reasonableTime = Double(attempts) * reasonableTimePerAttempt
+        let timeOverage = max(0, timeElapsed - reasonableTime)
+        let timePenalty = Int(timeOverage / 5)  // Much gentler time penalty
+        
+        // Calculate base score with penalties
+        var finalScore = baseScore - attemptPenalty - timePenalty
+        
+        // Significant bonuses for exceptional performance
+        switch attempts {
+        case 1:
+            finalScore += 800  // Massive bonus for perfect guess
+        case 2:
+            finalScore += 400  // Large bonus for 2 attempts
+        case 3:
+            finalScore += 200  // Good bonus for 3 attempts
+        case 4:
+            finalScore += 100  // Small bonus for 4 attempts
+        default:
+            break
         }
-
-        return max(score, 50)
+        
+        // Speed bonuses (but only significant for very fast times)
+        if timeElapsed < Double(attempts * 15) {  // 15 seconds per attempt
+            finalScore += 100
+        }
+        if timeElapsed < Double(attempts * 10) {  // 10 seconds per attempt
+            finalScore += 50
+        }
+        
+        // Ensure minimum score
+        return max(finalScore, 10)
     }
 
     // MARK: - Private Methods
@@ -313,5 +341,12 @@ class GameScoreManager: ObservableObject {
             self.saveToUserDefaults()
             self.objectWillChange.send()
         }
+    }
+    
+    func getMostRecentScore(for gameId: String) -> GameScore? {
+        return allScores
+            .filter { $0.gameId == gameId }
+            .sorted { $0.date > $1.date }  // Sort by date, newest first
+            .first
     }
 }

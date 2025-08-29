@@ -82,6 +82,11 @@ class FlashdanceGame: GameProtocol, ObservableObject {
     func startGame() {
         print("🚀 FlashdanceGame.startGame() called")
         
+        // Debug: Check equation manager status
+        print("🔍 Equation manager status:")
+        print("   - currentEquationSet: \(equationManager.currentEquationSet?.equations.count ?? 0) equations")
+        print("   - isGeneratingEquations: \(equationManager.isGeneratingEquations)")
+        
         // Load today's equation set
         guard let todaysEquationSet = equationManager.getTodaysEquationSet() else {
             print("startGame(): ❌ No equation set available - getTodaysEquationSet() returned nil")
@@ -90,6 +95,7 @@ class FlashdanceGame: GameProtocol, ObservableObject {
         }
         
         print("✅ startGame(): Got equation set with \(todaysEquationSet.equations.count) equations")
+        print("📝 Equations: \(todaysEquationSet.equations.map { $0.expression })")
         
         dailyEquationSet = todaysEquationSet
         totalEquationsInSet = todaysEquationSet.equations.count
@@ -153,6 +159,9 @@ class FlashdanceGame: GameProtocol, ObservableObject {
         isGamePaused = false
         gameOver = 1
         
+        let oldScores = scoreManager.getScores(for: "flashdance")
+        print("OLD flashdance scores: \(oldScores.map { $0.finalScore })")
+        
         calculateFinalScore()
         statusText = "Game over!"
               
@@ -165,12 +174,21 @@ class FlashdanceGame: GameProtocol, ObservableObject {
             incorrectAnswers: incorrectAttempts,
             longestStreak: maxStreak
         )
-        lastScore = scoreManager.getScores(for: "flashdance").first
+        // Wait for the save to complete, then update lastScore
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+            // Debug what scores exist after save
+            let newScores = self.scoreManager.getScores(for: "flashdance")
+            print("CURRENT/NEW flashdance scores: \(newScores.map { $0.finalScore })")
+            
+            // Update lastScore
+            self.lastScore = self.scoreManager.getMostRecentScore(for: "flashdance")
+            print("Just the most Recent lastScore: \(self.lastScore?.flashdanceProperties?.correctAnswers ?? -1) correct, \(self.lastScore?.flashdanceProperties?.incorrectAnswers ?? -1) wrong, \(self.maxStreak) streak")
+        }
         
         
-        print("Score saved successfully: \(totalScore) points")
+        print("Score saved successfully: \(totalScore) points, \(correctAttempts) correct, \(incorrectAttempts) wrong, ")
     }
-
+    
 
     
     // MARK: - Scoring System
@@ -259,7 +277,7 @@ class FlashdanceGame: GameProtocol, ObservableObject {
             options.insert(wrong)
         }
         answers = Array(options).shuffled()
-        statusText = "Swipe toward the correct answer!\n\n"
+        statusText = "Swipe toward the correct answer!\n\n\n"
         
         print("✅ newQuestion() completed - answers: \(answers)")
     }
@@ -306,11 +324,13 @@ class FlashdanceGame: GameProtocol, ObservableObject {
             updateRunningScore()
             
             // Enhanced status text with streak info
-            var message = "Correct!\n🙌\n"
+            var message = "Correct!\n"
             if currentStreak >= 3 {
                 message += "\n\n🔥 streak \(currentStreak)! 🔥"  // Show streak with fire emoji
+            } else {
+                message += "\n\n🙌"
             }
-            message += " Score: \(totalScore)"
+            //message += " Score: \(totalScore)"
             statusText = message
             
         } else {
@@ -322,7 +342,7 @@ class FlashdanceGame: GameProtocol, ObservableObject {
             
             updateRunningScore()
             
-            statusText = "❌ Wrong!\nTry Again. . .\n"
+            statusText = "❌ Wrong!\n\nTry Again. . .\n"
         }
         return isCorrect
     }

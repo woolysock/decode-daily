@@ -228,11 +228,11 @@ final class DailyWordsetManager: ObservableObject {
         let dateKey = Self.dateFormatter.string(from: date)
         print("🔍 Looking for wordset with dateKey: \(dateKey)")
 
-        // 1) check override in UserDefaults
-        if let override = loadWordsetOverride(for: dateKey) {
-            print("✅ Found override in UserDefaults for \(dateKey)")
-            return override
-        }
+//        // 1) check override in UserDefaults
+//        if let override = loadWordsetOverride(for: dateKey) {
+//            print("✅ Found override in UserDefaults for \(dateKey)")
+//            return override
+//        }
 
         // 2) check bundled JSON
         print("🔍 Searching in \(allWordsets.count) bundled wordsets...")

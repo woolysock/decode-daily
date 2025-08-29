@@ -31,6 +31,7 @@ struct SettingsView: View {
                 helpOverlay
             }
         }
+        .background(Color.white)
         .alert("Erase All High Scores?", isPresented: $showingEraseConfirmation) {
             Button("Cancel", role: .cancel) { }
             Button("Erase All", role: .destructive) {

@@ -27,6 +27,9 @@ struct DecodeGameView: View {
     // Remove navigateToMenu since we'll use dismiss
     @State private var navigateToHighScores = false
     
+    // Track if this is the first launch
+    @State private var isFirstLaunch = true
+    
     // Initialize with proper dependency injection
     init() {
         // Create a temporary game with a basic score manager that will be replaced
@@ -89,7 +92,7 @@ struct DecodeGameView: View {
                     
                     // Status text
                     Rectangle()
-                        .frame(width: 300, height: game.gameOver != 0 && game.lastScore != nil ? 120 : 60)
+                        .frame(width: 300, height: game.gameOver != 0 && game.lastScore != nil ? 115 : 60)
                         .foregroundColor(.clear)
                         .overlay(
                             Text(game.statusText)
@@ -103,19 +106,35 @@ struct DecodeGameView: View {
                     Divider().background(.white).padding(5)
                     
                     // Game board
-                    VStack(spacing: 10) {
+                    // Game board
+                    VStack(spacing: 11) {
                         ForEach(0..<game.numRows, id: \.self) { row in
                             HStack(spacing: 10) {
                                 ForEach(0..<game.numCols, id: \.self) { col in
                                     let currentColor = game.pegShades[game.theBoard[row][col]]
+                                    let isEmpty = game.theBoard[row][col] == 0
+                                    let isActiveRow = row == game.currentTurn
+                                    let isSelectedSquare = selectedSquare.row == row && selectedSquare.col == col && showingColorPicker
                                     
                                     Rectangle()
                                         .frame(width: 50, height: 50)
                                         .cornerRadius(1)
                                         .foregroundColor(
-                                            game.gameOver == 0
-                                            ? (row <= game.currentTurn ? currentColor : .clear)
-                                            : (row != game.currentTurn - 1 ? currentColor.opacity(0.6) : currentColor)
+                                            // Show black when game is over
+                                            game.gameOver != 0 ? Color.black :
+                                                game.gameOver == 0 ? {
+                                                    if isEmpty {
+                                                        if isSelectedSquare {
+                                                            return Color.gray.opacity(0.6)
+                                                        } else if isActiveRow {
+                                                            return Color.gray.opacity(0.3)
+                                                        } else {
+                                                            return Color.gray.opacity(0.15)
+                                                        }
+                                                    } else {
+                                                        return currentColor
+                                                    }
+                                                }() : Color.black
                                         )
                                         .opacity(game.gameInteractive ? 1.0 : 0.7)
                                         .contentShape(Rectangle())
@@ -148,31 +167,20 @@ struct DecodeGameView: View {
                                                             showingColorPicker = true
                                                         }
                                                         
-                                                        game.statusText = "Choose a color for this square."
+                                                        // Don't immediately change status text - let it be handled by the picker
                                                     }
-                                                    .allowsHitTesting(game.gameInteractive && !showingColorPicker && !showHowToPlay && !showEndGameOverlay)
+                                                    .allowsHitTesting(game.gameInteractive && !showingColorPicker && !showHowToPlay && !showEndGameOverlay && game.gameOver == 0)
                                             }
                                         )
                                     
                                 }
                                 
                                 // Spacer before score button
-                                Rectangle().frame(width: 10, height: 10).foregroundColor(.clear)
+                                Rectangle().frame(width: 1, height: 10).foregroundColor(.clear)
                                 
                                 // Score indicators
                                 ZStack {
                                     VStack {
-                                        HStack {
-                                            Circle()
-                                                .frame(width: 10, height: 10)
-                                                .foregroundColor(row < game.currentTurn ? game.scoreShades[game.theScore[row][3]] : .clear)
-                                            Circle()
-                                                .frame(width: 10, height: 10)
-                                                .foregroundColor(row < game.currentTurn ? game.scoreShades[game.theScore[row][2]] : .clear)
-                                            Circle()
-                                                .frame(width: 10, height: 10)
-                                                .foregroundColor(row < game.currentTurn ? game.scoreShades[game.theScore[row][4]] : .clear)
-                                        }
                                         HStack {
                                             Circle()
                                                 .frame(width: 10, height: 10)
@@ -181,12 +189,26 @@ struct DecodeGameView: View {
                                                 .frame(width: 10, height: 10)
                                                 .foregroundColor(row < game.currentTurn ? game.scoreShades[game.theScore[row][1]] : .clear)
                                         }
+                                        HStack {
+                                            Circle()
+                                                .frame(width: 10, height: 10)
+                                                .foregroundColor(row < game.currentTurn ? game.scoreShades[game.theScore[row][4]] : .clear)
+                                            Circle()
+                                                .frame(width: 10, height: 10)
+                                                .foregroundColor(row < game.currentTurn ? game.scoreShades[game.theScore[row][2]] : .clear)
+                                            Circle()
+                                                .frame(width: 10, height: 10)
+                                                .foregroundColor(row < game.currentTurn ? game.scoreShades[game.theScore[row][3]] : .clear)
+                                        }
                                     }
                                     
-                                    // Circle that submits the score
-                                    Circle()
-                                        .frame(width: 50)
-                                        .foregroundColor(row == game.currentTurn ? (game.gameOver == 0 ? .gray : .clear) : .clear)
+                                    // Submit button with system image
+                                    let isActiveRow = row == game.currentTurn
+                                    let isRowComplete = isActiveRow && game.theBoard[row].allSatisfy { $0 != 0 }
+                                    
+                                    Image(systemName: isRowComplete ? "checkmark.circle.badge.questionmark.fill" : "checkmark.circle.badge.questionmark")
+                                        .font(.system(size: 30))
+                                        .foregroundColor(isActiveRow ? (game.gameOver == 0 ? (isRowComplete ? .white : .gray) : .clear) : .clear)
                                         .opacity(game.gameInteractive ? 1.0 : 0.5)
                                         .contentShape(Circle())
                                         .onTapGesture {
@@ -194,7 +216,7 @@ struct DecodeGameView: View {
                                                 game.scoreRow(row)
                                             }
                                         }
-                                        .allowsHitTesting(game.gameInteractive && !showingColorPicker && !showHowToPlay && !showEndGameOverlay)
+                                        .allowsHitTesting(game.gameInteractive && !showingColorPicker && !showHowToPlay && !showEndGameOverlay && game.gameOver == 0)
                                 }
                             }
                         }
@@ -205,15 +227,24 @@ struct DecodeGameView: View {
                     // Inject the real scoreManager into the game
                     game.scoreManager = scoreManager
                     
-                    // Show the How-to-Play overlay if the user hasn't dismissed it before
+                    // Check if user has seen How-to-Play before
                     let key = "hasSeenHowToPlay_decode"
-                    if !UserDefaults.standard.bool(forKey: key) {
-                        // Delay showing how-to-play until after animation
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
-                            if game.gameInteractive {
-                                showHowToPlay = true
-                            }
-                        }
+                    let hasSeenBefore = UserDefaults.standard.bool(forKey: key)
+                    
+                    if !hasSeenBefore && isFirstLaunch {
+                        // Start game without animation, then show how-to-play
+                        game.startGameWithoutAnimation()
+                        showHowToPlay = true
+                    } else {
+                        // Normal start with animation
+                        game.startGame()
+                    }
+                    isFirstLaunch = false
+                }
+                .onChange(of: showHowToPlay, initial: false) { oldValue, newValue in
+                    // When How-to-Play is dismissed, start the animation
+                    if oldValue && !newValue {
+                        game.startCodeAnimation()
                     }
                 }
                 .onChange(of: game.gameOver, initial: false) { oldValue, newValue in
@@ -222,7 +253,7 @@ struct DecodeGameView: View {
 //                        print("🔍 DEBUG: game.gameOver = \(newValue)")
 //                        print("🔍 DEBUG: game.lastScore = \(String(describing: game.lastScore))")
 //                        print("🔍 DEBUG: game.lastScore?.finalScore = \(String(describing: game.lastScore?.finalScore))")
-//                        
+//
                         // Show Code Reveal first
                         showCodeReveal = true
 
@@ -246,7 +277,14 @@ struct DecodeGameView: View {
                         onColorSelected: { colorIndex in
                             let gameColorIndex = colorIndex + 1
                             game.theBoard[selectedSquare.row][selectedSquare.col] = gameColorIndex
-                            game.statusText = "Tap the circle when you're ready to submit a guess. You have \(7 - game.currentTurn) guesses left."
+                            
+                            // Check if row is now complete
+                            let isRowComplete = game.theBoard[game.currentTurn].allSatisfy { $0 != 0 }
+                            if isRowComplete {
+                                game.statusText = "Tap the checkmark to submit your guess."
+                            } else {
+                                game.statusText = "Tap the checkmark when you're ready to submit a guess. You have \(7 - game.currentTurn) guesses left."
+                            }
                         }
                     )
                     .background(
@@ -286,8 +324,8 @@ struct DecodeGameView: View {
                     CodeRevealOverlay(
                         theCode: game.theCode,
                         theBoard: game.theBoard,
-                        lastTurn: game.currentTurn - 1,
-                        won: game.lastScore?.won ?? false,
+                        lastTurn: game.currentTurn,
+                        won: game.gameOver == 1 && game.currentTurn < game.numRows,
                         pegShades: game.pegShades
                     ) {
                         withAnimation {
@@ -370,7 +408,7 @@ struct CodeRevealOverlay: View {
                 .foregroundColor(.white)
             
             HStack {
-                ForEach(theCode, id: \.self) { peg in
+                ForEach(Array(theCode.enumerated()), id: \.offset) { index, peg in
                     Circle()
                         .fill(pegShades[peg])
                         .frame(width: 30, height: 30)
@@ -383,7 +421,7 @@ struct CodeRevealOverlay: View {
                 .foregroundColor(.white)
             
             HStack {
-                ForEach(theBoard[lastTurn], id: \.self) { peg in
+                ForEach(Array(theBoard[lastTurn].enumerated()), id: \.offset) { index, peg in
                     Circle()
                         .fill(pegShades[peg])
                         .frame(width: 30, height: 30)

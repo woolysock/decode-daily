@@ -11,6 +11,8 @@ struct FlashdanceGameView: View {
     @EnvironmentObject var scoreManager: GameScoreManager
     @Environment(\.dismiss) private var dismiss
     
+    @ObservedObject private var equationManager = DailyEquationManager.shared
+    
     @StateObject private var game: FlashdanceGame
     @StateObject private var dailyCheckManager = DailyCheckManager.shared
     
@@ -62,27 +64,38 @@ struct FlashdanceGameView: View {
                     VStack(spacing: 15) {
                         Spacer().frame(height: 5)
                         
-                        // === Header: Title + Timer + Help ===
                         HStack {
-                            Text("\(game.gameInfo.displayName)")
-                                .foregroundColor(.white)
-                                .font(.custom("LuloOne-Bold", size: 20))
-                                .onTapGesture { startRound() }
-                            
+                            Spacer().frame(width: 5)
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("\(game.gameInfo.displayName)")
+                                    .foregroundColor(.white)
+                                    .font(.custom("LuloOne-Bold", size: 20))
+                                    .onTapGesture { startRound() }
+                                
+                                if let mathset = equationManager.currentEquationSet {
+                                    Text(DateFormatter.dayFormatter.string(from: mathset.date))
+                                        .font(.custom("LuloOne", size: 12))
+                                        .foregroundColor(.gray)
+                                }
+                            }
+
                             Spacer()
                             
-                            if game.isGameActive {
-                                Text("\(game.gameTimeRemaining)")
-                                    .font(.custom("LuloOne-Bold", size: 20))
-                                    .foregroundColor(.white)
-                                    .monospacedDigit()
-                                    .frame(minWidth: 54)
-                                    .transition(.opacity)
-                            } else {
-                                Text(" ")
-                                    .font(.custom("LuloOne-Bold", size: 20))
-                                    .frame(minWidth: 54)
-                                    .opacity(0)
+                            Group {
+                                
+                                if game.isGameActive {
+                                    Text("\(game.gameTimeRemaining)")
+                                        .font(.custom("LuloOne-Bold", size: 20))
+                                        .foregroundColor(.white)
+                                        .monospacedDigit()
+                                        .frame(minWidth: 54)
+                                        .transition(.opacity)
+                                } else {
+                                    Text(" ")
+                                        .font(.custom("LuloOne-Bold", size: 20))
+                                        .frame(minWidth: 54)
+                                        .opacity(0)
+                                }
                             }
                             
                             Spacer()
@@ -95,6 +108,8 @@ struct FlashdanceGameView: View {
                         }
                         .padding(.horizontal, 20)
                         
+                        //Spacer().frame(height:1)
+                        
                         Divider().background(.white).padding(5)
                         
                         // Status text
@@ -104,22 +119,20 @@ struct FlashdanceGameView: View {
                             .multilineTextAlignment(.center)
                             .padding(.horizontal, 20)
                         
-                        Spacer().frame(height: 1)
+                        Spacer().frame(height:45)
                         
                         // === GAME BOARD ===
                         ZStack {
                             Color.black.ignoresSafeArea()
                             
                             GeometryReader { geo in
-                                let cardWidth: CGFloat = min(geo.size.width * 0.6, 300)
-                                let cardHeight: CGFloat = min(geo.size.height * 0.4, 420)
-                                let pillWidth: CGFloat = min(geo.size.width * 0.25, 120)
-                                let pillHeight: CGFloat = 160
+                                let cardWidth: CGFloat = 180
+                                let cardHeight: CGFloat = 200
+                                let pillWidth: CGFloat = 120
+                                let pillHeight: CGFloat = 50
                                 let spacing: CGFloat = 10
-                                
+                                                                
                                 VStack {
-                                    Spacer().frame(height: geo.size.height * 0.05)
-                                    
                                     // === Answer Pills Row ===
                                     if game.isGameActive {
                                         HStack(spacing: spacing) {
@@ -133,7 +146,7 @@ struct FlashdanceGameView: View {
                                         .opacity(0.85)
                                     }
                                     
-                                    Spacer().frame(height: 20)
+                                    Spacer().frame(height: 10)
                                     
                                     // === Flashcard Center ===
                                     if game.isPreCountdownActive {
@@ -215,7 +228,12 @@ struct FlashdanceGameView: View {
                         else { game.resumeGame(); if !hasStartedRound { startRound() } }
                     }
                     .onChange(of: game.gameOver, initial: false) { _, newValue in
-                        if newValue == 1 { showEndGameOverlay = true }
+                        if newValue == 1 {
+                            // Wait a brief moment for the score to be saved and lastScore updated
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                                showEndGameOverlay = true
+                            }
+                        }
                     }
                 }
                 .navigationDestination(isPresented: $navigateToHighScores) {
@@ -233,22 +251,45 @@ struct FlashdanceGameView: View {
                 .transition(.opacity)
             }
             
-            if showEndGameOverlay {
-                EndGameOverlay(
-                    gameID: game.gameInfo.id,
-                    finalScore: game.lastScore?.finalScore ?? game.totalScore,
-                    displayName: game.gameInfo.displayName,
-                    isVisible: $showEndGameOverlay,
-                    onPlayAgain: { startNewGame() },
-                    onHighScores: {
-                        showEndGameOverlay = false
-                        navigateToHighScores = true
-                    },
-                    onMenu: { showEndGameOverlay = false; dismiss() },
-                    gameScore: game.lastScore
-                )
-                .transition(.opacity)
+            // Move overlays outside NavigationStack to root ZStack level
+           
+                if showEndGameOverlay {
+                    let _ = print("  EGO: game.lastScore.finalScore: \(String(describing: game.lastScore?.finalScore))")
+                    let _ = print("  EGO: game.totalScore: \(game.totalScore)")
+                    
+                    EndGameOverlay(
+                        gameID: game.gameInfo.id,
+                        finalScore: game.totalScore,
+                        displayName: game.gameInfo.displayName,
+                        isVisible: $showEndGameOverlay,
+                        onPlayAgain: { startNewGame() },
+                        onHighScores: { navigateToHighScores = true },
+                        onMenu: {
+                            showEndGameOverlay = false
+                            dismiss()
+                        },
+                        gameScore: game.lastScore
+                    )
+                    .transition(.opacity)
+                
             }
+                
+//            if showEndGameOverlay {
+//                EndGameOverlay(
+//                    gameID: game.gameInfo.id,
+//                    finalScore: game.totalScore,
+//                    displayName: game.gameInfo.displayName,
+//                    isVisible: $showEndGameOverlay,
+//                    onPlayAgain: { startNewGame() },
+//                    onHighScores: {
+//                        showEndGameOverlay = false
+//                        navigateToHighScores = true
+//                    },
+//                    onMenu: { showEndGameOverlay = false; dismiss() },
+//                    gameScore: game.lastScore
+//                )
+//                .transition(.opacity)
+//            }
         }
         .onChange(of: dailyCheckManager.showNewDayOverlay) { oldValue, newValue in
             if newValue {
@@ -285,41 +326,7 @@ struct FlashdanceGameView: View {
             .shadow(radius: 3)
             .accessibilityLabel(Text("Answer \(value)"))
     }
-    
-//    private func highlightPillUnderDrag(location: CGPoint, geo: GeometryProxy) {
-//        // Match the exact same calculations used in the UI layout
-//        let pillWidth: CGFloat = min(geo.size.width * 0.25, 120)
-//        let pillHeight: CGFloat = 160
-//        let spacing: CGFloat = 10 // Match the HStack spacing exactly
-//        
-//        // Calculate the total width of all pills including spacing
-//        let totalPillsWidth = pillWidth * 3 + spacing * 2
-//        let startX = (geo.size.width - totalPillsWidth) / 2
-//        
-//        // Calculate Y position to match the actual pill layout
-//        // Pills are positioned at: Spacer(height: geo.size.height * 0.05) + pillHeight/2
-//        let pillRowY = geo.size.height * 0.05 + pillHeight / 2
-//        
-//        highlightedAnswer = nil
-//        
-//        for (i, val) in game.answers.enumerated() {
-//            // Calculate the center X position for each pill
-//            let pillCenterX = startX + pillWidth/2 + CGFloat(i) * (pillWidth + spacing)
-//            
-//            // Create the pill frame
-//            let pillFrame = CGRect(
-//                x: pillCenterX - pillWidth/2,
-//                y: pillRowY - pillHeight/2,
-//                width: pillWidth + 10,
-//                height: pillHeight + 40
-//            )
-//            
-//            if pillFrame.contains(location) {
-//                highlightedAnswer = val
-//                break
-//            }
-//        }
-//    }
+
     
     private func highlightPillUnderDrag(location: CGPoint, geo: GeometryProxy) {
         // Calculate card center based on current drag
@@ -342,7 +349,7 @@ struct FlashdanceGameView: View {
         
         // Calculate the CENTER of the flashcard after the drag
         let cardCenterX = geo.size.width / 2 + currentDragOffset.width
-        let cardCenterY = geo.size.height / 2 + currentDragOffset.height // Approximate card center Y
+        //let cardCenterY = geo.size.height / 2 + currentDragOffset.height // Approximate card center Y
         
         var selectedAnswer: Int?
         
@@ -403,7 +410,7 @@ struct FlashdanceGameView: View {
     
     private func animateWrongAnswer() {
         // Bounce back to center
-        withAnimation(.spring(response: 0.4, dampingFraction: 0.6)) {
+        withAnimation(.spring(response: 0.6, dampingFraction: 0.6)) {
             dragOffset = .zero
         }
     }

@@ -132,7 +132,11 @@ struct ScoreRowView: View {
                     Text("Guesses: \(decodeProps.turnsToSolve)")
                         .font(.custom("LuloOne", size: 10))
                         .foregroundColor(.secondary)
-                    Text("Code Size: \(decodeProps.codeLength)")
+                    
+                    let duration = Int(decodeProps.gameDuration)
+                    let timeText = duration < 60 ? "\(duration) sec" : String(format: "%d:%02d", duration / 60, duration % 60)
+                    
+                    Text("Time to Solve: \(timeText)")
                         .font(.custom("LuloOne", size: 10))
                         .foregroundColor(.secondary)
                 }
@@ -142,12 +146,16 @@ struct ScoreRowView: View {
                         .font(.custom("LuloOne", size: 10))
                         .foregroundColor(.black)
                     Text("  (\(anagramsProps.totalWordsInSet) words possible)")
-                        .font(.custom("LuloOne", size: 12))
+                        .font(.custom("LuloOne", size: 8))
                         .foregroundColor(.secondary)
                     Text("Longest word solved: \(anagramsProps.longestWord) letters")
                         .font(.custom("LuloOne", size: 10))
                         .foregroundColor(.black)
-                    Text("Timer: \(Int(score.timeElapsed)) seconds")
+                    
+                    let duration = Int(score.timeElapsed)
+                    let timeText = duration < 60 ? "\(duration) sec" : String(format: "%d:%02d", duration / 60, duration % 60)
+                    
+                    Text("Timer: \(timeText)")
                         .font(.custom("LuloOne", size: 10))
                         .foregroundColor(.black)
                     

@@ -263,8 +263,9 @@ class AnagramsGame: GameProtocol, ObservableObject {
             )
         )
         
-        scoreManager.saveScore(newScore)
-        lastScore = newScore
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+            self.lastScore = self.scoreManager.getMostRecentScore(for: "anagrams")
+        }
         
         // Mark wordset as completed if applicable
         if let wordset = dailyWordset {

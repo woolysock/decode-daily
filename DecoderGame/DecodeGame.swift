@@ -44,7 +44,7 @@ class DecodeGame: ObservableObject, GameProtocol {
 
     let numRows = 7
     let numCols = 5
-
+    
     init(scoreManager: GameScoreManager) {
         self.scoreManager = scoreManager
         startGame()
@@ -69,28 +69,55 @@ class DecodeGame: ObservableObject, GameProtocol {
 
 
     func startGame() {
+        // Set animation state FIRST to hide the board
+        isAnimating = true
+        gameInteractive = false
+        
         pegShades = [myPegColor1, myPegColor2, myPegColor3, myPegColor4, myPegColor5, myPegColor6]
         currentTurn = 0
         gameOver = 0
         theCode = (0..<numCols).map { _ in Int.random(in: 1..<pegShades.count) }
+        
+        print("🔐 SECRET CODE: \(theCode)")
+        
         theBoard = Array(repeating: Array(repeating: 0, count: numCols), count: numRows)
         theScore = Array(repeating: Array(repeating: 0, count: numCols), count: numRows)
         statusText = "Try to guess the hidden color code"
         gameStartTime = Date()
         lastScore = nil
         
-        // Start the code animation
+        // Now start the animation
         startCodeAnimation()
         
-        // Debug logging to verify scoreManager is connected
-        print("DecodeGame initialized with scoreManager: \(type(of: scoreManager))")
+        print("startGame() called: DecodeGame initialized with scoreManager: \(type(of: scoreManager))")
+    }
+    
+    func startGameWithoutAnimation() {
+        pegShades = [myPegColor1, myPegColor2, myPegColor3, myPegColor4, myPegColor5, myPegColor6]
+        currentTurn = 0
+        gameOver = 0
+        theCode = (0..<numCols).map { _ in Int.random(in: 1..<pegShades.count) }
+        
+        // DEBUG: Print the secret code
+        print("🔐 SECRET CODE: \(theCode)")
+        
+        theBoard = Array(repeating: Array(repeating: 0, count: numCols), count: numRows)
+        theScore = Array(repeating: Array(repeating: 0, count: numCols), count: numRows)
+        gameStartTime = Date()
+        lastScore = nil
+        
+        isAnimating = false
+        gameInteractive = false
+        animatedCode = (0..<numCols).map { _ in 0 }
+        
+        print("DecodeGame initialized without animation with scoreManager: \(type(of: scoreManager))")
     }
 
     func resetGame() {
         startGame()
     }
     
-    private func startCodeAnimation() {
+    func startCodeAnimation() {
         isAnimating = true
         gameInteractive = false
         animationStartTime = Date()
@@ -104,7 +131,7 @@ class DecodeGame: ObservableObject, GameProtocol {
         }
     }
     
-    private func updateAnimation() {
+    func updateAnimation() {
         guard let startTime = animationStartTime else { return }
         
         let elapsed = Date().timeIntervalSince(startTime)
@@ -143,10 +170,14 @@ class DecodeGame: ObservableObject, GameProtocol {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
             withAnimation(.easeIn(duration: 0.2)) {
                 self.gameInteractive = true
-                self.statusText = "Tap each square to assign a color."
+                // Only set status text if it's still the default or empty
+                if self.statusText.isEmpty || self.statusText == "Learn how to play, then start cracking the code!" {
+                    self.statusText = "Tap each square to assign a color."
+                }
             }
         }
     }
+
 
     func checkRow(_ row: Int) -> Bool {
         for col in 0..<numCols {
@@ -157,17 +188,25 @@ class DecodeGame: ObservableObject, GameProtocol {
         }
         return true
     }
-
+    
     func scoreRow(_ row: Int) {
-        guard row == currentTurn else { return }
-
+        guard row == currentTurn, gameOver == 0 else {
+            print("scoreRow rejected: row=\(row), currentTurn=\(currentTurn), gameOver=\(gameOver)")
+            return
+        }
+        
+        print("scoreRow executing for turn \(row)")
+        
         if checkRow(row) {
+            // DEBUG: Print the current guess vs the code
+            print("🎯 GUESS \(row + 1): \(theBoard[row]) vs CODE: \(theCode)")
+            
             var exactMatches = 0
             var colorCounts = [Int: Int]()
-
+            
             // Count colors in the code
             for peg in theCode { colorCounts[peg, default: 0] += 1 }
-
+            
             // Check for exact matches first
             for col in 0..<numCols {
                 if theBoard[row][col] == theCode[col] {
@@ -185,20 +224,22 @@ class DecodeGame: ObservableObject, GameProtocol {
                 }
             }
 
+            // DEBUG: Print the scoring results
+            print("📊 SCORING: \(exactMatches) exact matches, \(partialMatches) partial matches")
+
             // Set score indicators
             for col in 0..<exactMatches { theScore[row][col] = 2 } // Green dots
             for col in exactMatches..<(exactMatches + partialMatches) { theScore[row][col] = 1 } // Yellow dots
 
-            // Update status text
-            statusText = "You got \(exactMatches) color\(exactMatches == 1 ? " " : "s ")in the RIGHT spot.\nYou got \(partialMatches) color\(partialMatches == 1 ? " " : "s ")in the WRONG spot.\n\nTry again (\(7 - self.currentTurn) turns left)."
-            currentTurn += 1
-
+            statusText = "You got \(exactMatches) color\(exactMatches == 1 ? " " : "s ")in the RIGHT spot.\n\nYou got \(partialMatches) color\(partialMatches == 1 ? " " : "s ")in the WRONG spot.\n\nTry again."
+            
             // Check win condition
             if exactMatches == numCols {
+                print("🎉 WIN DETECTED! Setting gameOver = 1")
                 gameOver = 1
                 statusText = "You cracked the code! Nice job!"
                 saveGameScore(won: true)
-
+                
                 if let score = lastScore {
                     statusText += "\n\nScore: \(score.finalScore) points"
                     statusText += "\nTime: \(score.formattedTime)"
@@ -207,8 +248,13 @@ class DecodeGame: ObservableObject, GameProtocol {
                 return
             }
 
+            // Only increment currentTurn if the game wasn't won
+            currentTurn += 1
+            print("➡️ Moving to turn \(currentTurn)")
+
             // Check lose condition (out of attempts)
             if currentTurn >= numRows {
+                print("💀 GAME OVER! No more turns")
                 gameOver = 1
                 statusText = "Sorry, you're out of guesses. Maybe next time!"
                 saveGameScore(won: false)
@@ -223,7 +269,8 @@ class DecodeGame: ObservableObject, GameProtocol {
         }
 
         let timeElapsed = Date().timeIntervalSince(startTime)
-        let attempts = currentTurn
+        let attempts = currentTurn + 1
+        
         let finalScore = GameScoreManager.calculateDecodeScore(
             attempts: attempts,
             timeElapsed: timeElapsed,
@@ -231,18 +278,8 @@ class DecodeGame: ObservableObject, GameProtocol {
             maxAttempts: numRows
         )
 
-//        let gameScore = GameScore(
-//            gameId: "decode",
-//            date: Date(),
-//            attempts: attempts,
-//            timeElapsed: timeElapsed,
-//            won: won,
-//            finalScore: finalScore
-//        )
-
         print("Saving game score: \(finalScore) points, won: \(won), attempts: \(attempts)")
         
-        // Save the score using the enhanced score manager with additional properties
         scoreManager.saveDecodeScore(
             attempts: attempts,
             timeElapsed: timeElapsed,
@@ -251,7 +288,10 @@ class DecodeGame: ObservableObject, GameProtocol {
             turnsToSolve: attempts,
             codeLength: numCols
         )
-        lastScore = scoreManager.getScores(for: "decode").first
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+            self.lastScore = self.scoreManager.getMostRecentScore(for: "decode")
+        }
         
         print("Score saved successfully to \(type(of: scoreManager))")
     }
@@ -259,8 +299,11 @@ class DecodeGame: ObservableObject, GameProtocol {
     func getRecentScores() -> [GameScore] {
         return scoreManager.getScores(for: "decode")
     }
+
     
     deinit {
         animationTimer?.invalidate()
     }
+    
+    
 }

@@ -19,7 +19,6 @@ struct DailyEquationSet: Codable, Identifiable {
     let id: String           // Date string "2025-01-15"
     let date: Date
     let equations: [MathEquation]
-    var isCompleted: Bool = false
     var completedAt: Date?
 }
 
@@ -82,31 +81,46 @@ final class DailyEquationManager: ObservableObject {
     
     // Private methods similar to DailyWordsetManager...
     private func loadAllEquationSets() {
+        print("🔍 Looking for DailyEquations.json in bundle...")
+        
         guard let url = Bundle.main.url(forResource: dailyEquationsResource, withExtension: "json") else {
-            print("DailyEquationManager - no DailyEquations.json found")
+            print("❌ DailyEquationManager - no DailyEquations.json found in bundle")
+            print("📂 Available files: \(Bundle.main.urls(forResourcesWithExtension: "json", subdirectory: nil) ?? [])")
             return
         }
         
+        print("✅ Found DailyEquations.json at: \(url)")
+        
         do {
             let data = try Data(contentsOf: url)
+            print("📊 JSON file size: \(data.count) bytes")
+            
             let decoder = JSONDecoder()
             decoder.dateDecodingStrategy = .formatted(Self.dateFormatter)
             self.allEquationSets = try decoder.decode([DailyEquationSet].self, from: data)
+            
+            print("✅ Successfully loaded \(allEquationSets.count) equation sets")
+            if let first = allEquationSets.first {
+                print("📝 First set: \(first.id) with \(first.equations.count) equations")
+            }
         } catch {
-            print("Failed to load DailyEquations.json: \(error)")
+            print("❌ Failed to load/parse DailyEquations.json: \(error)")
         }
     }
     
     private func loadEquationSet(for date: Date) -> DailyEquationSet? {
         let dateKey = Self.dateFormatter.string(from: date)
+        print("🔍 Looking for equation set with dateKey: \(dateKey)")
         
-        // Check UserDefaults override first
-        if let override = loadEquationSetOverride(for: dateKey) {
-            return override
+        // Skip UserDefaults - go directly to bundled JSON
+        print("🔍 Searching in \(allEquationSets.count) bundled equation sets...")
+        if let found = allEquationSets.first(where: { $0.id == dateKey }) {
+            print("✅ Found equation set in bundled JSON for \(dateKey)")
+            return found
         }
-        
-        // Check bundled JSON
-        return allEquationSets.first { $0.id == dateKey }
+
+        print("❌ No equation set found for \(dateKey)")
+        return nil
     }
     
     private func generateEquation(operation: Int) -> MathEquation {

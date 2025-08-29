@@ -97,8 +97,8 @@ struct EndGameOverlay: View {
     
     // NEW: Computed property for additional score details
     private var additionalScoreDetails: String? {
-        print("🔍 DEBUG: gameScore = \(String(describing: gameScore))")
-        print("🔍 DEBUG: gameID = \(gameID)")
+        //print("🔍 EndGameOverlay score = \(String(describing: gameScore))")
+        //print("🔍 DEBUG: gameID = \(gameID)")
         
         guard let gameScore = gameScore else {
             print("🔍 DEBUG: gameScore is nil, returning nil")
@@ -109,12 +109,11 @@ struct EndGameOverlay: View {
         case "decode":
             //print("🔍 DEBUG: In decode case")
             guard let decodeProps = gameScore.decodeProperties else {
-                print("🔍 DEBUG: decodeProps is nil")
+                //print("🔍 DEBUG: decodeProps is nil")
                 return nil
             }
-           // print("🔍 DEBUG: decodeProps = \(decodeProps)")
             let formattedTime = formatDuration(decodeProps.gameDuration)
-            return "Turns: \(decodeProps.turnsToSolve)/7 • Time: \(formattedTime) • Code Length: \(decodeProps.codeLength)"
+            return "Turns: \(decodeProps.turnsToSolve)/7 • Time: \(formattedTime)"
             
         case "flashdance":
             guard let flashProps = gameScore.flashdanceProperties else { return nil }
