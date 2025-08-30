@@ -232,7 +232,7 @@ class AnagramsGame: GameProtocol, ObservableObject {
         gameOver = 1
         
         // Calculate final score and statistics
-                let longestWordLength = getLongestWordCompleted()
+               // let longestWordLength = getLongestWordCompleted()
         let gameWon = wordsCompleted >= (totalWordsInSet / 2)
         let difficultyScore = calculateDifficultyScore()
         let finalScore = Int(difficultyScore) //wordsCompleted <- former score value before difficulty
@@ -245,23 +245,23 @@ class AnagramsGame: GameProtocol, ObservableObject {
         userAnswer = ""
         
         // Save score to ScoreManager
-        let newScore = GameScore(
-            gameId: "anagrams",
-            date: Date(),
-            attempts: wordsCompleted,
-            timeElapsed: 60.0,
-            won: gameWon,
-            finalScore: finalScore,
-            additionalProperties: AnagramsAdditionalProperties(  // Use the GameScoreManager struct
-                gameDuration: 60.0,
-                longestWord: longestWordLength,
-                totalWordsInSet: totalWordsInSet,
-                wordsCompleted: wordsCompleted,
-                wordsetId: dailyWordset?.id ?? "",
-                completedWordLengths: completedWordLengths,
-                difficultyScore: difficultyScore
-            )
-        )
+//        let newScore = GameScore(
+//            gameId: "anagrams",
+//            date: Date(),
+//            attempts: wordsCompleted,
+//            timeElapsed: 60.0,
+//            won: gameWon,
+//            finalScore: finalScore,
+//            additionalProperties: AnagramsAdditionalProperties(  // Use the GameScoreManager struct
+//                gameDuration: 60.0,
+//                longestWord: longestWordLength,
+//                totalWordsInSet: totalWordsInSet,
+//                wordsCompleted: wordsCompleted,
+//                wordsetId: dailyWordset?.id ?? "",
+//                completedWordLengths: completedWordLengths,
+//                difficultyScore: difficultyScore
+//            )
+//        )
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
             self.lastScore = self.scoreManager.getMostRecentScore(for: "anagrams")
