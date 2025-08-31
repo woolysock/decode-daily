@@ -75,7 +75,7 @@ final class DailyEquationManager: ObservableObject {
         }
     }
     
-    func getTodaysEquationSet() -> DailyEquationSet? {
+    func getTodaysEquationSet(for date: Date) -> DailyEquationSet? {
         return currentEquationSet
     }
     
@@ -206,5 +206,12 @@ final class DailyEquationManager: ObservableObject {
             print("DailyEquationManager - failed to encode equation set for \(equationSet.id): \(error)")
         }
     }
+    
+    func getAvailableDates() -> [Date] {
+        // Map the loaded JSON sets to their actual dates
+        let dates = allEquationSets.map { $0.date }
+        return dates.sorted(by: >) // newest first
+    }
+
 }
 

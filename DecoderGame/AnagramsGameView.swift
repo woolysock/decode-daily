@@ -9,6 +9,8 @@ import SwiftUI
 import Combine
 
 struct AnagramsGameView: View {
+    let targetDate: Date?
+    
     @ObservedObject private var wordsetManager = DailyWordsetManager.shared
 
     @EnvironmentObject var scoreManager: GameScoreManager
@@ -32,6 +34,10 @@ struct AnagramsGameView: View {
 
     If you make a mistake, tap "clear" to remove the letters and try again. 
     """
+    
+    init(targetDate: Date? = nil) {
+        self.targetDate = targetDate
+    }
     
     var body: some View {
         ZStack {
@@ -96,24 +102,27 @@ struct AnagramsGameView: View {
         .onChange(of: dailyCheckManager.showNewDayOverlay) { oldValue, newValue in
             guard let anagramsGame = game.anagramsGame else { return }
             
-            if newValue {
-                // New day overlay is showing - force end the game immediately
-                print("AnagramsGameView: Force ending game due to new day overlay")
-                anagramsGame.endGame()
-                
-                // Hide any other overlays that might be showing
-                showEndGameOverlay = false
-                showHowToPlay = false
-                
-                // Reset the game state
-                hasStartedRound = false
+            // Only respond to new day overlay if this is NOT an archived game
+            if targetDate == nil {
+                if newValue {
+                    // New day overlay is showing - force end the game immediately
+                    print("AnagramsGameView: Force ending game due to new day overlay")
+                    anagramsGame.endGame()
+                    
+                    // Hide any other overlays that might be showing
+                    showEndGameOverlay = false
+                    showHowToPlay = false
+                    
+                    // Reset the game state
+                    hasStartedRound = false
+                }
             }
         }
 
         // Also add this onChange to handle when the overlay is dismissed:
         .onChange(of: dailyCheckManager.showNewDayOverlay) { oldValue, newValue in
             // When overlay is dismissed (goes from true to false), return to main menu
-            if oldValue == true && newValue == false {
+            if targetDate == nil && oldValue == true && newValue == false {
                 print("AnagramsGameView: New day overlay dismissed, returning to main menu")
                 dismiss()
             }
@@ -125,7 +134,7 @@ struct AnagramsGameView: View {
         print("🔧 Initializing game...")
         
         if game.anagramsGame == nil {
-            game.anagramsGame = AnagramsGame(scoreManager: scoreManager)
+            game.anagramsGame = AnagramsGame(scoreManager: scoreManager, targetDate: targetDate)
         }
         
         print("📊 WordsetManager Status:")
@@ -177,18 +186,32 @@ struct AnagramsGameView: View {
             HStack {
                 Spacer().frame(width: 5)
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(anagramsGame.gameInfo.displayName)
-                        .foregroundColor(.white)
-                        .font(.custom("LuloOne-Bold", size: 20))
-                        .onTapGesture { tryToStartGame() }
+                    HStack(spacing: 8) {
+                        Text(anagramsGame.gameInfo.displayName)
+                            .foregroundColor(.white)
+                            .font(.custom("LuloOne-Bold", size: 20))
+                            .onTapGesture { tryToStartGame() }
+                        
+                        // Archive indicator
+                        if targetDate != nil {
+                            Text("ARCHIVE")
+                                .font(.custom("LuloOne", size: 8))
+                                .foregroundColor(.orange)
+                                .padding(.horizontal, 6)
+                                .padding(.vertical, 2)
+                                .background(Color.orange.opacity(0.2))
+                                .cornerRadius(4)
+                        }
+                    }
                     
                     // Daily indicator
-//                    if wordsetManager.currentWordset != nil {
-//                        Text(DateFormatter.dayFormatter.string(from: Date()))
-//                            .font(.custom("LuloOne", size: 12))
-//                            .foregroundColor(.gray)
-                    //                    }
-                    if let wordset = wordsetManager.currentWordset {
+                    if let targetDate = targetDate {
+                        // Show the archive date when in archive mode
+                        Text(DateFormatter.dayFormatter.string(from: targetDate))
+                            .font(.custom("LuloOne", size: 12))
+                            .foregroundColor(.gray)
+                    } else if let wordset = wordsetManager.currentWordset {
+                        // Show the wordset date when in normal mode
                         Text(DateFormatter.dayFormatter.string(from: wordset.date))
                             .font(.custom("LuloOne", size: 12))
                             .foregroundColor(.gray)
@@ -310,12 +333,6 @@ struct AnagramsGameView: View {
                         }
                     } else {
                         //let _ = print("   → UI showing default state")
-//                        // Show a default state with instructions
-//                        VStack(spacing: 20) {
-//                            Text("🎬")
-//                                .font(.custom("LuloOne", size: 86))
-//                                .foregroundColor(.white)
-//                        }
                         Spacer()
                     }
                     Spacer()
@@ -455,9 +472,6 @@ struct AnagramsGameView: View {
         VStack(spacing: 10) {
             if anagramsGame.isGameActive {
                 
-//                let _ = print("   → gameArea: isGameActive")
-//                let _ = print("anagramsGame.userAnswer.isEmpty: \(anagramsGame.userAnswer.isEmpty), anagramsGame.isGamePaused: \(anagramsGame.isGamePaused), wordsetManager.isGeneratingWordsets: \(wordsetManager.isGeneratingWordsets)")
-                
                 HStack {
                     Text("Solved: \(anagramsGame.attempts)")
                         .font(.custom("LuloOne-Bold", size: 16))
@@ -468,7 +482,6 @@ struct AnagramsGameView: View {
                     // Show progress through daily words
                     
                     if let wordset = wordsetManager.currentWordset {
-                        //let _ = print("   → gameArea: using wordset \(wordsetManager.currentWordset?.words ?? [])")
                         Text("On word\n\(anagramsGame.currentWordIndex + 1) of \(wordset.words.count)")
                             .font(.custom("LuloOne", size: 12))
                             .foregroundColor(.white)
@@ -485,8 +498,6 @@ struct AnagramsGameView: View {
                     .font(.custom("LuloOne", size: 14))
                     .foregroundColor(.white)
                 
-                //let _ = print("anagramsGame.userAnswer.count: \(anagramsGame.userAnswer.count) - \(anagramsGame.userAnswer)")
-                
                 HStack(spacing: 5) {
                     ForEach(0..<anagramsGame.userAnswer.count, id: \.self) { index in
                         let letter = String(
@@ -499,8 +510,7 @@ struct AnagramsGameView: View {
                     
                     // Show empty boxes for remaining letters - make them smaller for long words
                     ForEach(anagramsGame.userAnswer.count..<anagramsGame.currentWord.count, id: \.self) { _ in
-                        //let boxSize: CGFloat = anagramsGame.currentWord.count > 6 ? 35 : 45
-                                                Rectangle()
+                        Rectangle()
                             .fill(Color.white.opacity(0.3))
                             .frame(width: 35, height: 35)
                             .cornerRadius(0)
@@ -533,7 +543,6 @@ struct AnagramsGameView: View {
             
         }
         .padding(.horizontal, 20)
-        //.padding(.vertical, 10)
     }
     
     // MARK: - Game Control Methods

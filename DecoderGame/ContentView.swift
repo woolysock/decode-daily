@@ -29,7 +29,7 @@ struct ContentView: View {
             }
             
             // New Day Overlay - appears on top of everything
-            if dailyCheckManager.showNewDayOverlay {
+            if dailyCheckManager.showNewDayOverlay && !isLoading {
                 NewDayOverlay(
                     isVisible: $dailyCheckManager.showNewDayOverlay,
                     onLetsPlay: {
@@ -54,9 +54,13 @@ struct LoadingView: View {
     var body: some View {
         ZStack {
             Color.black.ignoresSafeArea()
-            Image("TitleLoader-w")
-                .resizable()
-                .scaledToFit()
+            ZStack {
+                Color.black.ignoresSafeArea()
+                Image("TitleLoader-w")
+                    .resizable()
+                    .scaledToFit()
+            }
+            .padding(30)
         }
     }
 }

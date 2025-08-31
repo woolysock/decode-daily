@@ -188,6 +188,7 @@ class GameScoreManager: ObservableObject {
         incorrectAnswers: Int,
         longestStreak: Int
     ) {
+        print("Calling saveScore()")
         let additionalProps = FlashdanceAdditionalProperties(
             gameDuration: gameDuration,
             correctAnswers: correctAnswers,
@@ -218,6 +219,7 @@ class GameScoreManager: ObservableObject {
         turnsToSolve: Int,
         codeLength: Int
     ) {
+        print("Calling saveDecodeScore()")
         let additionalProps = DecodeAdditionalProperties(
             gameDuration: timeElapsed,
             turnsToSolve: turnsToSolve,

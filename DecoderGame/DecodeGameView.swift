@@ -8,6 +8,8 @@
 import SwiftUI
 
 struct DecodeGameView: View {
+    let targetDate: Date?
+    
     @StateObject private var game: DecodeGame
     @EnvironmentObject var scoreManager: GameScoreManager
     @Environment(\.dismiss) private var dismiss  // Add this
@@ -27,45 +29,103 @@ struct DecodeGameView: View {
     // Remove navigateToMenu since we'll use dismiss
     @State private var navigateToHighScores = false
     
-    // Track if this is the first launch
+    // Track if this is the first launch AND if we should animate after how-to-play
     @State private var isFirstLaunch = true
+    @State private var shouldAnimateAfterHowToPlay = false
     
     // Initialize with proper dependency injection
-    init() {
-        // Create a temporary game with a basic score manager that will be replaced
+    init(targetDate: Date? = nil) {
         self._game = StateObject(wrappedValue: DecodeGame(scoreManager: GameScoreManager.shared))
+        self.targetDate = targetDate
     }
     
     var body: some View {
         NavigationStack {
             ZStack {
                 Color.black.ignoresSafeArea()
-                
-                VStack(spacing: 15) {
-                    // Title + How To Play button
+                VStack() {
+                    Spacer().frame(height: 10)
+                    
+                    // Title + Timer + Help button
                     HStack {
-                        Text("\(game.gameInfo.displayName)")
-                            .foregroundColor(.white)
-                            .font(.custom("LuloOne-Bold", size: 20))
-                            .onTapGesture {
-                                game.startGame()
+                        
+                        //Game name, Archive Indicator, Date
+                        VStack(alignment: .leading, spacing: 4) {
+                            HStack(spacing: 8) {
+                                // Game name
+                                Text(game.gameInfo.displayName)
+                                    .foregroundColor(.white)
+                                    .font(.custom("LuloOne-Bold", size: 20))
+                                    .onTapGesture { game.startGame() }
+                                
+                                // Archive indicator
+                                if targetDate != nil {
+                                    Text("ARCHIVE")
+                                        .font(.custom("LuloOne", size: 8))
+                                        .foregroundColor(.orange)
+                                        .padding(.horizontal, 6)
+                                        .padding(.vertical, 2)
+                                        .background(Color.orange.opacity(0.2))
+                                        .cornerRadius(4)
+                                }
                             }
+                            // Date
+                            if let targetDate = targetDate {
+                                // Show the archive date when in archive mode
+                                Text(DateFormatter.dayFormatter.string(from: targetDate))
+                                    .font(.custom("LuloOne", size: 12))
+                                    .foregroundColor(.gray)
+                            } else {
+                                //temp until DAILIES work:
+                                Text(DateFormatter.dayFormatter.string(from: Date()))
+                                    .font(.custom("LuloOne", size: 12))
+                                    .foregroundColor(.gray)
+                            }
+                            //REUSE THIS WHEN DAILIES WORK:
+                            
+                            //                            else if let wordset = wordsetManager.currentWordset {
+                            //                                // Show the wordset date when in normal mode
+                            //                                Text(DateFormatter.dayFormatter.string(from: wordset.date))
+                            //                                    .font(.custom("LuloOne", size: 12))
+                            //                                    .foregroundColor(.gray)
+                            //                            }
+                        }
+                        
+                        // Top-center game clock
+                        Spacer()
+                        
+                        //                        Group {
+                        //                            if game.gameInteractive {
+                        //                                Text("\(game.gameTimeRemaining)")
+                        //                                    .font(.custom("LuloOne-Bold", size: 20))
+                        //                                    .foregroundColor(.white)
+                        //                                    .monospacedDigit()
+                        //                                    .frame(minWidth: 54, alignment: .center)
+                        //                                    .transition(.opacity)
+                        //                            } else {
+                        Text(" ")
+                            .font(.custom("LuloOne-Bold", size: 20))
+                            .frame(minWidth: 54)
+                            .opacity(0)
+                        //                            }
+                        //                        }
                         
                         Spacer()
                         
-                        Button(action: {
-                            showHowToPlay = true
-                        }) {
+                        //How to Play button
+                        Button { showHowToPlay = true } label: {
                             Image(systemName: "questionmark.circle")
                                 .foregroundColor(.white)
                                 .font(.title2)
                         }
-                        .disabled(!game.gameInteractive)
-                        .opacity(game.gameInteractive ? 1.0 : 0.5)
                     }
-                    .padding(.horizontal, 20)
+                    .padding(.horizontal, 30)
+                    .padding(.vertical, 0)
                     
-                    Divider().background(.white).padding(5)
+                    
+                    Divider().background(.white).padding(20)
+                    
+                    //Spacer().frame(height:20)
                     
                     // Code display with animation
                     HStack(spacing: 10) {
@@ -87,12 +147,13 @@ struct DecodeGameView: View {
                                 .animation(.easeInOut(duration: 0.1), value: game.animatedCode)
                         }
                     }
+                    .padding(8)
                     .scaleEffect(game.isAnimating ? 1.05 : 1.0)
                     .animation(.easeInOut(duration: 0.3), value: game.isAnimating)
                     
                     // Status text
                     Rectangle()
-                        .frame(width: 300, height: game.gameOver != 0 && game.lastScore != nil ? 115 : 60)
+                        .frame(width: 300, height: 60)//game.gameOver != 0 && game.lastScore != nil ? 115 : 60)
                         .foregroundColor(.clear)
                         .overlay(
                             Text(game.statusText)
@@ -106,10 +167,10 @@ struct DecodeGameView: View {
                     Divider().background(.white).padding(5)
                     
                     // Game board
-                    // Game board
+                    
                     VStack(spacing: 11) {
                         ForEach(0..<game.numRows, id: \.self) { row in
-                            HStack(spacing: 10) {
+                            HStack(spacing: 8) {
                                 ForEach(0..<game.numCols, id: \.self) { col in
                                     let currentColor = game.pegShades[game.theBoard[row][col]]
                                     let isEmpty = game.theBoard[row][col] == 0
@@ -176,7 +237,7 @@ struct DecodeGameView: View {
                                 }
                                 
                                 // Spacer before score button
-                                Rectangle().frame(width: 1, height: 10).foregroundColor(.clear)
+                                //Rectangle().frame(width: 1, height: 10).foregroundColor(.clear)
                                 
                                 // Score indicators
                                 ZStack {
@@ -222,6 +283,8 @@ struct DecodeGameView: View {
                         }
                     }
                     .coordinateSpace(name: "GameBoardSpace") // board space for picker alignment
+                    
+                    Spacer()
                 }
                 .onAppear {
                     // Inject the real scoreManager into the game
@@ -235,6 +298,7 @@ struct DecodeGameView: View {
                         // Start game without animation, then show how-to-play
                         game.startGameWithoutAnimation()
                         showHowToPlay = true
+                        shouldAnimateAfterHowToPlay = true // Flag that we need to animate after dialog
                     } else {
                         // Normal start with animation
                         game.startGame()
@@ -242,30 +306,32 @@ struct DecodeGameView: View {
                     isFirstLaunch = false
                 }
                 .onChange(of: showHowToPlay, initial: false) { oldValue, newValue in
-                    // When How-to-Play is dismissed, start the animation
-                    if oldValue && !newValue {
+                    // Only animate if this was the initial how-to-play for a first-time user
+                    if oldValue && !newValue && shouldAnimateAfterHowToPlay {
                         game.startCodeAnimation()
+                        shouldAnimateAfterHowToPlay = false // Reset the flag
                     }
                 }
                 .onChange(of: game.gameOver, initial: false) { oldValue, newValue in
                     if newValue != 0 {
                         
-//                        print("🔍 DEBUG: game.gameOver = \(newValue)")
-//                        print("🔍 DEBUG: game.lastScore = \(String(describing: game.lastScore))")
-//                        print("🔍 DEBUG: game.lastScore?.finalScore = \(String(describing: game.lastScore?.finalScore))")
-//
+                        //                        print("🔍 DEBUG: game.gameOver = \(newValue)")
+                        //                        print("🔍 DEBUG: game.lastScore = \(String(describing: game.lastScore))")
+                        //                        print("🔍 DEBUG: game.lastScore?.finalScore = \(String(describing: game.lastScore?.finalScore))")
+                        //
                         // Show Code Reveal first
                         showCodeReveal = true
-
-//                        // After 2 seconds, hide reveal and show overlay
-//                        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-//                            withAnimation {
-//                                showCodeReveal = false
-//                                showEndGameOverlay = true
-//                            }
-//                        }
+                        
+                        //                        // After 2 seconds, hide reveal and show overlay
+                        //                        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                        //                            withAnimation {
+                        //                                showCodeReveal = false
+                        //                                showEndGameOverlay = true
+                        //                            }
+                        //                        }
                     }
                 }
+                
                 
                 
                 // Color Picker Overlay
@@ -321,11 +387,12 @@ struct DecodeGameView: View {
                 
                 // Code Reveal Overlay
                 if showCodeReveal {
+                    //let _ = print("game.currentTurn: \(game.currentTurn) vs game.numRows: \(game.numRows)")
                     CodeRevealOverlay(
                         theCode: game.theCode,
                         theBoard: game.theBoard,
                         lastTurn: game.currentTurn,
-                        won: game.gameOver == 1 && game.currentTurn < game.numRows,
+                        won: game.gameOver == 1 && (game.currentTurn + 1) < game.numRows,
                         pegShades: game.pegShades
                     ) {
                         withAnimation {
@@ -336,7 +403,7 @@ struct DecodeGameView: View {
                     .transition(.opacity)
                     .zIndex(3)
                 }
-
+                
                 
                 // End Game Overlay
                 if showEndGameOverlay {
@@ -357,6 +424,8 @@ struct DecodeGameView: View {
                     .transition(.opacity)
                     .zIndex(3)
                 }
+                
+                
             }
             // Remove the navigationDestination for menu, keep only high scores
             .navigationDestination(isPresented: $navigateToHighScores) {

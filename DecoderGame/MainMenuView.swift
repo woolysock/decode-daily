@@ -21,6 +21,7 @@ struct MainMenuView: View {
     let screenHeight = UIScreen.main.bounds.height
     let screenWidth = UIScreen.main.bounds.width
     var logoPadding: CGFloat = -25
+    let today = Calendar.current.startOfDay(for: Date())
     
     // State for tracking button interactions with 3D tilt
     @State private var gameButtonTilts: [String: (x: Double, y: Double)] = [:]
@@ -29,6 +30,432 @@ struct MainMenuView: View {
     @State private var highScorePressed: Bool = false
     @State private var settingsTilt: (x: Double, y: Double) = (0, 0)
     @State private var settingsPressed: Bool = false
+    
+    // State for page tracking
+    @State private var currentPage = 0
+    @State private var selectedArchiveGame: String = "flashdance"
+    
+    //For Archives
+    @State private var selectedArchiveDate: Date?
+    @State private var navigateToArchivedGame = false
+    
+    // CACHE AVAILABLE DATES TO PREVENT FREQUENT CALLS
+    @State private var cachedAvailableDates: [String: [Date]] = [:]
+    @State private var hasLoadedInitialDates = false
+
+    
+    var body: some View {
+        NavigationStack {
+            TabView(selection: $currentPage) {
+                mainMenuPage.tag(0)
+                archivesPage.tag(1)
+                accountPage.tag(2)
+            }
+            .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
+            .background(.black)
+            .navigationDestination(isPresented: $navigateToArchivedGame) {
+                if let date = selectedArchiveDate {
+                    archivedGameDestination(for: selectedArchiveGame, date: date)
+                }
+            }
+            .onAppear {
+                // Load all available dates once when the main menu appears
+                loadAllAvailableDates()
+            }
+        }
+    }
+    
+    // MARK: - Main Menu Page
+    @ViewBuilder
+    private var mainMenuPage: some View {
+        ZStack {
+            Color.black.ignoresSafeArea()
+            
+            GeometryReader { geo in
+                VStack(spacing: 25) {
+                    Spacer()
+                        .frame(height : 45)
+                    
+                    Text(DateFormatter.day2Formatter.string(from: today))
+                        .font(.custom("LuloOne-Bold", size: 14))
+                        .foregroundColor(Color.myAccentColor1)
+                    
+                    //game title header
+                    VStack (spacing: 5){
+                        Text(" DECODE!")
+                            .font(.custom("LuloOne-Bold", size: 52))
+                            .foregroundColor(.white)
+                        Text("DAILY")
+                            .font(.custom("LuloOne-Bold", size: 24))
+                            .foregroundColor(.white)
+                        Spacer()
+                            .frame(height: 2)
+                        Text("Just Puzzles. No Distractions.")
+                            .font(.custom("LuloOne", size: 10))
+                            .foregroundColor(.white)
+                    }
+                    .fixedSize()
+                    .frame(width: (screenWidth))
+                    
+                    Spacer()
+                        .frame(height: 7)
+                    
+                    // Dynamic game buttons from GameInfo array with tilt effect
+                    ForEach(GameInfo.availableGames.filter { $0.isAvailable }, id: \.id) { gameInfo in
+                        tiltableGameButton(for: gameInfo)
+                    }
+                    
+                    Spacer()
+                        .frame(height: 5)
+                    
+                    // High Scores button with tilt effect
+                    tiltableHighScoreButton
+                    
+//                    // Settings button was moved to accounts tab
+//                    tiltableSettingsButton
+                    
+//                    Text(DateFormatter.dayFormatter.string(from: Date()))
+                
+                    //Spacer().frame(height:5)
+                    
+                    HStack(alignment:.center) {
+                        Spacer()
+                        Text("swipe for more")
+                            .font(.custom("LuloOne-Bold", size: 8))
+                            .foregroundColor(Color.myAccentColor1)
+                        Image(systemName: "chevron.forward.dotted.chevron.forward") //arrowshape.forward
+                            .font(.system(size: 30))
+                            .foregroundColor(Color.myAccentColor1)
+                            .padding(.trailing, 30)
+                    }
+                    //.frame(width: 300)
+                    
+                    Spacer()
+                }
+            }
+        }
+    }
+    
+    // Account Page
+    @ViewBuilder
+    private var accountPage: some View {
+        ZStack {
+            Color.black.ignoresSafeArea()
+            
+            VStack(spacing: 20) {
+                Spacer()
+                    .frame(height: 50)
+                
+                // Title for the second page
+                VStack(spacing: 10) {
+                    Text("Stats&\nAccount")
+                        .font(.custom("LuloOne-Bold", size: 40))
+                        .foregroundColor(.white)
+                    
+                    Text("Your gaming overview")
+                        .font(.custom("LuloOne", size: 12))
+                        .foregroundColor(.white.opacity(0.8))
+                }
+                
+                Spacer()
+                    .frame(height: 10)
+                
+                // Add your second page content here
+                // For example, stats overview, achievements, etc.
+                VStack(spacing: 20) {
+                    // Total games played
+                    statCard(
+                        title: "Games Played",
+                        value: "\(scoreManager.allScores.count)",
+                        icon: "gamecontroller"
+                    )
+                    
+                    // Best scores
+                    statCard(
+                        title: "Highest Score",
+                        value: "\(scoreManager.getTopScores(limit: 1).first?.finalScore ?? 0)",
+                        icon: "trophy"
+                    )
+                    
+                    // Recent activity
+                    statCard(
+                        title: "Recent Games",
+                        value: "\(scoreManager.getRecentScores(limit: 7).count)",
+                        subtitle: "this week",
+                        icon: "calendar"
+                    )
+                }
+                
+                Divider().background(.white).padding(5)
+                
+                // Settings button with tilt effect
+                tiltableSettingsButton
+
+                Spacer()
+                    .frame(height: 50)
+            }
+            .padding(.horizontal, 40)
+        }
+    }
+    
+    // Archives Page
+    @ViewBuilder
+    private var archivesPage: some View {
+        ZStack {
+            Color.black.ignoresSafeArea()
+            
+            VStack(spacing: 20) {
+                
+                Spacer()
+                    .frame(height: 30)
+                
+                // Title for the second page
+                VStack(alignment: .leading, spacing: 10) {
+                    Text("GAME ARCHIVES")
+                        .font(.custom("LuloOne-Bold", size: 40))
+                        .foregroundColor(.white)
+                        .multilineTextAlignment(.leading)
+                    Text("Blast to the past! 🚀")
+                        .font(.custom("LuloOne", size: 18))
+                        .foregroundColor(.white)
+                        .multilineTextAlignment(.leading)
+                    Text("Scroll below to play games prior to \(DateFormatter.day2Formatter.string(from: today))")
+                        .font(.custom("LuloOne", size: 12))
+                        .foregroundColor(.white)
+                        .multilineTextAlignment(.leading)
+                }
+                .padding(.horizontal, 40)
+                
+                Divider().background(.white).padding(5)
+                                
+                // Game Selector
+                HStack(spacing: 15) {
+                    Button(action: {
+                        selectedArchiveGame = "flashdance"
+                        // Load dates for new selection if not cached
+                        loadAvailableDatesIfNeeded(for: "flashdance")
+                    }) {
+                        Text("Flashdance")
+                            .font(.custom("LuloOne-Bold", size: 12))
+                            .foregroundColor(selectedArchiveGame == "flashdance" ? .black : .white)
+                            .padding(.horizontal, 20)
+                            .padding(.vertical, 10)
+                            .background(selectedArchiveGame == "flashdance" ? Color.white : Color.clear)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .stroke(Color.white, lineWidth: 1)
+                            )
+                            .cornerRadius(8)
+                    }
+                    
+                    Button(action: {
+                        selectedArchiveGame = "anagrams"
+                        // Load dates for new selection if not cached
+                        loadAvailableDatesIfNeeded(for: "anagrams")
+                    }) {
+                        Text("Anagrams")
+                            .font(.custom("LuloOne-Bold", size: 12))
+                            .foregroundColor(selectedArchiveGame == "anagrams" ? .black : .white)
+                            .padding(.horizontal, 20)
+                            .padding(.vertical, 10)
+                            .background(selectedArchiveGame == "anagrams" ? Color.white : Color.clear)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .stroke(Color.white, lineWidth: 1)
+                            )
+                            .cornerRadius(8)
+                    }
+                }
+                .padding(.horizontal, 40)
+                
+                Divider().background(.white).padding(5)
+                
+                // Date Grid - now using cached dates
+                ScrollView {
+                    LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 10), count: 5), spacing: 20) {
+                        ForEach(getCachedAvailableDates(for: selectedArchiveGame), id: \.self) { date in
+                            dateButton(for: date)
+                        }
+                    }
+                    .padding(.horizontal, 40)
+                }
+                
+                Spacer()
+                    //.frame(height: 20)
+            }
+        }
+        .onAppear {
+            // Load dates for the current selection when archives page appears
+            loadAvailableDatesIfNeeded(for: selectedArchiveGame)
+        }
+    }
+
+    // MARK: - Date Loading Functions
+    
+    // Load all available dates once when the app starts
+    private func loadAllAvailableDates() {
+        guard !hasLoadedInitialDates else { return }
+        
+        print("🚀 Loading all available dates (one-time initialization)")
+        
+        // Load dates for all available games
+        loadAvailableDatesForGame("flashdance")
+        loadAvailableDatesForGame("anagrams")
+        
+        hasLoadedInitialDates = true
+        print("✅ Finished loading all available dates")
+    }
+    
+    // Load dates for a specific game only if not already cached
+    private func loadAvailableDatesIfNeeded(for gameId: String) {
+        guard cachedAvailableDates[gameId] == nil else {
+            print("📋 Using cached dates for \(gameId) (\(cachedAvailableDates[gameId]?.count ?? 0) dates)")
+            return
+        }
+        
+        loadAvailableDatesForGame(gameId)
+    }
+    
+    // Actually load the dates for a game and cache them
+    private func loadAvailableDatesForGame(_ gameId: String) {
+        print("🔍 Loading available dates for gameId: \(gameId)")
+        let today = Calendar.current.startOfDay(for: Date())
+        var dates: [Date] = []
+
+        switch gameId {
+        case "flashdance":
+            dates = gameCoordinator.dailyEquationManager.getAvailableDates()
+            print("   → Loaded \(dates.count) archive dates for flashdance")
+        case "anagrams":
+            dates = gameCoordinator.dailyWordsetManager.getAvailableDates()
+            print("   → Loaded \(dates.count) archive dates for anagrams")
+        default:
+            print("   → Unknown gameId: \(gameId)")
+            break
+        }
+
+        // Filter out today and future dates, then sort
+        dates = dates.filter { $0 < today }.sorted(by: >)
+        
+        // Cache the results
+        cachedAvailableDates[gameId] = dates
+        print("   → Cached \(dates.count) dates for \(gameId)")
+    }
+    
+    // Get cached dates for a game (returns empty array if not cached)
+    private func getCachedAvailableDates(for gameId: String) -> [Date] {
+        return cachedAvailableDates[gameId] ?? []
+    }
+    
+    
+//    // Helper function for fallback sample data
+//    private func generateSampleDates(count: Int, gameId: String) -> [Date] {
+//        print("   → generateSampleDates: Creating \(count) dates for \(gameId)")
+//        let calendar = Calendar.current
+//        let today = Date()
+//        var dates: [Date] = []
+//
+//        // Create dates going back in time to span multiple months for color testing
+//        let startDaysBack = gameId == "flashdance" ? 45 : 35 // Different starting points
+//
+//        for i in 0..<count {
+//            if let date = calendar.date(byAdding: .day, value: -(startDaysBack + i), to: today) {
+//                dates.append(date)
+//            }
+//        }
+//
+//        return dates.sorted(by: >) // Most recent first
+//    }
+    
+    // Helper function to create date buttons
+    @ViewBuilder
+    private func dateButton(for date: Date) -> some View {
+        let calendar = Calendar.current
+        let day   = calendar.component(.day, from: date)
+        let month = calendar.component(.month, from: date)
+        let year  = calendar.component(.year, from: date)
+
+        // Alternate colors between months
+        let monthYearId = (year * 12) + month
+        let backgroundColor = monthYearId % 2 == 0 ? Color.myAccentColor1 : Color.myAccentColor2
+
+        // Show the month label only on the 1st of the month
+        let showMonth = (day == 1)
+        let monthAbbrev = monthAbbrevFormatter.string(from: date).uppercased()
+
+        Button(action: {
+            launchArchivedGame(gameId: selectedArchiveGame, date: date)
+        }) {
+            VStack(spacing: showMonth ? 2 : 0) {
+                Text("\(day)")
+                    .font(.custom("LuloOne-Bold", size: 16))
+                    .foregroundColor(.white)
+
+                if showMonth {
+                    Text(monthAbbrev)
+                        .font(.custom("LuloOne-Bold", size: 8))
+                        .foregroundColor(.white.opacity(0.85))
+                        .minimumScaleFactor(0.7)
+                        .lineLimit(1)
+                }
+            }
+            .frame(width: 50, height: 50) // If your month text feels cramped, try 56
+            .background(backgroundColor)
+            .cornerRadius(8)
+            .contentShape(RoundedRectangle(cornerRadius: 8))
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(
+                Text("\(monthAbbrevFormatter.string(from: date)) \(day), \(year)")
+            )
+        }
+    }
+
+
+    // Helper function to launch archived game
+    private func launchArchivedGame(gameId: String, date: Date) {
+        print("Launch \(gameId) for date: \(date)")
+        
+        // Store the selected date and game
+        selectedArchiveDate = date
+        selectedArchiveGame = gameId
+        
+        // Trigger navigation
+        navigateToArchivedGame = true
+    }
+  
+    
+    // MARK: - Helper Views
+    @ViewBuilder
+    private func statCard(title: String, value: String, subtitle: String? = nil, icon: String) -> some View {
+        HStack(spacing: 15) {
+            Image(systemName: icon)
+                .font(.system(size: 20))
+                .foregroundColor(Color.myAccentColor1)
+                .frame(width: 30)
+            
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(.custom("LuloOne", size: 12))
+                    .foregroundColor(.white.opacity(0.8))
+                
+                if let subtitle = subtitle {
+                    Text(subtitle)
+                        .font(.custom("LuloOne", size: 8))
+                        .foregroundColor(.white.opacity(0.5))
+                }
+            }
+            
+            Spacer()
+            
+            Text(value)
+                .font(.custom("LuloOne-Bold", size: 18))
+                .foregroundColor(.white)
+        }
+        .padding()
+        .background(Color.myAccentColor2)
+        .cornerRadius(10)
+        .frame(maxWidth: .infinity)
+    }
     
     // Helper function to determine which game view to show
     @ViewBuilder
@@ -205,7 +632,7 @@ struct MainMenuView: View {
             .padding()
             .fixedSize()
             .frame(width: buttonWidth, height: 60)
-            .background(Color.myAccentColor2)
+            .background(Color.myAccentColor1)
             .foregroundColor(Color.white)
             .cornerRadius(10)
             .scaleEffect(settingsPressed ? 0.98 : 1.0)
@@ -236,61 +663,38 @@ struct MainMenuView: View {
         )
     }
     
-    var body: some View {
-        NavigationStack {
-            ZStack {
-                Color.black.ignoresSafeArea()
-                
-                GeometryReader { geo in
-                    VStack(spacing: 25) {
-                        Spacer()
-                            .frame(height : 30)
-                        
-                        //game title header
-                        VStack (spacing: 5){
-                            Text(" DECODE!")
-                                .font(.custom("LuloOne-Bold", size: 52))
-                                .foregroundColor(.white)
-                            Text("DAILY")
-                                .font(.custom("LuloOne-Bold", size: 24))
-                                .foregroundColor(.white)
-                            Spacer()
-                                .frame(height: 2)
-                            Text("Just Puzzles. No Distractions.")
-                                .font(.custom("LuloOne", size: 10))
-                                .foregroundColor(.white)
-                        }
-                        .fixedSize()
-                        .frame(width: (screenWidth))
-                        
-                        Spacer()
-                            .frame(height: 7)
-                        
-                        // Dynamic game buttons from GameInfo array with tilt effect
-                        ForEach(GameInfo.availableGames.filter { $0.isAvailable }, id: \.id) { gameInfo in
-                            tiltableGameButton(for: gameInfo)
-                        }
-                        
-                        Spacer()
-                            .frame(height: 5)
-                        
-                        // High Scores button with tilt effect
-                        tiltableHighScoreButton
-                        
-                        // Settings button with tilt effect
-                        tiltableSettingsButton
-                        
-                        Text(DateFormatter.dayFormatter.string(from: Date()))
-                            .font(.custom("LuloOne-Bold", size: 10))
-                            .foregroundColor(Color.myAccentColor1)
-                        
-                        Spacer()
-                    }
-                }
-            }
+    @ViewBuilder
+    private func archivedGameDestination(for gameId: String, date: Date) -> some View {
+        switch gameId {
+        case "flashdance":
+            FlashdanceGameView(targetDate: date)
+                .environmentObject(scoreManager)
+                .onAppear { gameCoordinator.setActiveGame("flashdance") }
+                .onDisappear { gameCoordinator.clearActiveGame() }
+        case "anagrams":
+            AnagramsGameView(targetDate: date)
+                .environmentObject(scoreManager)
+                .onAppear { gameCoordinator.setActiveGame("anagrams") }
+                .onDisappear { gameCoordinator.clearActiveGame() }
+        default:
+            EmptyView()
         }
-        .navigationTitle("return to the main menu")
-        .tint(Color.myAccentColor1)
     }
-    
+}
+
+private let monthAbbrevFormatter: DateFormatter = {
+    let f = DateFormatter()
+    f.locale = Locale.current
+    f.setLocalizedDateFormatFromTemplate("LLL") // e.g., Jan, Feb
+    return f
+}()
+
+extension DateFormatter {
+    static let day2Formatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "MMM dd, yyyy"
+        f.timeZone = TimeZone.current // or fixed timezone if needed
+        f.locale = Locale(identifier: "en_US_POSIX")
+        return f
+    }()
 }

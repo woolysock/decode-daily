@@ -8,6 +8,8 @@
 import SwiftUI
 
 struct FlashdanceGameView: View {
+    let targetDate: Date?
+    
     @EnvironmentObject var scoreManager: GameScoreManager
     @Environment(\.dismiss) private var dismiss
     
@@ -43,8 +45,9 @@ struct FlashdanceGameView: View {
     More right answers yield higher scores!
     """
     
-    init() {
-        self._game = StateObject(wrappedValue: FlashdanceGame(scoreManager: GameScoreManager.shared))
+    init(targetDate: Date? = nil) {
+        self.targetDate = targetDate
+        self._game = StateObject(wrappedValue: FlashdanceGame(scoreManager: GameScoreManager.shared, targetDate: targetDate))
     }
     
     private var cleanedStatusText: String {
@@ -67,12 +70,31 @@ struct FlashdanceGameView: View {
                         HStack {
                             Spacer().frame(width: 5)
                             VStack(alignment: .leading, spacing: 4) {
-                                Text("\(game.gameInfo.displayName)")
-                                    .foregroundColor(.white)
-                                    .font(.custom("LuloOne-Bold", size: 20))
-                                    .onTapGesture { startRound() }
+                                HStack(spacing: 8) {
+                                    Text("\(game.gameInfo.displayName)")
+                                        .foregroundColor(.white)
+                                        .font(.custom("LuloOne-Bold", size: 20))
+                                        .onTapGesture { startRound() }
+                                    
+                                    // Archive indicator
+                                    if targetDate != nil {
+                                        Text("ARCHIVE")
+                                            .font(.custom("LuloOne", size: 8))
+                                            .foregroundColor(.orange)
+                                            .padding(.horizontal, 6)
+                                            .padding(.vertical, 2)
+                                            .background(Color.orange.opacity(0.2))
+                                            .cornerRadius(4)
+                                    }
+                                }
                                 
-                                if let mathset = equationManager.currentEquationSet {
+                                if let targetDate = targetDate {
+                                    // Show the archive date when in archive mode
+                                    Text(DateFormatter.dayFormatter.string(from: targetDate))
+                                        .font(.custom("LuloOne", size: 12))
+                                        .foregroundColor(.gray)
+                                } else if let mathset = equationManager.currentEquationSet {
+                                    // Show the equation set date when in normal mode
                                     Text(DateFormatter.dayFormatter.string(from: mathset.date))
                                         .font(.custom("LuloOne", size: 12))
                                         .foregroundColor(.gray)
@@ -273,40 +295,26 @@ struct FlashdanceGameView: View {
                     .transition(.opacity)
                 
             }
-                
-//            if showEndGameOverlay {
-//                EndGameOverlay(
-//                    gameID: game.gameInfo.id,
-//                    finalScore: game.totalScore,
-//                    displayName: game.gameInfo.displayName,
-//                    isVisible: $showEndGameOverlay,
-//                    onPlayAgain: { startNewGame() },
-//                    onHighScores: {
-//                        showEndGameOverlay = false
-//                        navigateToHighScores = true
-//                    },
-//                    onMenu: { showEndGameOverlay = false; dismiss() },
-//                    gameScore: game.lastScore
-//                )
-//                .transition(.opacity)
-//            }
         }
         .onChange(of: dailyCheckManager.showNewDayOverlay) { oldValue, newValue in
-            if newValue {
-                // New day overlay is showing - force end the game immediately
-                print("FlashdanceGameView: Force ending game due to new day overlay")
-                game.endGame()
-                
-                // Hide any other overlays that might be showing
-                showEndGameOverlay = false
-                showHowToPlay = false
-                
-                // Reset the game state
-                hasStartedRound = false
-            } else if oldValue == true && newValue == false {
-                // Overlay was just dismissed - return to main menu
-                print("FlashdanceGameView: New day overlay dismissed, returning to main menu")
-                dismiss()
+            // Only respond to new day overlay if this is NOT an archived game
+            if targetDate == nil {
+                if newValue {
+                    // New day overlay is showing - force end the game immediately
+                    print("FlashdanceGameView: Force ending game due to new day overlay")
+                    game.endGame()
+                    
+                    // Hide any other overlays that might be showing
+                    showEndGameOverlay = false
+                    showHowToPlay = false
+                    
+                    // Reset the game state
+                    hasStartedRound = false
+                } else if oldValue == true && newValue == false {
+                    // Overlay was just dismissed - return to main menu
+                    print("FlashdanceGameView: New day overlay dismissed, returning to main menu")
+                    dismiss()
+                }
             }
         }
     }

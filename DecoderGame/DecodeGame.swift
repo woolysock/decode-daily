@@ -76,44 +76,47 @@ class DecodeGame: ObservableObject, GameProtocol {
         pegShades = [myPegColor1, myPegColor2, myPegColor3, myPegColor4, myPegColor5, myPegColor6]
         currentTurn = 0
         gameOver = 0
+        
         theCode = (0..<numCols).map { _ in Int.random(in: 1..<pegShades.count) }
-        
-        print("🔐 SECRET CODE: \(theCode)")
-        
+              
         theBoard = Array(repeating: Array(repeating: 0, count: numCols), count: numRows)
         theScore = Array(repeating: Array(repeating: 0, count: numCols), count: numRows)
-        statusText = "Try to guess the hidden color code"
         gameStartTime = Date()
         lastScore = nil
+        statusText = "Try to guess the hidden color code"
         
         // Now start the animation
         startCodeAnimation()
         
-        print("startGame() called: DecodeGame initialized with scoreManager: \(type(of: scoreManager))")
+        print("🔐 SECRET CODE: \(theCode)")
+        print("🏁 startGame(): DecodeGame initialized with scoreManager: \(type(of: scoreManager))")
     }
     
+    //USED WHEN THEN HOW TO PLAY DIALOG IS UP
     func startGameWithoutAnimation() {
+        isAnimating = false
+        gameInteractive = false
+        
         pegShades = [myPegColor1, myPegColor2, myPegColor3, myPegColor4, myPegColor5, myPegColor6]
         currentTurn = 0
         gameOver = 0
-        theCode = (0..<numCols).map { _ in Int.random(in: 1..<pegShades.count) }
         
-        // DEBUG: Print the secret code
-        print("🔐 SECRET CODE: \(theCode)")
+        theCode = (0..<numCols).map { _ in Int.random(in: 1..<pegShades.count) }
         
         theBoard = Array(repeating: Array(repeating: 0, count: numCols), count: numRows)
         theScore = Array(repeating: Array(repeating: 0, count: numCols), count: numRows)
         gameStartTime = Date()
         lastScore = nil
-        
-        isAnimating = false
-        gameInteractive = false
+                
         animatedCode = (0..<numCols).map { _ in 0 }
         
-        print("DecodeGame initialized without animation with scoreManager: \(type(of: scoreManager))")
+        print("🔐 SECRET CODE: \(theCode)")
+        print("🏁 startGameWithoutAnimation(): DecodeGame initialized with scoreManager: \(type(of: scoreManager))")
     }
 
+    
     func resetGame() {
+        print("⚠️ calling resetGame()")
         startGame()
     }
     
@@ -225,7 +228,7 @@ class DecodeGame: ObservableObject, GameProtocol {
             }
 
             // DEBUG: Print the scoring results
-            print("📊 SCORING: \(exactMatches) exact matches, \(partialMatches) partial matches")
+            print("📊 SCORING: \(exactMatches) exact matches, \(partialMatches) partial matches for row index \(row)")
 
             // Set score indicators
             for col in 0..<exactMatches { theScore[row][col] = 2 } // Green dots
@@ -250,13 +253,14 @@ class DecodeGame: ObservableObject, GameProtocol {
 
             // Only increment currentTurn if the game wasn't won
             currentTurn += 1
-            print("➡️ Moving to turn \(currentTurn)")
+            print("➡️ Moving to try # \(currentTurn + 1) -- currentTurn index is: \(currentTurn)")
 
             // Check lose condition (out of attempts)
             if currentTurn >= numRows {
                 print("💀 GAME OVER! No more turns")
                 gameOver = 1
                 statusText = "Sorry, you're out of guesses. Maybe next time!"
+                currentTurn = currentTurn - 1 //reset to pass the right information to GameScore and EndGame
                 saveGameScore(won: false)
             }
         }

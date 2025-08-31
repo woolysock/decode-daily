@@ -102,7 +102,7 @@ final class DailyWordsetManager: ObservableObject {
     }
 
     /// Return the current cached wordset (if any)
-    func getTodaysWordset() -> DailyWordset? {
+    func getTodaysWordset(for date: Date) -> DailyWordset? {
         return currentWordset
     }
 
@@ -351,4 +351,11 @@ final class DailyWordsetManager: ObservableObject {
             "QUEST","RIVER","SCOPE","TRAIN","UNITY","VALUE","WATER","YOUTH","ZEBRA","SPEAK"
         ]
     }
+    
+    func getAvailableDates() -> [Date] {
+        // Map the loaded JSON sets to their actual dates
+        let dates = allWordsets.map { $0.date }
+        return dates.sorted(by: >) // newest first
+    }
+
 }

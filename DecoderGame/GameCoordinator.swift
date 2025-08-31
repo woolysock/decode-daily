@@ -12,9 +12,10 @@ class GameCoordinator: ObservableObject, DailyCheckGameDelegate {
     @Published var shouldReturnToMainMenu = false
     
     private let dailyCheckManager = DailyCheckManager.shared
+    @Published var dailyEquationManager = DailyEquationManager.shared
+    @Published var dailyWordsetManager = DailyWordsetManager.shared
     
     init() {
-        // Register as delegate for daily check events
         dailyCheckManager.gameDelegate = self
     }
     

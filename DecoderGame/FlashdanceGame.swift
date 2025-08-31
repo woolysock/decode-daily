@@ -18,6 +18,7 @@ class FlashdanceGame: GameProtocol, ObservableObject {
     @Published var gameOver: Int = 0
     @Published var statusText: String = "\n\n\n"
     @Published var lastScore: GameScore?
+    private let targetDate: Date?
 
     // MARK: - Gameplay
     @Published var currentEquation: String = ""
@@ -61,9 +62,11 @@ class FlashdanceGame: GameProtocol, ObservableObject {
     )
 
     // Initialize with score manager
-    init(scoreManager: GameScoreManager) {
+    init(scoreManager: GameScoreManager, targetDate: Date? = nil) {
         self.scoreManager = scoreManager
-        self.equationManager = DailyEquationManager.shared  // Use singleton
+        self.equationManager = DailyEquationManager.shared
+        self.targetDate = targetDate
+        
         print("FlashdanceGame initialized with scoreManager: \(type(of: scoreManager))")
         
         // Observe equation manager changes
@@ -87,12 +90,15 @@ class FlashdanceGame: GameProtocol, ObservableObject {
         print("   - currentEquationSet: \(equationManager.currentEquationSet?.equations.count ?? 0) equations")
         print("   - isGeneratingEquations: \(equationManager.isGeneratingEquations)")
         
-        // Load today's equation set
-        guard let todaysEquationSet = equationManager.getTodaysEquationSet() else {
+        
+        let gameDate = targetDate ?? Date()
+        guard let todaysEquationSet = equationManager.getTodaysEquationSet(for: gameDate) else {
             print("startGame(): ❌ No equation set available - getTodaysEquationSet() returned nil")
-            statusText = "No equations available for today!"
+            statusText = "No equations available for this date!"
             return
         }
+        
+        
         
         print("✅ startGame(): Got equation set with \(todaysEquationSet.equations.count) equations")
         print("📝 Equations: \(todaysEquationSet.equations.map { $0.expression })")
