@@ -8,14 +8,14 @@ import SwiftUI
 struct LeaderboardPageView: View {
     let gameID: String
     let title: String
-    let gameDestination: AnyView
+    let onPlayGame: () -> Void  // Change from AnyView to closure
 
     @EnvironmentObject var scoreManager: GameScoreManager
 
     var body: some View {
         VStack {
             if filteredScores.isEmpty {
-                NoScoresView(gameDestination: gameDestination)
+                NoScoresView(onPlayGame: onPlayGame)  // Pass closure
             } else {
                 VStack {
                     LeaderboardHeaderText(count: filteredScores.count)
@@ -31,7 +31,7 @@ struct LeaderboardPageView: View {
         }
         .animation(.default, value: scoreManager.allScores)
     }
-
+    
     private var filteredScores: [GameScore] {
         scoreManager.allScores
             .filter { $0.gameId == gameID }
@@ -47,7 +47,7 @@ struct LeaderboardPageView: View {
 
 // MARK: - Subviews
 struct NoScoresView: View {
-    let gameDestination: AnyView
+    let onPlayGame: () -> Void  // Change from AnyView to closure
 
     var body: some View {
         Spacer().frame(height: 20)
@@ -56,10 +56,9 @@ struct NoScoresView: View {
                 .font(.custom("LuloOne-Bold", size: 12))
                 .foregroundColor(.secondary)
 
-            Spacer()
-                .frame(height:10)
+            Spacer().frame(height:10)
             
-            NavigationLink(destination: gameDestination) {
+            Button(action: onPlayGame) {  // Use Button with closure
                 VStack(spacing: 5) {
                     Text("play")
                         .font(.custom("LuloOne-Bold", size: 16))
@@ -106,7 +105,7 @@ struct ScoreRowView: View {
                     Text(dateOnlyFormatter.string(from: score.date))
                         .font(.custom("LuloOne-Bold", size: 12))
                     
-                    Text(" ⋰⋰⋰ ")
+                    Text(" ⋰ ")
                         .font(.custom("LuloOne-Bold", size: 10))
                         .foregroundColor(Color.myAccentColor1)
                     
@@ -117,18 +116,19 @@ struct ScoreRowView: View {
                 // CUSTOM SCORE EXTRAS
                 
                 if let flashdanceProps = score.flashdanceProperties {
-                    Text("Equations solved: \(flashdanceProps.correctAnswers)")
-                        .font(.custom("LuloOne-Bold", size: 10))
-                        .foregroundColor(Color.myAccentColor1)
-                    Text("Longest Streak: \(flashdanceProps.longestStreak) in a row")
+                    Text("Game ID: \(DateFormatter.dayFormatter.string(from: flashdanceProps.gameDate!))\n")
                         .font(.custom("LuloOne", size: 10))
-                        .foregroundColor(Color.myAccentColor1)
-                    Text("Incorrect Answers: \(flashdanceProps.incorrectAnswers)")
+                    
+                    Text(" ☆ Equations solved: \(flashdanceProps.correctAnswers)")
                         .font(.custom("LuloOne", size: 10))
-                        .foregroundColor(Color.myAccentColor1)
-                    Text("Game Date: \(DateFormatter.dayFormatter.string(from: flashdanceProps.gameDate!))")
+                        
+                    Text(" ☆ Longest Streak: \(flashdanceProps.longestStreak) in a row")
                         .font(.custom("LuloOne", size: 10))
-                        .foregroundColor(Color.myAccentColor2)
+                        
+                    Text(" ☆ Wrong Answers: \(flashdanceProps.incorrectAnswers)")
+                        .font(.custom("LuloOne", size: 10))
+                        
+                    
                 }
                 
                 if let decodeProps = score.decodeProperties {
@@ -195,6 +195,7 @@ struct ScoreRowView: View {
 struct MultiGameLeaderboardView: View {
     @EnvironmentObject var scoreManager: GameScoreManager
     @State private var currentTabIndex: Int = 0
+    @State private var navigateToGame: String? = nil  // Add this
 
     private let games: [GameInfo]
 
@@ -216,7 +217,7 @@ struct MultiGameLeaderboardView: View {
                     }
                 }) {
                     Image(systemName: "arrowshape.backward.circle.fill")
-                        .foregroundColor(.black) // always enabled now
+                        .foregroundColor(.black)
                         .font(.system(size: 22))
                 }
 
@@ -233,21 +234,20 @@ struct MultiGameLeaderboardView: View {
                     }
                 }) {
                     Image(systemName: "arrowshape.forward.circle.fill")
-                        .foregroundColor(.black) // always enabled now
+                        .foregroundColor(.black)
                         .font(.system(size: 22))
                 }
             }
             .padding(.horizontal, 20)
             .padding(.top, 10)
-
-
+            
             // Page TabView
             TabView(selection: $currentTabIndex) {
                 ForEach(0..<games.count, id: \.self) { index in
                     LeaderboardPageView(
                         gameID: games[index].id.lowercased(),
                         title: "\(games[index].displayName) Leaderboard",
-                        gameDestination: games[index].gameLocation
+                        onPlayGame: { navigateToGame = games[index].id }  // Use closure instead of view
                     )
                     .tag(index)
                     .padding(.top, 20)
@@ -255,15 +255,30 @@ struct MultiGameLeaderboardView: View {
             }
             .tabViewStyle(.page(indexDisplayMode: .never))
         }
+        .navigationDestination(isPresented: Binding<Bool>(
+            get: { navigateToGame != nil },
+            set: { if !$0 { navigateToGame = nil } }
+        )) {
+            if let gameId = navigateToGame {
+                gameDestinationView(for: gameId)
+            }
+        }
+    }
+    
+    // Add this helper method to create game destinations
+    
+    private func gameDestinationView(for gameId: String) -> AnyView {
+        switch gameId {
+        case "decode":
+            return AnyView(DecodeGameView().environmentObject(scoreManager))
+        case "flashdance":
+            return AnyView(FlashdanceGameView().environmentObject(scoreManager))
+        case "anagrams":
+            return AnyView(AnagramsGameView().environmentObject(scoreManager))
+        default:
+            return AnyView(EmptyView())
+        }
     }
 }
-extension DateFormatter {
-    static let dayFormatter: DateFormatter = {
-        assert(Thread.isMainThread, "DateFormatter should be initialized on main thread")
-        let formatter = DateFormatter()
-        formatter.dateFormat = "MMMM d, yyyy"
-        formatter.timeZone = TimeZone.current
-        formatter.locale = Locale(identifier: "en_US_POSIX")
-        return formatter
-    }()
-}
+
+

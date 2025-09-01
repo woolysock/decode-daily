@@ -11,7 +11,7 @@ import Combine
 
 class AnagramsGame: GameProtocol, ObservableObject {
     var scoreManager: GameScoreManager
-    private let targetDate: Date?
+    let targetDate: Date?
     private let wordsetManager: DailyWordsetManager
     
     // MARK: - GameProtocol basics
@@ -53,13 +53,13 @@ class AnagramsGame: GameProtocol, ObservableObject {
         displayName: "letters",
         description: "rearrange letters into words",
         isAvailable: true,
-        gameLocation: AnyView(EmptyView()), // replace with real view if needed
+        //gameLocation: AnyView(EmptyView()), // replace with real view if needed
         gameIcon: Image(systemName: "60.arrow.trianglehead.clockwise")
     )
     
     // Initialize with score manager and use singleton wordset manager
     init(scoreManager: GameScoreManager, targetDate: Date? = nil) {
-        self.scoreManager = scoreManager
+        self.scoreManager = GameScoreManager.shared
         self.wordsetManager = DailyWordsetManager.shared  // Use singleton
         self.targetDate = targetDate
         
@@ -79,20 +79,36 @@ class AnagramsGame: GameProtocol, ObservableObject {
     func startGame() {
         print("🚀 AnagramsGame.startGame() called")
         
-        // Debug: Check what the wordset manager thinks it has
-        //print("🔍 Debugging wordset loading:")
-        //print("   - wordsetManager.currentWordset: \(wordsetManager.currentWordset?.words ?? [])")
-        
         let gameDate = targetDate ?? Date()
+        
+        print("🎯 TARGET DATE DEBUG:")
+        print("   - targetDate: \(String(describing: targetDate))")
+        print("   - Current Date(): \(Date())")
+        print("   - gameDate (final): \(gameDate)")
+        print("   - gameDate formatted: \(DateFormatter.debugFormatter.string(from: gameDate))")
+        
+        print("🔍 Before calling getTodaysWordset:")
+        print("   - wordsetManager.currentWordset date: \(String(describing: wordsetManager.currentWordset?.date))")
+        
         guard let todaysWordset = wordsetManager.getTodaysWordset(for: gameDate) else {
-            print("startGame(): ❌ No wordset available - getTodaysWordset() returned nil")
+            print("startGame(): ❌ No wordset available")
             statusText = "No wordset available for this day!"
             return
         }
         
+        print("📜 loaded todaysWordset: \(todaysWordset)")
         
-        dailyWordset = todaysWordset
-        totalWordsInSet = todaysWordset.words.count
+        // Sort words shortest-to-longest
+        // Keep the date as a string, since your JSON stores it that way
+        let sortedWordset = DailyWordset(
+            date: todaysWordset.date,  // ✅ keep as String
+            words: todaysWordset.words.sorted { $0.count < $1.count }
+        )
+        
+        dailyWordset = sortedWordset
+        totalWordsInSet = sortedWordset.words.count
+        
+        // Reset game state
         stopAllTimers()
         gameOver = 0
         attempts = 0
@@ -106,36 +122,23 @@ class AnagramsGame: GameProtocol, ObservableObject {
         lastScore = nil
         completedWordLengths = []
         
-        print("🎲 startGame(): Calling newQuestion()...")
+        // Load first question
         newQuestion()
         
-        // CRITICAL FIX: Ensure ALL UI updates happen on main thread together
+        // Pre-countdown setup
         DispatchQueue.main.async {
             self.statusText = "Ready, set. . ."
             self.countdownValue = 3
             self.isPreCountdownActive = true
             self.isGameActive = false
             
-            //print("✅ Set UI state on main thread - isPreCountdownActive: \(self.isPreCountdownActive)")
-            
-            //print("⏱️ Starting pre-countdown timer...")
             self.preCountdownTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] t in
-                guard let self = self else {
-                    print("❌ Timer callback: self is nil")
-                    return
-                }
-                if self.isGamePaused {
-                    print("⏸️ Timer callback: game is paused")
-                    return
-                }
-                
-                // Already on main thread since timer was created on main thread
-                print("⏱️ Countdown: \(self.countdownValue)")
+                guard let self = self else { return }
+                if self.isGamePaused { return }
                 
                 if self.countdownValue > 1 {
                     self.countdownValue -= 1
                 } else {
-                    print("🏁 Countdown finished, invalidating timer and starting main game")
                     t.invalidate()
                     self.isPreCountdownActive = false
                     self.startMainGame()
@@ -143,8 +146,10 @@ class AnagramsGame: GameProtocol, ObservableObject {
             }
         }
         
-        print("✅ startGame(): completed setup")
+        print("✅ startGame(): completed setup with sorted words")
     }
+
+
     
     private func calculateDifficultyScore() -> Double {
         guard totalWordsInSet > 0 else { return 0.0 }
@@ -166,43 +171,43 @@ class AnagramsGame: GameProtocol, ObservableObject {
         return difficultyScore
     }
     
-    func startGameWithWordset(_ wordset: DailyWordset) {
-        print("startGameWithWordset: \(wordset)")
-        dailyWordset = wordset
-        totalWordsInSet = wordset.words.count
-        
-        stopAllTimers()
-        gameOver = 0
-        attempts = 0
-        wordsCompleted = 0
-        currentWordIndex = 0
-        isWordsetCompleted = false
-        isGamePaused = false
-        userAnswer = ""
-        usedLetterIndices = []
-        statusText = "Get ready..."
-        countdownValue = 3
-        isPreCountdownActive = true
-        isGameActive = false
-        roundStart = nil
-        lastScore = nil
-        
-        newQuestion()
-        DispatchQueue.main.async {
-            self.preCountdownTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] t in
-                guard let self = self else { return }
-                if self.isGamePaused { return }
-                
-                if self.countdownValue > 1 {
-                    self.countdownValue -= 1
-                } else {
-                    t.invalidate()
-                    self.isPreCountdownActive = false
-                    self.startMainGame()
-                }
-            }
-        }
-    }
+//    func startGameWithWordset(_ wordset: DailyWordset) {
+//        print("startGameWithWordset: \(wordset)")
+//        dailyWordset = wordset
+//        totalWordsInSet = wordset.words.count
+//        
+//        stopAllTimers()
+//        gameOver = 0
+//        attempts = 0
+//        wordsCompleted = 0
+//        currentWordIndex = 0
+//        isWordsetCompleted = false
+//        isGamePaused = false
+//        userAnswer = ""
+//        usedLetterIndices = []
+//        statusText = "Get ready..."
+//        countdownValue = 3
+//        isPreCountdownActive = true
+//        isGameActive = false
+//        roundStart = nil
+//        lastScore = nil
+//        
+//        newQuestion()
+//        DispatchQueue.main.async {
+//            self.preCountdownTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] t in
+//                guard let self = self else { return }
+//                if self.isGamePaused { return }
+//                
+//                if self.countdownValue > 1 {
+//                    self.countdownValue -= 1
+//                } else {
+//                    t.invalidate()
+//                    self.isPreCountdownActive = false
+//                    self.startMainGame()
+//                }
+//            }
+//        }
+//    }
     
     func pauseGame() {
         guard !isGamePaused else { return }
@@ -222,50 +227,59 @@ class AnagramsGame: GameProtocol, ObservableObject {
         isPreCountdownActive = false
         isGamePaused = false
         gameOver = 1
-        
-        // Calculate final score and statistics
-        // let longestWordLength = getLongestWordCompleted()
+
         let gameWon = wordsCompleted >= (totalWordsInSet / 2)
         let difficultyScore = calculateDifficultyScore()
-        let finalScore = Int(difficultyScore) //wordsCompleted <- former score value before difficulty
-        
-        // Update display
+        let finalScore = Int(difficultyScore)
+
         statusText = gameWon ? "Well done!" : "Game over!"
-        //currentWord = "Final\nScore\n\n\(finalScore)/\(totalWordsInSet)"
         scrambledLetters = []
         usedLetterIndices = []
         userAnswer = ""
-        
-        // Save score to ScoreManager
-        //        let newScore = GameScore(
-        //            gameId: "anagrams",
-        //            date: Date(),
-        //            attempts: wordsCompleted,
-        //            timeElapsed: 60.0,
-        //            won: gameWon,
-        //            finalScore: finalScore,
-        //            additionalProperties: AnagramsAdditionalProperties(  // Use the GameScoreManager struct
-        //                gameDuration: 60.0,
-        //                longestWord: longestWordLength,
-        //                totalWordsInSet: totalWordsInSet,
-        //                wordsCompleted: wordsCompleted,
-        //                wordsetId: dailyWordset?.id ?? "",
-        //                completedWordLengths: completedWordLengths,
-        //                difficultyScore: difficultyScore
-        //            )
-        //        )
-        
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-            self.lastScore = self.scoreManager.getMostRecentScore(for: "anagrams")
-        }
-        
-        // Mark wordset as completed if applicable
+
+        // Save score with the wordset date
+        let scoreDate = dailyWordset?.date ?? Date()
+        let newScore = GameScore(
+            gameId: gameInfo.id,
+            date: scoreDate,
+            attempts: wordsCompleted, // ✅ use wordsCompleted, not attempts
+            timeElapsed: 60.0,
+            won: gameWon,
+            finalScore: finalScore,
+            additionalProperties: AnagramsAdditionalProperties(
+                gameDuration: 60.0,
+                longestWord: getLongestWordCompleted(),
+                totalWordsInSet: totalWordsInSet,
+                wordsCompleted: wordsCompleted,
+                wordsetId: dailyWordset?.id ?? "",
+                completedWordLengths: completedWordLengths,
+                difficultyScore: difficultyScore
+            )
+        )
+
+        // Save score and update lastScore immediately
+        scoreManager.saveScore(newScore)
+        lastScore = newScore
+
+        // Mark wordset as completed
         if let wordset = dailyWordset {
             wordsetManager.markWordsetCompleted(wordset, score: finalScore)
         }
-        
-        print("Score saved - Words completed: \(wordsCompleted), Difficulty Score: \(difficultyScore), Word Lengths: \(completedWordLengths)")
+
+        print("""
+        ✅ Score saved:
+           - finalScore: \(finalScore)
+           - longestWordCompleted: \(getLongestWordCompleted())
+           - totalWordsInSet: \(totalWordsInSet)
+           - wordsCompleted: \(wordsCompleted)
+           - dailyWordsetID: \(dailyWordset?.id ?? "N/A")
+           - completedWordLengths: \(completedWordLengths)
+           - difficultyScore: \(difficultyScore)
+           - scoreDate: \(scoreDate)
+        """)
     }
+
+
     
     // MARK: - Gameplay helpers
     
@@ -343,19 +357,28 @@ class AnagramsGame: GameProtocol, ObservableObject {
     
     private func checkAnswer() {
         let isCorrect = userAnswer.uppercased() == currentWord.uppercased()
+        
         if isCorrect {
             wordsCompleted += 1
             attempts += 1
-            
-            // NEW: Track the length of the completed word
             completedWordLengths.append(currentWord.count)
             
             currentWordIndex += 1
             statusText = "Correct!\n"
             
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                self.newQuestion()
+            if currentWordIndex < totalWordsInSet {
+                // Next word
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                    self.newQuestion()
+                }
+            } else {
+                // Wordset completed - finalize game
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    self.isWordsetCompleted = true
+                    self.endGame()
+                }
             }
+            
         } else {
             statusText = "Wrong!\nTry again."
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
@@ -364,6 +387,7 @@ class AnagramsGame: GameProtocol, ObservableObject {
             }
         }
     }
+
     
     private func getLongestWordCompleted() -> Int {
         guard let wordset = dailyWordset else { return 0 }
@@ -452,6 +476,7 @@ class AnagramsGame: GameProtocol, ObservableObject {
     var wordsetGenerationProgress: Double {
         return wordsetManager.generationProgress
     }
+    
     
 }
 

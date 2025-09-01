@@ -37,50 +37,60 @@ struct AnagramsAdditionalProperties: Codable {
 // MARK: - Enhanced GameScore with additional properties
 struct GameScore: Codable, Identifiable, Equatable {
     let id: UUID
-    let gameId: String           // "flashdance", "decode", "numbers", "anagrams"
-    let date: Date
-    let attempts: Int            // Number of tries/turns
-    let timeElapsed: TimeInterval // Seconds to complete
-    let won: Bool                // Did they win?
-    let finalScore: Int          // Calculated score (higher = better)
-    
-    // NEW: Additional game-specific properties stored as JSON data
+    let gameId: String           // "flashdance", "decode", "anagrams"
+    let date: Date               // when the game was played
+    let archiveDate: Date?       // the “target” or archived date (e.g., targetDate in Flashdance)
+    let attempts: Int
+    let timeElapsed: TimeInterval
+    let won: Bool
+    let finalScore: Int
     let additionalPropertiesData: Data?
 
-    // MARK: - Init (backwards compatible)
-    init(gameId: String, date: Date, attempts: Int, timeElapsed: TimeInterval, won: Bool, finalScore: Int) {
+    // MARK: - Initializers
+    init(gameId: String,
+         date: Date,
+         archiveDate: Date? = nil,
+         attempts: Int,
+         timeElapsed: TimeInterval,
+         won: Bool,
+         finalScore: Int)
+    {
         self.id = UUID()
         self.gameId = gameId
         self.date = date
+        self.archiveDate = archiveDate
         self.attempts = attempts
         self.timeElapsed = timeElapsed
         self.won = won
         self.finalScore = finalScore
         self.additionalPropertiesData = nil
     }
-    
-    // MARK: - Init with additional properties
-    init(gameId: String, date: Date, attempts: Int, timeElapsed: TimeInterval, won: Bool, finalScore: Int, additionalProperties: Codable?) {
+
+    init<T: Codable>(gameId: String,
+                     date: Date,
+                     archiveDate: Date? = nil,
+                     attempts: Int,
+                     timeElapsed: TimeInterval,
+                     won: Bool,
+                     finalScore: Int,
+                     additionalProperties: T?)
+    {
         self.id = UUID()
         self.gameId = gameId
         self.date = date
+        self.archiveDate = archiveDate
         self.attempts = attempts
         self.timeElapsed = timeElapsed
         self.won = won
         self.finalScore = finalScore
-        
-        // Encode additional properties to Data
+
         if let properties = additionalProperties {
-            do {
-                self.additionalPropertiesData = try JSONEncoder().encode(properties)
-            } catch {
-                print("❌ Failed to encode additional properties: \(error)")
-                self.additionalPropertiesData = nil
-            }
+            self.additionalPropertiesData = try? JSONEncoder().encode(properties)
         } else {
             self.additionalPropertiesData = nil
         }
     }
+    
 
     // MARK: - Additional Properties Accessors
     
@@ -145,11 +155,9 @@ struct GameScore: Codable, Identifiable, Equatable {
 }
 
 class GameScoreManager: ObservableObject {
-    // ADDED: Singleton instance
-    static let shared = GameScoreManager()
-    
-    @Published var allScores: [GameScore] = []
 
+    @Published var allScores: [GameScore] = []
+    static let shared = GameScoreManager()
     private let userDefaults = UserDefaults.standard
     private let scoresKey = "SavedGameScores"
 
@@ -163,23 +171,24 @@ class GameScoreManager: ObservableObject {
     // Save a new score - FIXED to ensure main thread updates
     func saveScore(_ score: GameScore) {
         print("🔄 About to save score: \(score.finalScore) for \(score.gameId)")
-        
-        // Ensure UI updates happen on the main thread
+
         DispatchQueue.main.async { [weak self] in
             guard let self = self else { return }
-            
+
             self.allScores.append(score)
             self.saveToUserDefaults()
-            self.markGameCompleted(gameId: score.gameId, date: score.date)
-            
+
+            // Use archiveDate if available, else fallback to score.date
+            let markDate = score.archiveDate ?? score.date
+            self.markGameCompleted(gameId: score.gameId, date: markDate)
+
             print("✅ Score saved on main thread! score.date = \(score.date)")
             print("✅ Scores for \(score.gameId): \(self.allScores.filter { $0.gameId == score.gameId }.count)")
-            
-            // Force an additional UI update notification
+
             self.objectWillChange.send()
         }
-
     }
+
     
     // MARK: - Convenience Save Methods for Specific Games
     
@@ -187,6 +196,7 @@ class GameScoreManager: ObservableObject {
     /// Save a Flashdance score with additional properties
     func saveFlashdanceScore(
         date: Date,
+        archiveDate: Date? = nil,
         attempts: Int,
         timeElapsed: TimeInterval,
         finalScore: Int,
@@ -208,6 +218,7 @@ class GameScoreManager: ObservableObject {
         let score = GameScore(
             gameId: "flashdance",
             date: date,  // This is when the game was played
+            archiveDate: archiveDate,
             attempts: attempts,
             timeElapsed: timeElapsed,
             won: true,
@@ -221,6 +232,7 @@ class GameScoreManager: ObservableObject {
     /// Save a Decode score with additional properties
     func saveDecodeScore(
         date: Date = Date(),
+        archiveDate: Date? = nil,
         attempts: Int,
         timeElapsed: TimeInterval,
         won: Bool,
@@ -238,6 +250,7 @@ class GameScoreManager: ObservableObject {
         let score = GameScore(
             gameId: "decode",
             date: date,
+            archiveDate: archiveDate,
             attempts: attempts,
             timeElapsed: timeElapsed,
             won: won,
@@ -364,16 +377,27 @@ class GameScoreManager: ObservableObject {
     // Add these methods to your GameScoreManager class
 
     func markGameCompleted(gameId: String, date: Date) {
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "yyyy-MM-dd"
-        let dateString = dateFormatter.string(from: date)
+        // Normalize to UTC start of day
+        let utcCalendar = Calendar(identifier: .gregorian)
+        var calendar = utcCalendar
+        calendar.timeZone = TimeZone(secondsFromGMT: 0)!
+        let startOfDayUTC = calendar.startOfDay(for: date)
+        
+        // Use ISO yyyy-MM-dd string in UTC
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        formatter.timeZone = TimeZone(secondsFromGMT: 0)
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        let dateString = formatter.string(from: startOfDayUTC)
+        
         let key = "completed_\(gameId)_\(dateString)"
         UserDefaults.standard.set(true, forKey: key)
         
         print("markGameCompleted: \(UserDefaults.standard.bool(forKey: key)) for \(key)")
-        // Optionally trigger a UI update if needed
         objectWillChange.send()
     }
+
+
 
     func isGameCompleted(gameId: String, date: Date) -> Bool {
         let dateFormatter = DateFormatter()

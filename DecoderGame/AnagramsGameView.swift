@@ -204,17 +204,32 @@ struct AnagramsGameView: View {
                         }
                     }
                     
+                                      
                     // Daily indicator
                     if let targetDate = targetDate {
-                        // Show the archive date when in archive mode
-                        Text(DateFormatter.dayFormatter.string(from: targetDate))
+                        //when launching from the archives
+                        //let _ = print("... targetDate: \(targetDate.localStartOfDay)")
+                        
+                        Text(DateFormatter.dayStringFormatter.string(from: targetDate.localStartOfDay))
                             .font(.custom("LuloOne", size: 12))
                             .foregroundColor(.gray)
                     } else if let wordset = wordsetManager.currentWordset {
-                        // Show the wordset date when in normal mode
-                        Text(DateFormatter.dayFormatter.string(from: wordset.date))
-                            .font(.custom("LuloOne", size: 12))
-                            .foregroundColor(.gray)
+                        //when launching today's game from Main Menu & targetDate is nil
+//                        let _ = print("... wordset.date: \(wordset.date)")
+//                        let _ = print("... wordset.date.localStartOfDay: \(wordset.date.localStartOfDay)")
+                        
+                        Text(DateFormatter.dayStringFormatter.string(from: wordset.date))
+                                .font(.custom("LuloOne", size: 12))
+                                .foregroundColor(.gray)
+//                        Text(DateFormatter.dayFormatter.string(from: wordset.date.localStartOfDay))
+//                                .font(.custom("LuloOne", size: 12))
+//                                .foregroundColor(.gray)
+//                        Text(DateFormatter.day2Formatter.string(from: wordset.date.localStartOfDay))
+//                                .font(.custom("LuloOne", size: 12))
+//                                .foregroundColor(.gray)
+//                        Text(DateFormatter.debugFormatter.string(from: wordset.date.localStartOfDay))
+//                                .font(.custom("LuloOne", size: 12))
+//                                .foregroundColor(.gray)
                     }
                 }
 
@@ -566,7 +581,11 @@ struct AnagramsGameView: View {
             answerFlashColor = nil
         }
     }
+    
+  
 }
+
+
 
 // Container class to hold the AnagramsGame and make it properly observable
 class GameContainer: ObservableObject {

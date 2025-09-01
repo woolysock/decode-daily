@@ -103,7 +103,24 @@ final class DailyWordsetManager: ObservableObject {
 
     /// Return the current cached wordset (if any)
     func getTodaysWordset(for date: Date) -> DailyWordset? {
-        return currentWordset
+        let requestedDate = Calendar.current.startOfDay(for: date) // normalize to local start of day
+        let today = Calendar.current.startOfDay(for: Date())
+        
+        // Debug
+        print("getTodaysWordset -> requestedDate: \(requestedDate), today: \(today)")
+        
+        if Calendar.current.isDate(requestedDate, inSameDayAs: today) {
+            return currentWordset
+        }
+        
+        // For archive dates, load the specific wordset
+        if let archiveWordset = getWordset(for: requestedDate) {
+            print("Archive wordset found for: \(requestedDate)")
+            return archiveWordset
+        }
+        
+        print("No wordset found for: \(requestedDate)")
+        return nil
     }
 
     /// Return a wordset for a given date (may be an override saved to UserDefaults, or one loaded from the bundled JSON)
@@ -228,13 +245,8 @@ final class DailyWordsetManager: ObservableObject {
         let dateKey = Self.dateFormatter.string(from: date)
         print("🔍 Looking for wordset with dateKey: \(dateKey)")
 
-//        // 1) check override in UserDefaults
-//        if let override = loadWordsetOverride(for: dateKey) {
-//            print("✅ Found override in UserDefaults for \(dateKey)")
-//            return override
-//        }
-
-        // 2) check bundled JSON
+        // Skip UserDefaults - go directly to bundled JSON
+        
         print("🔍 Searching in \(allWordsets.count) bundled wordsets...")
         if let found = allWordsets.first(where: { $0.id == dateKey }) {
             print("✅ Found wordset in bundled JSON for \(dateKey)")

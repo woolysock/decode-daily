@@ -11,14 +11,16 @@ extension Color {
 //    static let myAccentColor1 = Color(red:88/255,green:93/255,blue:123/255)
 //    static let myAccentColor2 = Color(red:49/255,green:52/255,blue:66/255)
     static let myAccentColor1 = Color(red:36/255,green:76/255,blue:141/255)
-    static let myAccentColor2 = Color(red:58/255,green:108/255,blue:190/255)
+    //static let myAccentColor2 = Color(red:58/255,green:108/255,blue:190/255)
+    static let myAccentColor2 = Color(red:98/255,green:136/255,blue:199/255)
+    static let mySunColor = Color(red:246/255,green:211/255,blue:71/255)
+    static let myOverlaysColor = Color(red:51/255,green:68/255,blue:97/255)
 }
 
 struct MainMenuView: View {
     
     @EnvironmentObject var scoreManager: GameScoreManager
     @EnvironmentObject var gameCoordinator: GameCoordinator
-    
     
     let screenHeight = UIScreen.main.bounds.height
     let screenWidth = UIScreen.main.bounds.width
@@ -32,6 +34,8 @@ struct MainMenuView: View {
     @State private var highScorePressed: Bool = false
     @State private var settingsTilt: (x: Double, y: Double) = (0, 0)
     @State private var settingsPressed: Bool = false
+    @State private var navigateToGame: String? = nil
+    @State private var navigateToArchivedGame: (gameId: String, date: Date)? = nil
     
     // State for page tracking
     @State private var currentPage = 0
@@ -39,7 +43,7 @@ struct MainMenuView: View {
     
     //For Archives
     @State private var selectedArchiveDate: Date?
-    @State private var navigateToArchivedGame = false
+   // @State private var navigateToArchivedGame = false
     
     // CACHE AVAILABLE DATES TO PREVENT FREQUENT CALLS
     @State private var cachedAvailableDates: [String: [Date]] = [:]
@@ -77,10 +81,20 @@ struct MainMenuView: View {
                     accountPage.tag(2)
                 }
                 .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
-                .navigationDestination(isPresented: $navigateToArchivedGame) {
-                    if let date = selectedArchiveDate {
-                        //let _ = print("navigateToArchivedGame with date: \(date)")
-                        archivedGameDestination(for: selectedArchiveGame, date: date)
+                .navigationDestination(isPresented: Binding<Bool>(
+                    get: { navigateToGame != nil },
+                    set: { if !$0 { navigateToGame = nil } }
+                )) {
+                    if let gameId = navigateToGame {
+                        destinationView(for: gameId)
+                    }
+                }
+                .navigationDestination(isPresented: Binding<Bool>(
+                    get: { navigateToArchivedGame != nil },
+                    set: { if !$0 { navigateToArchivedGame = nil } }
+                )) {
+                    if let archivedGame = navigateToArchivedGame {
+                        archivedGameDestination(for: archivedGame.gameId, date: archivedGame.date)
                     }
                 }
                 .onAppear {
@@ -496,15 +510,20 @@ struct MainMenuView: View {
 
 
     // Helper function to launch archived game
+//    private func launchArchivedGame(gameId: String, date: Date) {
+//        print("🏁 launchArchivedGame(): Launch \(gameId) for date: \(date)")
+//        
+//        // Store the selected date and game
+//        selectedArchiveDate = date
+//        selectedArchiveGame = gameId
+//        
+//        // Trigger navigation
+//        navigateToArchivedGame = true
+//    }
+//    
     private func launchArchivedGame(gameId: String, date: Date) {
         print("🏁 launchArchivedGame(): Launch \(gameId) for date: \(date)")
-        
-        // Store the selected date and game
-        selectedArchiveDate = date
-        selectedArchiveGame = gameId
-        
-        // Trigger navigation
-        navigateToArchivedGame = true
+        navigateToArchivedGame = (gameId: gameId, date: date)
     }
   
     
@@ -541,34 +560,29 @@ struct MainMenuView: View {
         .frame(maxWidth: .infinity)
     }
     
-    // Helper function to determine which game view to show
-    @ViewBuilder
-    private func gameDestination(for gameId: String) -> some View {
-        switch gameId {
-        case "decode":
-            DecodeGameView()
-                .environmentObject(scoreManager)
-                .onAppear { gameCoordinator.setActiveGame("decode") }
-                .onDisappear { gameCoordinator.clearActiveGame() }
-        case "numbers":
-            NumbersGameView()
-                .environmentObject(scoreManager)
-                .onAppear { gameCoordinator.setActiveGame("numbers") }
-                .onDisappear { gameCoordinator.clearActiveGame() }
-        case "flashdance":
-            FlashdanceGameView()
-                .environmentObject(scoreManager)
-                .onAppear { gameCoordinator.setActiveGame("flashdance") }
-                .onDisappear { gameCoordinator.clearActiveGame() }
-        case "anagrams":
-            AnagramsGameView()
-                .environmentObject(scoreManager)
-                .onAppear { gameCoordinator.setActiveGame("anagrams") }
-                .onDisappear { gameCoordinator.clearActiveGame() }
-        default:
-            EmptyView()
-        }
-    }
+//    // Helper function to determine which game view to show
+//    @ViewBuilder
+//    private func gameDestination(for gameId: String) -> some View {
+//        switch gameId {
+//        case "decode":
+//            AnyView(DecodeGameView()
+//                .environmentObject(scoreManager)
+//                .onAppear { gameCoordinator.setActiveGame("decode") }
+//                .onDisappear { gameCoordinator.clearActiveGame() })
+//        case "flashdance":
+//            AnyView(FlashdanceGameView()
+//                .environmentObject(scoreManager)
+//                .onAppear { gameCoordinator.setActiveGame("flashdance") }
+//                .onDisappear { gameCoordinator.clearActiveGame() })
+//        case "anagrams":
+//            AnyView(AnagramsGameView()
+//                .environmentObject(scoreManager)
+//                .onAppear { gameCoordinator.setActiveGame("anagrams") }
+//                .onDisappear { gameCoordinator.clearActiveGame() })
+//        default:
+//            AnyView(EmptyView())
+//        }
+//    }
     
     
     // Helper function to calculate 3D tilt based on drag position
@@ -588,15 +602,17 @@ struct MainMenuView: View {
         return (x: xTilt, y: yTilt)
     }
     
-    // Tiltable button for games
+    // Update your tiltableGameButton to use state-based navigation
     @ViewBuilder
     private func tiltableGameButton(for gameInfo: GameInfo) -> some View {
         let buttonWidth = screenWidth - 120
-        let buttonHeight: CGFloat = 40 + 32 // Including padding
+        let buttonHeight: CGFloat = 40 + 32
         let tilt = gameButtonTilts[gameInfo.id] ?? (0, 0)
         let isPressed = gameButtonPressed[gameInfo.id] ?? false
         
-        NavigationLink(destination: gameDestination(for: gameInfo.id)) {
+        Button(action: {
+            navigateToGame = gameInfo.id  // Set the state instead of using NavigationLink
+        }) {
             VStack(spacing: 5) {
                 HStack(alignment: .firstTextBaseline, spacing: 10) {
                     gameInfo.gameIcon.font(.system(size: 14))
@@ -640,6 +656,35 @@ struct MainMenuView: View {
                     }
                 }
         )
+    }
+    
+    // Add this method to your MainMenuView struct
+    @ViewBuilder
+    private func destinationView(for gameId: String) -> some View {
+        switch gameId {
+        case "decode":
+            DecodeGameView()
+                .environmentObject(scoreManager)
+                .onAppear { gameCoordinator.setActiveGame("decode") }
+                .onDisappear { gameCoordinator.clearActiveGame() }
+        case "flashdance":
+            FlashdanceGameView()
+                .environmentObject(scoreManager)
+                .onAppear { gameCoordinator.setActiveGame("flashdance") }
+                .onDisappear { gameCoordinator.clearActiveGame() }
+        case "anagrams":
+            AnagramsGameView()
+                .environmentObject(scoreManager)
+                .onAppear { gameCoordinator.setActiveGame("anagrams") }
+                .onDisappear { gameCoordinator.clearActiveGame() }
+        case "numbers":
+            NumbersGameView()
+                .environmentObject(scoreManager)
+                .onAppear { gameCoordinator.setActiveGame("numbers") }
+                .onDisappear { gameCoordinator.clearActiveGame() }
+        default:
+            EmptyView()
+        }
     }
     
     // Tiltable button for High Scores
@@ -774,22 +819,3 @@ private let monthAbbrevFormatter: DateFormatter = {
     return f
 }()
 
-extension DateFormatter {
-    static let day2Formatter: DateFormatter = {
-        let f = DateFormatter()
-        f.dateFormat = "MMM dd, yyyy"
-        f.timeZone = TimeZone.current // or fixed timezone if needed
-        f.locale = Locale(identifier: "en_US_POSIX")
-        return f
-    }()
-}
-
-extension DateFormatter {
-    static let debugFormatter: DateFormatter = {
-        let f = DateFormatter()
-        f.dateFormat = "yyyy-MM-dd HH:mm:ss z"
-        f.timeZone = TimeZone.current
-        f.locale = Locale(identifier: "en_US_POSIX")
-        return f
-    }()
-}

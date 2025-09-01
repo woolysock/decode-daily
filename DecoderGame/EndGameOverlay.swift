@@ -243,7 +243,7 @@ struct EndGameOverlay: View {
                 }
             }
             .padding(30)
-            .background(Color.myAccentColor1)
+            .background(Color.myOverlaysColor)
             .cornerRadius(15)
             .overlay(
                 RoundedRectangle(cornerRadius: 15)

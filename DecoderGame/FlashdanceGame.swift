@@ -18,7 +18,7 @@ class FlashdanceGame: GameProtocol, ObservableObject {
     @Published var gameOver: Int = 0
     @Published var statusText: String = "\n\n\n"
     @Published var lastScore: GameScore?
-    private let targetDate: Date?
+    let targetDate: Date?
 
     // MARK: - Gameplay
     @Published var currentEquation: String = ""
@@ -57,13 +57,13 @@ class FlashdanceGame: GameProtocol, ObservableObject {
         displayName: "flashdance",
         description: "math flashcard fun",
         isAvailable: true,
-        gameLocation: AnyView(FlashdanceGameView()),
+        //gameLocation: AnyView(FlashdanceGameView()),
         gameIcon: Image(systemName: "30.arrow.trianglehead.clockwise")
     )
 
     // Initialize with score manager
     init(scoreManager: GameScoreManager, targetDate: Date? = nil) {
-        self.scoreManager = scoreManager
+        self.scoreManager = GameScoreManager.shared
         self.equationManager = DailyEquationManager.shared
         self.targetDate = targetDate
         
@@ -162,20 +162,20 @@ class FlashdanceGame: GameProtocol, ObservableObject {
 
     func resetGame() { startGame() }
 
-    func endGame() {
+    func endGame(completion: (() -> Void)? = nil) {
         stopAllTimers()
         isGameActive = false
         isPreCountdownActive = false
         isGamePaused = false
         gameOver = 1
-        
-        //let oldScores = scoreManager.getScores(for: "flashdance")
-               
+
         calculateFinalScore()
         statusText = "Game over!"
-        
+
+        // Save score with targetDate as archiveDate
         scoreManager.saveFlashdanceScore(
-            date: Date(), // When the game was played (now)
+            date: Date(),                        // actual play date
+            archiveDate: targetDate,             // target/archived date
             attempts: correctAttempts + incorrectAttempts,
             timeElapsed: 30.0,
             finalScore: totalScore,
@@ -183,23 +183,18 @@ class FlashdanceGame: GameProtocol, ObservableObject {
             correctAnswers: correctAttempts,
             incorrectAnswers: incorrectAttempts,
             longestStreak: maxStreak,
-            gameDate: targetDate ?? Date()  // The archive date or today if current game
+            gameDate: targetDate ?? Date()
         )
-        
-        // Wait for the save to complete, then update lastScore
+
+        // Update lastScore after save completes on main thread
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-            // Debug what scores exist after save
-            let newScores = self.scoreManager.getScores(for: "flashdance")
-            print("Flashdance scores: \(newScores.map { $0.finalScore })")
-            
-            // Update lastScore
             self.lastScore = self.scoreManager.getMostRecentScore(for: "flashdance")
-            print("most Recent lastScore: \(self.lastScore?.flashdanceProperties?.correctAnswers ?? -1) correct, \(self.lastScore?.flashdanceProperties?.incorrectAnswers ?? -1) wrong, \(self.maxStreak) streak")
+            completion?()  // Call completion after lastScore is updated
         }
-        
-        
-        print("Score saved successfully: \(totalScore) points, \(correctAttempts) correct, \(incorrectAttempts) wrong, ")
+
+        print("Score saved successfully: \(totalScore) points, \(correctAttempts) correct, \(incorrectAttempts) wrong")
     }
+
     
 
     
@@ -377,7 +372,7 @@ class FlashdanceGame: GameProtocol, ObservableObject {
                 self.gameTimeRemaining -= 1
             } else {
                 t.invalidate()
-                self.endGame()
+                self.endGame()  // This will now properly update lastScore before showing overlay
             }
         }
     }
@@ -394,3 +389,4 @@ class FlashdanceGame: GameProtocol, ObservableObject {
         print("FlashdanceGame deinitialized")
     }
 }
+

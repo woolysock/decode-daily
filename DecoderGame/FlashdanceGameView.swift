@@ -10,13 +10,14 @@ import SwiftUI
 struct FlashdanceGameView: View {
     let targetDate: Date?
     
-    @EnvironmentObject var scoreManager: GameScoreManager
+    //@EnvironmentObject var scoreManager: GameScoreManager
     @Environment(\.dismiss) private var dismiss
     
     @ObservedObject private var equationManager = DailyEquationManager.shared
     
     @StateObject private var game: FlashdanceGame
     @StateObject private var dailyCheckManager = DailyCheckManager.shared
+    @State private var finalGameData: GameScore?
     
     @State private var dragOffset: CGSize = .zero
     @State private var showHowToPlay = false
@@ -35,6 +36,8 @@ struct FlashdanceGameView: View {
     @State private var cardOpacity: Double = 1.0
     @State private var cardScale: CGFloat = 1.0
     
+    let scoreManager = GameScoreManager.shared
+    
     private let instructionsText = """
     You have 30 seconds to solve the
     most math problems! ⏲
@@ -46,6 +49,8 @@ struct FlashdanceGameView: View {
     """
     
     init(targetDate: Date? = nil) {
+        print("🏁 FlashdanceGameView init() with targetDate = \(String(describing: targetDate))")
+        //print("🏁 Call stack: \(Thread.callStackSymbols.prefix(5))")
         self.targetDate = targetDate
         self._game = StateObject(wrappedValue: FlashdanceGame(scoreManager: GameScoreManager.shared, targetDate: targetDate))
     }
@@ -95,12 +100,13 @@ struct FlashdanceGameView: View {
                                         .foregroundColor(.gray)
                                 } else if let mathset = equationManager.currentEquationSet {
                                     // Show the equation set date when in normal mode
-                                    Text(DateFormatter.dayFormatter.string(from: mathset.date))
+                                    
+                                    Text(DateFormatter.dayStringFormatter.string(from: mathset.date))
                                         .font(.custom("LuloOne", size: 12))
                                         .foregroundColor(.gray)
                                 }
                             }
-
+                            
                             Spacer()
                             
                             Group {
@@ -251,7 +257,25 @@ struct FlashdanceGameView: View {
                     }
                     .onChange(of: game.gameOver, initial: false) { _, newValue in
                         if newValue == 1 {
-                            // Wait a brief moment for the score to be saved and lastScore updated
+                            // Create a GameScore with the current game data
+                            let additionalProps = FlashdanceAdditionalProperties(
+                                gameDuration: 30,
+                                correctAnswers: game.correctAttempts,
+                                incorrectAnswers: game.incorrectAttempts,
+                                longestStreak: game.maxStreak,
+                                gameDate: game.targetDate ?? Date()
+                            )
+                            
+                            finalGameData = GameScore(
+                                gameId: "flashdance",
+                                date: Date(),
+                                attempts: game.correctAttempts + game.incorrectAttempts,
+                                timeElapsed: 30.0,
+                                won: true,
+                                finalScore: game.totalScore,
+                                additionalProperties: additionalProps
+                            )
+                            
                             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                                 showEndGameOverlay = true
                             }
@@ -275,24 +299,24 @@ struct FlashdanceGameView: View {
             
             // Move overlays outside NavigationStack to root ZStack level
            
-                if showEndGameOverlay {
-                    
-                    EndGameOverlay(
-                        gameID: game.gameInfo.id,
-                        finalScore: game.totalScore,
-                        displayName: game.gameInfo.displayName,
-                        isVisible: $showEndGameOverlay,
-                        onPlayAgain: { startNewGame() },
-                        onHighScores: { navigateToHighScores = true },
-                        onMenu: {
-                            showEndGameOverlay = false
-                            dismiss()
-                        },
-                        gameScore: game.lastScore
-                    )
-                    .transition(.opacity)
-                
+            if showEndGameOverlay {
+                EndGameOverlay(
+                    gameID: game.gameInfo.id,
+                    finalScore: finalGameData?.finalScore ?? game.totalScore,
+                    displayName: game.gameInfo.displayName,
+                    isVisible: $showEndGameOverlay,
+                    onPlayAgain: { startNewGame() },
+                    onHighScores: { navigateToHighScores = true },
+                    onMenu: {
+                        showEndGameOverlay = false
+                        dismiss()
+                    },
+                    gameScore: finalGameData  // Now this is a GameScore object
+                )
+                .transition(.opacity)
             }
+            
+    
         }
         .onChange(of: dailyCheckManager.showNewDayOverlay) { oldValue, newValue in
             // Only respond to new day overlay if this is NOT an archived game
@@ -343,24 +367,26 @@ struct FlashdanceGameView: View {
     
     private func handleSwipeWithPills(location: CGPoint, geo: GeometryProxy, currentDragOffset: CGSize, geoSize: CGSize) {
         let minSwipeThreshold: CGFloat = 40
-        let upwardThreshold: CGFloat = -30
+        let minUpwardMovement: CGFloat = -20  // Reduced from -30, less strict
         
-        // Check if we have enough swipe motion
+        // Check if we have enough horizontal swipe motion (prioritize horizontal)
+        let horizontalDistance = abs(currentDragOffset.width)
         let swipeMagnitude = sqrt(currentDragOffset.width * currentDragOffset.width + currentDragOffset.height * currentDragOffset.height)
         
-        guard swipeMagnitude >= minSwipeThreshold else {
+        guard horizontalDistance >= 30 || swipeMagnitude >= minSwipeThreshold else {
             animateWrongAnswer()
             return
         }
         
         // Calculate the CENTER of the flashcard after the drag
         let cardCenterX = geo.size.width / 2 + currentDragOffset.width
-        //let cardCenterY = geo.size.height / 2 + currentDragOffset.height // Approximate card center Y
         
         var selectedAnswer: Int?
         
-        if currentDragOffset.height <= upwardThreshold {
-            // Card moved up enough - check which pill the card center is closest to
+        // More lenient approach - check horizontal position if:
+        // 1. Any upward movement at all, OR
+        // 2. Significant horizontal movement even without much upward movement
+        if currentDragOffset.height <= minUpwardMovement || horizontalDistance >= 60 {
             selectedAnswer = getAnswerUnderCardCenter(cardCenterX: cardCenterX, geo: geo)
         }
         
@@ -373,7 +399,7 @@ struct FlashdanceGameView: View {
             animateCorrectAnswer(dragOffset: currentDragOffset, geoSize: geoSize)
             flash(correct: true, selectedAnswer: selectedValue)
             
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.9) {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                 game.newQuestion()
                 resetCardAnimation()
             }
@@ -400,7 +426,7 @@ struct FlashdanceGameView: View {
         )
         
         // Use smoother, slower animations
-        withAnimation(.easeOut(duration: 0.8)) {
+        withAnimation(.easeOut(duration: 0.7)) {
             // Move the card offscreen
         }
         
@@ -409,14 +435,14 @@ struct FlashdanceGameView: View {
             cardScale = 0.4
         }
         
-        withAnimation(.easeOut(duration: 0.7).delay(0.2)) {
+        withAnimation(.easeOut(duration: 0.7).delay(0.1)) {
             cardOpacity = 0.0
         }
     }
     
     private func animateWrongAnswer() {
         // Bounce back to center
-        withAnimation(.spring(response: 0.6, dampingFraction: 0.6)) {
+        withAnimation(.spring(response: 0.25, dampingFraction: 0.9)) {
             dragOffset = .zero
         }
     }
@@ -468,10 +494,10 @@ struct FlashdanceGameView: View {
             let pillLeftEdge = pillCenterX - pillWidth/2
             let pillRightEdge = pillCenterX + pillWidth/2
             
-            // Add some tolerance for easier selection
-            let tolerance: CGFloat = 20
+            // Increased tolerance for easier selection, especially horizontally
+            let horizontalTolerance: CGFloat = 40  // Increased from 20
             
-            if cardCenterX >= (pillLeftEdge - tolerance) && cardCenterX <= (pillRightEdge + tolerance) {
+            if cardCenterX >= (pillLeftEdge - horizontalTolerance) && cardCenterX <= (pillRightEdge + horizontalTolerance) {
                 return val
             }
         }
@@ -491,19 +517,23 @@ private struct Scoreboard: View {
         VStack(spacing: 10) {
             HStack(spacing: 12) {
                 StatPill(title: "Score", value: "\(score)")
-                StatPill(title: "Correct", value: "\(correct)")
+                StatPill(
+                    title: "Streak",
+                    value: "\(streak)",
+                    emphasize: streak > 1 ? .green : nil
+                )
             }
             HStack(spacing: 12) {
+                StatPill(
+                    title: "Correct",
+                    value: "\(correct)"
+                )
                 StatPill(
                     title: "Incorrect",
                     value: "\(incorrect)",
                     emphasize: incorrect > 0 ? .red : nil
                 )
-                StatPill(
-                    title: "Streak",
-                    value: "\(streak)",
-                    emphasize: streak > 0 ? .green : nil
-                )
+                
             }
         }
         .animation(.easeInOut(duration: 0.2), value: score)
@@ -545,7 +575,7 @@ private struct StatPill: View {
     
     private var backgroundColor: Color {
         switch emphasize {
-        case .green: return Color.green.opacity(0.35)
+        case .green: return Color.mySunColor.opacity(0.6) //Color.green.opacity(0.35)
         case .red:   return Color.red.opacity(0.35)
         case .none:  return Color.white.opacity(0.10)
         }

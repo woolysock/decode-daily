@@ -46,7 +46,7 @@ class DecodeGame: ObservableObject, GameProtocol {
     let numCols = 5
     
     init(scoreManager: GameScoreManager) {
-        self.scoreManager = scoreManager
+        self.scoreManager = GameScoreManager.shared
         startGame()
         
         //this is nothing to do with the game, just lists post-script names of fonts in the console
@@ -63,7 +63,7 @@ class DecodeGame: ObservableObject, GameProtocol {
            displayName: "decode",
            description: "crack the color code",
            isAvailable: true,
-           gameLocation: AnyView(DecodeGameView()),
+           //gameLocation: AnyView(DecodeGameView()),
            gameIcon: Image(systemName: "circle.hexagonpath")
        )
 

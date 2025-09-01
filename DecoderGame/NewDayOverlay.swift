@@ -53,7 +53,7 @@ struct NewDayOverlay: View {
                 VStack(spacing: 15) {
                     Image(systemName: "sun.horizon.fill")
                         .font(.system(size: 60))
-                        .foregroundColor(.orange)
+                        .foregroundColor(Color.mySunColor)
                         .symbolRenderingMode(.hierarchical)
                     
                     Text("Fresh challenges await!")
@@ -79,7 +79,7 @@ struct NewDayOverlay: View {
                 .animation(.easeInOut(duration: 0.3), value: buttonsAreActive)
             }
             .padding(30)
-            .background(Color.myAccentColor2)
+            .background(Color.myOverlaysColor)
             .cornerRadius(15)
             .overlay(
                 RoundedRectangle(cornerRadius: 15)
