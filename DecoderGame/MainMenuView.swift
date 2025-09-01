@@ -8,8 +8,10 @@
 import SwiftUI
 
 extension Color {
-    static let myAccentColor1 = Color(red:88/255,green:93/255,blue:123/255)
-    static let myAccentColor2 = Color(red:49/255,green:52/255,blue:66/255)
+//    static let myAccentColor1 = Color(red:88/255,green:93/255,blue:123/255)
+//    static let myAccentColor2 = Color(red:49/255,green:52/255,blue:66/255)
+    static let myAccentColor1 = Color(red:36/255,green:76/255,blue:141/255)
+    static let myAccentColor2 = Color(red:58/255,green:108/255,blue:190/255)
 }
 
 struct MainMenuView: View {
@@ -46,22 +48,47 @@ struct MainMenuView: View {
     
     var body: some View {
         NavigationStack {
-            TabView(selection: $currentPage) {
-                mainMenuPage.tag(0)
-                archivesPage.tag(1)
-                accountPage.tag(2)
-            }
-            .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
-            .background(.black)
-            .navigationDestination(isPresented: $navigateToArchivedGame) {
-                if let date = selectedArchiveDate {
-                    archivedGameDestination(for: selectedArchiveGame, date: date)
+            VStack(spacing: 0) {
+                // Swipe nav bar
+                HStack(alignment: .center) {
+                    Spacer()
+                    ForEach([0, 1, 2], id: \.self) { pageIndex in
+                        Image(systemName: currentPage == pageIndex ? "smallcircle.filled.circle.fill" : "smallcircle.filled.circle")
+                            .font(.system(size: currentPage == pageIndex ? 12 : 10))
+                            .foregroundColor(.white)
+                            .padding(.leading, pageIndex == 0 ? 30 : 0)
+                            .padding(.trailing, pageIndex == 2 ? 30 : 0)
+                    }
+                    Spacer()
+                }
+                .frame(height: 60)
+                .background(.black)
+                
+                Text(DateFormatter.day2Formatter.string(from: today))
+                    .font(.custom("LuloOne-Bold", size: 14))
+                    .foregroundColor(Color.myAccentColor2)
+                
+                Spacer()
+                    .frame(height : 10)
+                
+                TabView(selection: $currentPage) {
+                    mainMenuPage.tag(0)
+                    archivesPage.tag(1)
+                    accountPage.tag(2)
+                }
+                .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
+                .navigationDestination(isPresented: $navigateToArchivedGame) {
+                    if let date = selectedArchiveDate {
+                        //let _ = print("navigateToArchivedGame with date: \(date)")
+                        archivedGameDestination(for: selectedArchiveGame, date: date)
+                    }
+                }
+                .onAppear {
+                    loadAllAvailableDates()
                 }
             }
-            .onAppear {
-                // Load all available dates once when the main menu appears
-                loadAllAvailableDates()
-            }
+            .background(.black)
+            .ignoresSafeArea(.all, edges: .bottom) // Move this here if needed
         }
     }
     
@@ -72,13 +99,9 @@ struct MainMenuView: View {
             Color.black.ignoresSafeArea()
             
             GeometryReader { geo in
-                VStack(spacing: 25) {
+                VStack(spacing: 20) {
                     Spacer()
-                        .frame(height : 45)
-                    
-                    Text(DateFormatter.day2Formatter.string(from: today))
-                        .font(.custom("LuloOne-Bold", size: 14))
-                        .foregroundColor(Color.myAccentColor1)
+                        .frame(height : 20)
                     
                     //game title header
                     VStack (spacing: 5){
@@ -111,25 +134,18 @@ struct MainMenuView: View {
                     // High Scores button with tilt effect
                     tiltableHighScoreButton
                     
-//                    // Settings button was moved to accounts tab
-//                    tiltableSettingsButton
-                    
-//                    Text(DateFormatter.dayFormatter.string(from: Date()))
-                
-                    //Spacer().frame(height:5)
-                    
-                    HStack(alignment:.center) {
-                        Spacer()
-                        Text("swipe for more")
-                            .font(.custom("LuloOne-Bold", size: 8))
-                            .foregroundColor(Color.myAccentColor1)
-                        Image(systemName: "chevron.forward.dotted.chevron.forward") //arrowshape.forward
-                            .font(.system(size: 30))
-                            .foregroundColor(Color.myAccentColor1)
-                            .padding(.trailing, 30)
+                    HStack{
+                        Image(systemName: "hand.draw")
+                            .font(.system(size: 20))
+                            .foregroundColor(Color.myAccentColor2)
+                        Text("Swipe left to view archive & settings")
+                            .font(.custom("LuloOne", size: 10))
+                            .foregroundColor(Color.myAccentColor2)
+                            .multilineTextAlignment(.center)
+                        
                     }
-                    //.frame(width: 300)
-                    
+                    .padding(.horizontal,60)
+                                        
                     Spacer()
                 }
             }
@@ -204,32 +220,37 @@ struct MainMenuView: View {
         ZStack {
             Color.black.ignoresSafeArea()
             
-            VStack(spacing: 20) {
+            VStack() {
                 
                 Spacer()
-                    .frame(height: 30)
+                    .frame(height: 50)
+                        
                 
-                // Title for the second page
-                VStack(alignment: .leading, spacing: 10) {
+                // Title for Archives page
+                VStack(alignment: .leading, spacing: 8) {
                     Text("GAME ARCHIVES")
                         .font(.custom("LuloOne-Bold", size: 40))
                         .foregroundColor(.white)
                         .multilineTextAlignment(.leading)
                     Text("Blast to the past! 🚀")
-                        .font(.custom("LuloOne", size: 18))
+                        .font(.custom("LuloOne", size: 16))
                         .foregroundColor(.white)
                         .multilineTextAlignment(.leading)
-                    Text("Scroll below to play games prior to \(DateFormatter.day2Formatter.string(from: today))")
-                        .font(.custom("LuloOne", size: 12))
+                    Spacer().frame(height:1)
+                    Text(" ")
+                        .font(.custom("LuloOne", size: 10))
                         .foregroundColor(.white)
                         .multilineTextAlignment(.leading)
                 }
                 .padding(.horizontal, 40)
                 
-                Divider().background(.white).padding(5)
+                Spacer()
+                    .frame(height:25)
+                
+                Divider().background(.white)
                                 
                 // Game Selector
-                HStack(spacing: 15) {
+                HStack(spacing: 10) {
                     Button(action: {
                         selectedArchiveGame = "flashdance"
                         // Load dates for new selection if not cached
@@ -267,21 +288,23 @@ struct MainMenuView: View {
                     }
                 }
                 .padding(.horizontal, 40)
+                .padding(.vertical, 10)
                 
-                Divider().background(.white).padding(5)
+                //Divider().background(.white)
                 
                 // Date Grid - now using cached dates
                 ScrollView {
-                    LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 10), count: 5), spacing: 20) {
+                    LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 10), count: 5), spacing: 10) {
                         ForEach(getCachedAvailableDates(for: selectedArchiveGame), id: \.self) { date in
                             dateButton(for: date)
                         }
                     }
                     .padding(.horizontal, 40)
+                   // .padding(.vertical, 0)
                 }
                 
-                Spacer()
-                    //.frame(height: 20)
+                //Divider().background(.white.opacity(0.8))
+                
             }
         }
         .onAppear {
@@ -320,6 +343,9 @@ struct MainMenuView: View {
     private func loadAvailableDatesForGame(_ gameId: String) {
         print("🔍 Loading available dates for gameId: \(gameId)")
         let today = Calendar.current.startOfDay(for: Date())
+        print("   → Today (startOfDay): \(today)")
+        print("   → Today formatted: \(DateFormatter.debugFormatter.string(from: today))")
+        
         var dates: [Date] = []
 
         switch gameId {
@@ -334,13 +360,45 @@ struct MainMenuView: View {
             break
         }
 
+        // Log the first few raw dates before processing
+        print("   → First 5 raw dates:")
+        for (index, date) in dates.prefix(5).enumerated() {
+            print("     [\(index)]: \(date) -> \(DateFormatter.debugFormatter.string(from: date))")
+        }
+
+        // Convert UTC dates to local timezone dates
+        let localCalendar = Calendar.current
+        dates = dates.compactMap { utcDate in
+            // Extract date components from the UTC date
+            var utcCalendar = Calendar(identifier: .gregorian)
+            utcCalendar.timeZone = TimeZone(abbreviation: "UTC")!
+            
+            let components = utcCalendar.dateComponents([.year, .month, .day], from: utcDate)
+            
+            // Create a new date using local timezone
+            return localCalendar.date(from: components)
+        }
+
+        // Log the converted dates
+        print("   → First 5 converted local dates:")
+        for (index, date) in dates.prefix(5).enumerated() {
+            print("     [\(index)]: \(date) -> \(DateFormatter.debugFormatter.string(from: date))")
+        }
+
         // Filter out today and future dates, then sort
         dates = dates.filter { $0 < today }.sorted(by: >)
+        
+        // Log the first few filtered dates
+        print("   → First 5 filtered dates (after sorting):")
+        for (index, date) in dates.prefix(5).enumerated() {
+            print("     [\(index)]: \(date) -> \(DateFormatter.debugFormatter.string(from: date))")
+        }
         
         // Cache the results
         cachedAvailableDates[gameId] = dates
         print("   → Cached \(dates.count) dates for \(gameId)")
     }
+    
     
     // Get cached dates for a game (returns empty array if not cached)
     private func getCachedAvailableDates(for gameId: String) -> [Date] {
@@ -370,6 +428,8 @@ struct MainMenuView: View {
     // Helper function to create date buttons
     @ViewBuilder
     private func dateButton(for date: Date) -> some View {
+        
+        //let _ = print("*️⃣ dateButton(\(date))")
         let calendar = Calendar.current
         let day   = calendar.component(.day, from: date)
         let month = calendar.component(.month, from: date)
@@ -382,6 +442,9 @@ struct MainMenuView: View {
         // Show the month label only on the 1st of the month
         let showMonth = (day == 1)
         let monthAbbrev = monthAbbrevFormatter.string(from: date).uppercased()
+        
+        // Check if this game is completed using scoreManager
+        let isCompleted = scoreManager.isGameCompleted(gameId: selectedArchiveGame, date: date)
 
         Button(action: {
             launchArchivedGame(gameId: selectedArchiveGame, date: date)
@@ -399,13 +462,34 @@ struct MainMenuView: View {
                         .lineLimit(1)
                 }
             }
-            .frame(width: 50, height: 50) // If your month text feels cramped, try 56
+            .frame(width: 50, height: 50)
             .background(backgroundColor)
             .cornerRadius(8)
+            .overlay(
+                // Checkmark overlay for completed games
+                Group {
+                    if isCompleted {
+                        Image(systemName: "checkmark.seal.fill")
+                            .font(.system(size: 20, weight: .bold))
+                            .foregroundColor(.yellow)
+//                            .background(
+//                                Circle()
+//                                    .fill(Color.green)
+//                                    .frame(width: 18, height: 18)
+//                            )
+                            .offset(x: 10, y: 10) // Position in btm-right corner
+                    }
+                }
+            )
+            .overlay(
+                // White border for completed games
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(isCompleted ? Color.white : Color.clear, lineWidth: 1)
+            )
             .contentShape(RoundedRectangle(cornerRadius: 8))
             .accessibilityElement(children: .ignore)
             .accessibilityLabel(
-                Text("\(monthAbbrevFormatter.string(from: date)) \(day), \(year)")
+                Text("\(monthAbbrevFormatter.string(from: date)) \(day), \(year)\(isCompleted ? ", completed" : "")")
             )
         }
     }
@@ -413,7 +497,7 @@ struct MainMenuView: View {
 
     // Helper function to launch archived game
     private func launchArchivedGame(gameId: String, date: Date) {
-        print("Launch \(gameId) for date: \(date)")
+        print("🏁 launchArchivedGame(): Launch \(gameId) for date: \(date)")
         
         // Store the selected date and game
         selectedArchiveDate = date
@@ -452,7 +536,7 @@ struct MainMenuView: View {
                 .foregroundColor(.white)
         }
         .padding()
-        .background(Color.myAccentColor2)
+        .background(Color.myAccentColor2.opacity(0.2))
         .cornerRadius(10)
         .frame(maxWidth: .infinity)
     }
@@ -680,11 +764,12 @@ struct MainMenuView: View {
             EmptyView()
         }
     }
+    
 }
 
 private let monthAbbrevFormatter: DateFormatter = {
     let f = DateFormatter()
-    f.locale = Locale.current
+    f.locale = Locale(identifier: "en_US_POSIX") //Locale.current
     f.setLocalizedDateFormatFromTemplate("LLL") // e.g., Jan, Feb
     return f
 }()
@@ -694,6 +779,16 @@ extension DateFormatter {
         let f = DateFormatter()
         f.dateFormat = "MMM dd, yyyy"
         f.timeZone = TimeZone.current // or fixed timezone if needed
+        f.locale = Locale(identifier: "en_US_POSIX")
+        return f
+    }()
+}
+
+extension DateFormatter {
+    static let debugFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "yyyy-MM-dd HH:mm:ss z"
+        f.timeZone = TimeZone.current
         f.locale = Locale(identifier: "en_US_POSIX")
         return f
     }()

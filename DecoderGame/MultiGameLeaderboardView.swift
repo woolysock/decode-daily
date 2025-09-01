@@ -108,7 +108,7 @@ struct ScoreRowView: View {
                     
                     Text(" ⋰⋰⋰ ")
                         .font(.custom("LuloOne-Bold", size: 10))
-                        .foregroundColor(.secondary)
+                        .foregroundColor(Color.myAccentColor1)
                     
                     Text(timeFormatter.string(from: score.date))
                         .font(.custom("LuloOne-Bold", size: 12))
@@ -118,14 +118,17 @@ struct ScoreRowView: View {
                 
                 if let flashdanceProps = score.flashdanceProperties {
                     Text("Equations solved: \(flashdanceProps.correctAnswers)")
-                        .font(.custom("LuloOne", size: 10))
-                        .foregroundColor(.secondary)
+                        .font(.custom("LuloOne-Bold", size: 10))
+                        .foregroundColor(Color.myAccentColor1)
                     Text("Longest Streak: \(flashdanceProps.longestStreak) in a row")
                         .font(.custom("LuloOne", size: 10))
-                        .foregroundColor(.secondary)
+                        .foregroundColor(Color.myAccentColor1)
                     Text("Incorrect Answers: \(flashdanceProps.incorrectAnswers)")
                         .font(.custom("LuloOne", size: 10))
-                        .foregroundColor(.secondary)
+                        .foregroundColor(Color.myAccentColor1)
+                    Text("Game Date: \(DateFormatter.dayFormatter.string(from: flashdanceProps.gameDate!))")
+                        .font(.custom("LuloOne", size: 10))
+                        .foregroundColor(Color.myAccentColor2)
                 }
                 
                 if let decodeProps = score.decodeProperties {
@@ -254,12 +257,13 @@ struct MultiGameLeaderboardView: View {
         }
     }
 }
-
 extension DateFormatter {
     static let dayFormatter: DateFormatter = {
+        assert(Thread.isMainThread, "DateFormatter should be initialized on main thread")
         let formatter = DateFormatter()
         formatter.dateFormat = "MMMM d, yyyy"
-        formatter.timeZone = TimeZone(secondsFromGMT: 0)  // Match the wordset manager
+        formatter.timeZone = TimeZone.current
+        formatter.locale = Locale(identifier: "en_US_POSIX")
         return formatter
     }()
 }

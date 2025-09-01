@@ -101,7 +101,6 @@ struct EndGameOverlay: View {
         //print("🔍 DEBUG: gameID = \(gameID)")
         
         guard let gameScore = gameScore else {
-            print("🔍 DEBUG: gameScore is nil, returning nil")
             return nil
         }
         
@@ -209,7 +208,7 @@ struct EndGameOverlay: View {
                     .font(.custom("LuloOne-Bold", size: 18))
                     .foregroundColor(buttonsAreActive ? .black : .gray)
                     .frame(width: 200, height: 50)
-                    .background(buttonsAreActive ? Color.white : Color.gray.opacity(0.4))
+                    .background(buttonsAreActive ? Color.white : Color.black.opacity(0.4))
                     .cornerRadius(10)
                     .disabled(!buttonsAreActive)
                     .animation(.easeInOut(duration: 0.3), value: buttonsAreActive)
@@ -223,7 +222,7 @@ struct EndGameOverlay: View {
                         .foregroundColor(buttonsAreActive ? .white : .gray)
                         .padding(.horizontal, 20)
                         .padding(.vertical, 12)
-                        .background(buttonsAreActive ? Color.myAccentColor1 : Color.gray.opacity(0.4))
+                        .background(buttonsAreActive ? Color.myAccentColor2 : Color.black.opacity(0.4))
                         .cornerRadius(8)
                         .disabled(!buttonsAreActive)
                         .animation(.easeInOut(duration: 0.3), value: buttonsAreActive)
@@ -236,7 +235,7 @@ struct EndGameOverlay: View {
                         .foregroundColor(buttonsAreActive ? .white : .gray)
                         .padding(.horizontal, 20)
                         .padding(.vertical, 12)
-                        .background(buttonsAreActive ? Color.black.opacity(0.3) : Color.gray.opacity(0.4))
+                        .background(buttonsAreActive ? Color.myAccentColor2 : Color.black.opacity(0.4))
                         .cornerRadius(8)
                         .disabled(!buttonsAreActive)
                         .animation(.easeInOut(duration: 0.3), value: buttonsAreActive)
@@ -244,7 +243,7 @@ struct EndGameOverlay: View {
                 }
             }
             .padding(30)
-            .background(Color.myAccentColor2)
+            .background(Color.myAccentColor1)
             .cornerRadius(15)
             .overlay(
                 RoundedRectangle(cornerRadius: 15)

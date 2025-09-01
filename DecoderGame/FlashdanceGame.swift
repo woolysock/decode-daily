@@ -85,23 +85,27 @@ class FlashdanceGame: GameProtocol, ObservableObject {
     func startGame() {
         print("🚀 FlashdanceGame.startGame() called")
         
-        // Debug: Check equation manager status
-        print("🔍 Equation manager status:")
-        print("   - currentEquationSet: \(equationManager.currentEquationSet?.equations.count ?? 0) equations")
-        print("   - isGeneratingEquations: \(equationManager.isGeneratingEquations)")
-        
-        
         let gameDate = targetDate ?? Date()
+        print("🎯 TARGET DATE DEBUG:")
+        print("   - targetDate: \(String(describing: targetDate))")
+        print("   - Current Date(): \(Date())")
+        print("   - gameDate (final): \(gameDate)")
+        print("   - gameDate formatted: \(DateFormatter.debugFormatter.string(from: gameDate))")
+        
+        // Debug: Check what the equation manager thinks about this date
+        print("🔍 Before calling getTodaysEquationSet:")
+        print("   - equationManager.currentEquationSet date: \(String(describing: equationManager.currentEquationSet?.date))")
+        
         guard let todaysEquationSet = equationManager.getTodaysEquationSet(for: gameDate) else {
-            print("startGame(): ❌ No equation set available - getTodaysEquationSet() returned nil")
+            print("startGame(): ❌ No equation set available for date: \(gameDate)")
             statusText = "No equations available for this date!"
             return
         }
         
-        
-        
-        print("✅ startGame(): Got equation set with \(todaysEquationSet.equations.count) equations")
-        print("📝 Equations: \(todaysEquationSet.equations.map { $0.expression })")
+        print("✅ Got equation set for date: \(todaysEquationSet.date)")
+        print("   - Requested date: \(gameDate)")
+        print("   - Returned set date: \(todaysEquationSet.date)")
+        print("   - Are they the same day? \(Calendar.current.isDate(gameDate, inSameDayAs: todaysEquationSet.date))")
         
         dailyEquationSet = todaysEquationSet
         totalEquationsInSet = todaysEquationSet.equations.count
@@ -165,30 +169,32 @@ class FlashdanceGame: GameProtocol, ObservableObject {
         isGamePaused = false
         gameOver = 1
         
-        let oldScores = scoreManager.getScores(for: "flashdance")
-        print("OLD flashdance scores: \(oldScores.map { $0.finalScore })")
-        
+        //let oldScores = scoreManager.getScores(for: "flashdance")
+               
         calculateFinalScore()
         statusText = "Game over!"
-              
+        
         scoreManager.saveFlashdanceScore(
+            date: Date(), // When the game was played (now)
             attempts: correctAttempts + incorrectAttempts,
             timeElapsed: 30.0,
             finalScore: totalScore,
             gameDuration: 30,
             correctAnswers: correctAttempts,
             incorrectAnswers: incorrectAttempts,
-            longestStreak: maxStreak
+            longestStreak: maxStreak,
+            gameDate: targetDate ?? Date()  // The archive date or today if current game
         )
+        
         // Wait for the save to complete, then update lastScore
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
             // Debug what scores exist after save
             let newScores = self.scoreManager.getScores(for: "flashdance")
-            print("CURRENT/NEW flashdance scores: \(newScores.map { $0.finalScore })")
+            print("Flashdance scores: \(newScores.map { $0.finalScore })")
             
             // Update lastScore
             self.lastScore = self.scoreManager.getMostRecentScore(for: "flashdance")
-            print("Just the most Recent lastScore: \(self.lastScore?.flashdanceProperties?.correctAnswers ?? -1) correct, \(self.lastScore?.flashdanceProperties?.incorrectAnswers ?? -1) wrong, \(self.maxStreak) streak")
+            print("most Recent lastScore: \(self.lastScore?.flashdanceProperties?.correctAnswers ?? -1) correct, \(self.lastScore?.flashdanceProperties?.incorrectAnswers ?? -1) wrong, \(self.maxStreak) streak")
         }
         
         
@@ -214,7 +220,7 @@ class FlashdanceGame: GameProtocol, ObservableObject {
         
         totalScore = max(0, baseScore - penalty + streakBonus + accuracyBonus)
         
-        print("Score breakdown - Base: \(baseScore), Penalty: -\(penalty), Streak: +\(streakBonus), Accuracy: +\(accuracyBonus), Final: \(totalScore)")
+        //print("Score breakdown - Base: \(baseScore), Penalty: -\(penalty), Streak: +\(streakBonus), Accuracy: +\(accuracyBonus), Final: \(totalScore)")
     }
     
     private func calculateStreakBonus(_ streak: Int) -> Int {

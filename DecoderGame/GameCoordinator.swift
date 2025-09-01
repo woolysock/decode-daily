@@ -66,4 +66,5 @@ class GameCoordinator: ObservableObject, DailyCheckGameDelegate {
         shouldReturnToMainMenu = true
         clearActiveGame()
     }
+    
 }

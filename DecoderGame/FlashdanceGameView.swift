@@ -276,8 +276,6 @@ struct FlashdanceGameView: View {
             // Move overlays outside NavigationStack to root ZStack level
            
                 if showEndGameOverlay {
-                    let _ = print("  EGO: game.lastScore.finalScore: \(String(describing: game.lastScore?.finalScore))")
-                    let _ = print("  EGO: game.totalScore: \(game.totalScore)")
                     
                     EndGameOverlay(
                         gameID: game.gameInfo.id,

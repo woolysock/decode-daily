@@ -10,10 +10,12 @@ import SwiftUI
 
 // MARK: - Game-specific additional properties structures
 struct FlashdanceAdditionalProperties: Codable {
-    let gameDuration: Int        // Duration in seconds
-    let correctAnswers: Int      // Number of correct answers
-    let incorrectAnswers: Int    // Number of incorrect answers
-    let longestStreak: Int       // Longest consecutive correct streak
+    let gameDuration: Int
+    let correctAnswers: Int
+    let incorrectAnswers: Int
+    let longestStreak: Int
+    let gameDate: Date?
+    
 }
 
 struct DecodeAdditionalProperties: Codable {
@@ -22,12 +24,15 @@ struct DecodeAdditionalProperties: Codable {
     let codeLength: Int           // Number of squares in the code
 }
 
-//MOVED TO THE GAME CODE
-//struct AnagramsAdditionalProperties: Codable {
-//    let gameDuration: TimeInterval // Duration of the game
-//    let longestWord: Int
-//    let totalWordsInSet: Int
-//}
+struct AnagramsAdditionalProperties: Codable {
+    let gameDuration: TimeInterval
+    let longestWord: Int
+    let totalWordsInSet: Int
+    let wordsCompleted: Int        // NEW
+    let wordsetId: String         // NEW
+    let completedWordLengths: [Int]  // NEW
+    let difficultyScore: Double      // NEW
+}
 
 // MARK: - Enhanced GameScore with additional properties
 struct GameScore: Codable, Identifiable, Equatable {
@@ -165,13 +170,15 @@ class GameScoreManager: ObservableObject {
             
             self.allScores.append(score)
             self.saveToUserDefaults()
+            self.markGameCompleted(gameId: score.gameId, date: score.date)
             
-            print("✅ Score saved on main thread! Total scores: \(self.allScores.count)")
+            print("✅ Score saved on main thread! score.date = \(score.date)")
             print("✅ Scores for \(score.gameId): \(self.allScores.filter { $0.gameId == score.gameId }.count)")
             
             // Force an additional UI update notification
             self.objectWillChange.send()
         }
+
     }
     
     // MARK: - Convenience Save Methods for Specific Games
@@ -179,29 +186,31 @@ class GameScoreManager: ObservableObject {
 
     /// Save a Flashdance score with additional properties
     func saveFlashdanceScore(
-        date: Date = Date(),
+        date: Date,
         attempts: Int,
         timeElapsed: TimeInterval,
         finalScore: Int,
         gameDuration: Int,
         correctAnswers: Int,
         incorrectAnswers: Int,
-        longestStreak: Int
+        longestStreak: Int,
+        gameDate: Date  // Add this parameter
     ) {
         print("Calling saveScore()")
         let additionalProps = FlashdanceAdditionalProperties(
             gameDuration: gameDuration,
             correctAnswers: correctAnswers,
             incorrectAnswers: incorrectAnswers,
-            longestStreak: longestStreak
+            longestStreak: longestStreak,
+            gameDate: gameDate  // Include the archive date
         )
         
         let score = GameScore(
             gameId: "flashdance",
-            date: date,
+            date: date,  // This is when the game was played
             attempts: attempts,
             timeElapsed: timeElapsed,
-            won: true, // Flashdance is always a "win" when completed
+            won: true,
             finalScore: finalScore,
             additionalProperties: additionalProps
         )
@@ -350,5 +359,28 @@ class GameScoreManager: ObservableObject {
             .filter { $0.gameId == gameId }
             .sorted { $0.date > $1.date }  // Sort by date, newest first
             .first
+    }
+    
+    // Add these methods to your GameScoreManager class
+
+    func markGameCompleted(gameId: String, date: Date) {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd"
+        let dateString = dateFormatter.string(from: date)
+        let key = "completed_\(gameId)_\(dateString)"
+        UserDefaults.standard.set(true, forKey: key)
+        
+        print("markGameCompleted: \(UserDefaults.standard.bool(forKey: key)) for \(key)")
+        // Optionally trigger a UI update if needed
+        objectWillChange.send()
+    }
+
+    func isGameCompleted(gameId: String, date: Date) -> Bool {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd"
+        let dateString = dateFormatter.string(from: date)
+        let key = "completed_\(gameId)_\(dateString)"
+        //print("isGameCompleted: \(UserDefaults.standard.bool(forKey: key)) for \(key)")
+        return UserDefaults.standard.bool(forKey: key)
     }
 }

@@ -455,15 +455,7 @@ class AnagramsGame: GameProtocol, ObservableObject {
     
 }
 
-struct AnagramsAdditionalProperties: Codable {
-    let gameDuration: TimeInterval
-    let longestWord: Int
-    let totalWordsInSet: Int
-    let wordsCompleted: Int        // NEW
-    let wordsetId: String         // NEW
-    let completedWordLengths: [Int]  // NEW
-    let difficultyScore: Double      // NEW
-}
+
 
 
 

@@ -76,7 +76,16 @@ final class DailyEquationManager: ObservableObject {
     }
     
     func getTodaysEquationSet(for date: Date) -> DailyEquationSet? {
-        return currentEquationSet
+        // If requesting today's date, return the cached currentEquationSet
+        let today = Calendar.current.startOfDay(for: Date())
+        let requestedDate = Calendar.current.startOfDay(for: date)
+        
+        if Calendar.current.isDate(requestedDate, inSameDayAs: today) {
+            return currentEquationSet
+        }
+        
+        // For archive dates, load the specific equation set
+        return getEquationSet(for: requestedDate)
     }
     
     // Private methods similar to DailyWordsetManager...
@@ -212,6 +221,9 @@ final class DailyEquationManager: ObservableObject {
         let dates = allEquationSets.map { $0.date }
         return dates.sorted(by: >) // newest first
     }
-
+    
+    func getEquationSet(for date: Date) -> DailyEquationSet? {
+        return loadEquationSet(for: date)
+    }
 }
 
