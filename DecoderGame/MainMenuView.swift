@@ -357,7 +357,7 @@ struct MainMenuView: View {
     private func loadAvailableDatesForGame(_ gameId: String) {
         print("🔍 Loading available dates for gameId: \(gameId)")
         let today = Calendar.current.startOfDay(for: Date())
-        print("   → Today (startOfDay): \(today)")
+        //print("   → Today (startOfDay): \(today)")
         print("   → Today formatted: \(DateFormatter.debugFormatter.string(from: today))")
         
         var dates: [Date] = []
@@ -375,9 +375,9 @@ struct MainMenuView: View {
         }
 
         // Log the first few raw dates before processing
-        print("   → First 5 raw dates:")
-        for (index, date) in dates.prefix(5).enumerated() {
-            print("     [\(index)]: \(date) -> \(DateFormatter.debugFormatter.string(from: date))")
+        //print("   → First 5 raw dates:")
+        for (_, _) in dates.prefix(5).enumerated() {
+            //print("     [\(index)]: \(date) -> \(DateFormatter.debugFormatter.string(from: date))")
         }
 
         // Convert UTC dates to local timezone dates
@@ -394,9 +394,9 @@ struct MainMenuView: View {
         }
 
         // Log the converted dates
-        print("   → First 5 converted local dates:")
-        for (index, date) in dates.prefix(5).enumerated() {
-            print("     [\(index)]: \(date) -> \(DateFormatter.debugFormatter.string(from: date))")
+        //print("   → First 5 converted local dates:")
+        for (_, _) in dates.prefix(5).enumerated() {
+            //print("     [\(index)]: \(date) -> \(DateFormatter.debugFormatter.string(from: date))")
         }
 
         // Filter out today and future dates, then sort

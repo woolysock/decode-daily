@@ -56,7 +56,7 @@ struct DecodeGameView: View {
                                 Text(game.gameInfo.displayName)
                                     .foregroundColor(.white)
                                     .font(.custom("LuloOne-Bold", size: 20))
-                                    .onTapGesture { game.startGame() }
+                                  
                                 
                                 // Archive indicator
                                 if targetDate != nil {
@@ -83,12 +83,12 @@ struct DecodeGameView: View {
                             }
                             //REUSE THIS WHEN DAILIES WORK:
                             
-                            //                            else if let wordset = wordsetManager.currentWordset {
-                            //                                // Show the wordset date when in normal mode
-                            //                                Text(DateFormatter.dayFormatter.string(from: wordset.date))
-                            //                                    .font(.custom("LuloOne", size: 12))
-                            //                                    .foregroundColor(.gray)
-                            //                            }
+//                            else if let codeset = codeSetManager.currentCodeSet {
+//                                // Show the wordset date when in normal mode
+//                                Text(DateFormatter.dayFormatter.string(from: codeset.date))
+//                                    .font(.custom("LuloOne", size: 12))
+//                                    .foregroundColor(.gray)
+//                            }
                         }
                         
                         // Top-center game clock

@@ -22,7 +22,6 @@ struct DailyEquationSet: Codable, Identifiable {
     var completedAt: Date?
 }
 
-
 final class DailyEquationManager: ObservableObject {
     static let shared = DailyEquationManager()
     
@@ -77,26 +76,17 @@ final class DailyEquationManager: ObservableObject {
     }
     
     func getTodaysEquationSet(for date: Date) -> DailyEquationSet? {
-        let requestedDate = Calendar.current.startOfDay(for: date) // normalize to local start of day
+        // If requesting today's date, return the cached currentEquationSet
         let today = Calendar.current.startOfDay(for: Date())
-        
-        // Debug
-        print("getTodaysEquationSet -> requestedDate: \(requestedDate), today: \(today)")
+        let requestedDate = Calendar.current.startOfDay(for: date)
         
         if Calendar.current.isDate(requestedDate, inSameDayAs: today) {
             return currentEquationSet
         }
         
         // For archive dates, load the specific equation set
-        if let archiveSet = getEquationSet(for: requestedDate) {
-            print("Archive equation set found for: \(requestedDate)")
-            return archiveSet
-        }
-        
-        print("No equation set found for: \(requestedDate)")
-        return nil
+        return getEquationSet(for: requestedDate)
     }
-
     
     // Private methods similar to DailyWordsetManager...
     private func loadAllEquationSets() {

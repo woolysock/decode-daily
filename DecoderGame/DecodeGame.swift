@@ -1,4 +1,3 @@
-
 //
 //  DecodeGame.swift
 //  Decode! Daily iOS
@@ -26,6 +25,8 @@ class DecodeGame: ObservableObject, GameProtocol {
 
     // Make scoreManager mutable so it can be injected after initialization
     var scoreManager: GameScoreManager
+    let targetDate: Date?
+    private let codeSetManager: DailyCodeSetManager
     
     // Animation timer
     private var animationTimer: Timer?
@@ -45,17 +46,12 @@ class DecodeGame: ObservableObject, GameProtocol {
     let numRows = 7
     let numCols = 5
     
-    init(scoreManager: GameScoreManager) {
-        self.scoreManager = GameScoreManager.shared
+    // Updated initializer to accept targetDate and use DailyCodeSetManager
+    init(scoreManager: GameScoreManager, targetDate: Date? = nil) {
+        self.scoreManager = scoreManager
+        self.targetDate = targetDate
+        self.codeSetManager = DailyCodeSetManager.shared
         startGame()
-        
-        //this is nothing to do with the game, just lists post-script names of fonts in the console
-//        for family in UIFont.familyNames {
-//            print("Family: \(family)")
-//            for name in UIFont.fontNames(forFamilyName: family) {
-//                print("  Font: \(name)")
-//            }
-//        }
     }
     
     let gameInfo = GameInfo(
@@ -67,7 +63,6 @@ class DecodeGame: ObservableObject, GameProtocol {
            gameIcon: Image(systemName: "circle.hexagonpath")
        )
 
-
     func startGame() {
         // Set animation state FIRST to hide the board
         isAnimating = true
@@ -77,7 +72,8 @@ class DecodeGame: ObservableObject, GameProtocol {
         currentTurn = 0
         gameOver = 0
         
-        theCode = (0..<numCols).map { _ in Int.random(in: 1..<pegShades.count) }
+        // Use daily code instead of random
+        theCode = getDailyCode()
               
         theBoard = Array(repeating: Array(repeating: 0, count: numCols), count: numRows)
         theScore = Array(repeating: Array(repeating: 0, count: numCols), count: numRows)
@@ -101,7 +97,8 @@ class DecodeGame: ObservableObject, GameProtocol {
         currentTurn = 0
         gameOver = 0
         
-        theCode = (0..<numCols).map { _ in Int.random(in: 1..<pegShades.count) }
+        // Use daily code instead of random
+        theCode = getDailyCode()
         
         theBoard = Array(repeating: Array(repeating: 0, count: numCols), count: numRows)
         theScore = Array(repeating: Array(repeating: 0, count: numCols), count: numRows)
@@ -114,6 +111,21 @@ class DecodeGame: ObservableObject, GameProtocol {
         print("🏁 startGameWithoutAnimation(): DecodeGame initialized with scoreManager: \(type(of: scoreManager))")
     }
 
+    // New method to get the daily code
+    private func getDailyCode() -> [Int] {
+        let gameDate = targetDate ?? Date()
+        
+        if let codeSet = codeSetManager.getTodaysCodeSet(for: gameDate) {
+            let dailyCode = [codeSet.peg1, codeSet.peg2, codeSet.peg3, codeSet.peg4, codeSet.peg5]
+            print("📅 Using daily code for \(gameDate): \(dailyCode)")
+            return dailyCode
+        } else {
+            // Fallback to random if no daily code available
+            let randomCode = (0..<numCols).map { _ in Int.random(in: 1..<pegShades.count) }
+            print("🎲 No daily code found, using random: \(randomCode)")
+            return randomCode
+        }
+    }
     
     func resetGame() {
         print("⚠️ calling resetGame()")
@@ -180,7 +192,6 @@ class DecodeGame: ObservableObject, GameProtocol {
             }
         }
     }
-
 
     func checkRow(_ row: Int) -> Bool {
         for col in 0..<numCols {
@@ -304,10 +315,7 @@ class DecodeGame: ObservableObject, GameProtocol {
         return scoreManager.getScores(for: "decode")
     }
 
-    
     deinit {
         animationTimer?.invalidate()
     }
-    
-    
 }
