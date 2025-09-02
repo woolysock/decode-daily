@@ -54,7 +54,7 @@ class FlashdanceGame: GameProtocol, ObservableObject {
     
     let gameInfo = GameInfo(
         id: "flashdance",
-        displayName: "flashdance",
+        displayName: "Flashdance",
         description: "math flashcard fun",
         isAvailable: true,
         //gameLocation: AnyView(FlashdanceGameView()),
@@ -97,7 +97,7 @@ class FlashdanceGame: GameProtocol, ObservableObject {
         print("   - equationManager.currentEquationSet date: \(String(describing: equationManager.currentEquationSet?.date))")
         
         guard let todaysEquationSet = equationManager.getTodaysEquationSet(for: gameDate) else {
-            print("startGame(): ❌ No equation set available for date: \(gameDate)")
+            print(" ❌ startGame(): No equation set available for date: \(gameDate)")
             statusText = "No equations available for this date!"
             return
         }
@@ -192,7 +192,7 @@ class FlashdanceGame: GameProtocol, ObservableObject {
             completion?()  // Call completion after lastScore is updated
         }
 
-        print("Score saved successfully: \(totalScore) points, \(correctAttempts) correct, \(incorrectAttempts) wrong")
+        //print("Score saved successfully: \(totalScore) points, \(correctAttempts) correct, \(incorrectAttempts) wrong")
     }
 
     

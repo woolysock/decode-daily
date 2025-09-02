@@ -11,10 +11,13 @@ extension Color {
 //    static let myAccentColor1 = Color(red:88/255,green:93/255,blue:123/255)
 //    static let myAccentColor2 = Color(red:49/255,green:52/255,blue:66/255)
     static let myAccentColor1 = Color(red:36/255,green:76/255,blue:141/255)
+    
     //static let myAccentColor2 = Color(red:58/255,green:108/255,blue:190/255)
-    static let myAccentColor2 = Color(red:98/255,green:136/255,blue:199/255)
+    static let myAccentColor2 = Color(red:87/255,green:152/255,blue:212/255)
+    //static let myAccentColor2 = Color(red:98/255,green:136/255,blue:199/255)
+    
     static let mySunColor = Color(red:246/255,green:211/255,blue:71/255)
-    static let myOverlaysColor = Color(red:51/255,green:68/255,blue:97/255)
+    static let myOverlaysColor = Color(red:61/255,green:81/255,blue:116/255)
 }
 
 struct MainMenuView: View {
@@ -39,7 +42,7 @@ struct MainMenuView: View {
     
     // State for page tracking
     @State private var currentPage = 0
-    @State private var selectedArchiveGame: String = "flashdance"
+    @State private var selectedArchiveGame: String = "decode"
     
     //For Archives
     @State private var selectedArchiveDate: Date?
@@ -51,29 +54,17 @@ struct MainMenuView: View {
 
     
     var body: some View {
-        NavigationStack {
+            NavigationStack {
             VStack(spacing: 0) {
-                // Swipe nav bar
-                HStack(alignment: .center) {
-                    Spacer()
-                    ForEach([0, 1, 2], id: \.self) { pageIndex in
-                        Image(systemName: currentPage == pageIndex ? "smallcircle.filled.circle.fill" : "smallcircle.filled.circle")
-                            .font(.system(size: currentPage == pageIndex ? 12 : 10))
-                            .foregroundColor(.white)
-                            .padding(.leading, pageIndex == 0 ? 30 : 0)
-                            .padding(.trailing, pageIndex == 2 ? 30 : 0)
-                    }
-                    Spacer()
-                }
-                .frame(height: 60)
-                .background(.black)
                 
+                // Top swipe nav bar (just dates - dots at bottom)
+                Spacer().frame(height: 25)
                 Text(DateFormatter.day2Formatter.string(from: today))
                     .font(.custom("LuloOne-Bold", size: 14))
                     .foregroundColor(Color.myAccentColor2)
-                
-                Spacer()
-                    .frame(height : 10)
+                    .padding(20)
+                    //.background(.yellow)
+                //Spacer().frame(height : 10)
                 
                 TabView(selection: $currentPage) {
                     mainMenuPage.tag(0)
@@ -93,6 +84,9 @@ struct MainMenuView: View {
                     get: { navigateToArchivedGame != nil },
                     set: { if !$0 { navigateToArchivedGame = nil } }
                 )) {
+                    //let _ = print("🔍 TRACE: navigationDestination called")
+                    //let _ = print("   Stack trace: \(Thread.callStackSymbols.prefix(5).joined(separator: "\n   "))")
+                        
                     if let archivedGame = navigateToArchivedGame {
                         archivedGameDestination(for: archivedGame.gameId, date: archivedGame.date)
                     }
@@ -100,6 +94,22 @@ struct MainMenuView: View {
                 .onAppear {
                     loadAllAvailableDates()
                 }
+                
+                // Bottom swipe nav bar
+                HStack(alignment: .center) {
+                    Spacer()
+                    ForEach([0, 1, 2], id: \.self) { pageIndex in
+                        Image(systemName: currentPage == pageIndex ? "smallcircle.filled.circle.fill" : "smallcircle.filled.circle")
+                            .font(.system(size: currentPage == pageIndex ? 14 : 12))
+                            .foregroundColor(.white)
+                            .padding(.leading, pageIndex == 0 ? 30 : 0)
+                            .padding(.trailing, pageIndex == 2 ? 30 : 0)
+                    }
+                    Spacer()
+                }
+                .frame(height: 60)
+                .background(.black)
+                Spacer().frame(height:20)
             }
             .background(.black)
             .ignoresSafeArea(.all, edges: .bottom) // Move this here if needed
@@ -148,17 +158,19 @@ struct MainMenuView: View {
                     // High Scores button with tilt effect
                     tiltableHighScoreButton
                     
+                    Spacer()
+                        .frame(height: 1)
+                                        
                     HStack{
                         Image(systemName: "hand.draw")
-                            .font(.system(size: 20))
-                            .foregroundColor(Color.myAccentColor2)
+                            .font(.system(size: 16))
+                            .foregroundColor(Color.mySunColor)
                         Text("Swipe left to view archive & settings")
-                            .font(.custom("LuloOne", size: 10))
-                            .foregroundColor(Color.myAccentColor2)
+                            .font(.custom("LuloOne", size: 8))
+                            .foregroundColor(.white)
                             .multilineTextAlignment(.center)
-                        
                     }
-                    .padding(.horizontal,60)
+                    .padding(.horizontal,50)
                                         
                     Spacer()
                 }
@@ -174,7 +186,7 @@ struct MainMenuView: View {
             
             VStack(spacing: 20) {
                 Spacer()
-                    .frame(height: 50)
+                    .frame(height: 20)
                 
                 // Title for the second page
                 VStack(spacing: 10) {
@@ -222,7 +234,7 @@ struct MainMenuView: View {
                 tiltableSettingsButton
 
                 Spacer()
-                    .frame(height: 50)
+
             }
             .padding(.horizontal, 40)
         }
@@ -237,12 +249,11 @@ struct MainMenuView: View {
             VStack() {
                 
                 Spacer()
-                    .frame(height: 50)
+                    .frame(height: 40)
                         
-                
                 // Title for Archives page
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("GAME ARCHIVES")
+                    Text("DAILY ARCHIVES")
                         .font(.custom("LuloOne-Bold", size: 40))
                         .foregroundColor(.white)
                         .multilineTextAlignment(.leading)
@@ -259,18 +270,36 @@ struct MainMenuView: View {
                 .padding(.horizontal, 40)
                 
                 Spacer()
-                    .frame(height:25)
+                    .frame(height:15)
                 
                 Divider().background(.white)
                                 
                 // Game Selector
                 HStack(spacing: 10) {
                     Button(action: {
+                        selectedArchiveGame = "decode"
+                        // Load dates for new selection if not cached
+                        loadAvailableDatesIfNeeded(for: "decode")
+                    }) {
+                        Text("Decode")
+                            .font(.custom("LuloOne-Bold", size: 12))
+                            .foregroundColor(selectedArchiveGame == "decode" ? .black : .white)
+                            .padding(.horizontal, 20)
+                            .padding(.vertical, 15)
+                            .background(selectedArchiveGame == "decode" ? Color.white : Color.clear)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .stroke(Color.white, lineWidth: 1)
+                            )
+                            .cornerRadius(8)
+                    }
+                    
+                    Button(action: {
                         selectedArchiveGame = "flashdance"
                         // Load dates for new selection if not cached
                         loadAvailableDatesIfNeeded(for: "flashdance")
                     }) {
-                        Text("Flashdance")
+                        Text("Flash\ndance")
                             .font(.custom("LuloOne-Bold", size: 12))
                             .foregroundColor(selectedArchiveGame == "flashdance" ? .black : .white)
                             .padding(.horizontal, 20)
@@ -288,11 +317,11 @@ struct MainMenuView: View {
                         // Load dates for new selection if not cached
                         loadAvailableDatesIfNeeded(for: "anagrams")
                     }) {
-                        Text("Anagrams")
+                        Text("'Grams")
                             .font(.custom("LuloOne-Bold", size: 12))
                             .foregroundColor(selectedArchiveGame == "anagrams" ? .black : .white)
                             .padding(.horizontal, 20)
-                            .padding(.vertical, 10)
+                            .padding(.vertical, 15)
                             .background(selectedArchiveGame == "anagrams" ? Color.white : Color.clear)
                             .overlay(
                                 RoundedRectangle(cornerRadius: 8)
@@ -301,8 +330,8 @@ struct MainMenuView: View {
                             .cornerRadius(8)
                     }
                 }
-                .padding(.horizontal, 40)
-                .padding(.vertical, 10)
+                .padding(.horizontal, 20)
+                .padding(.vertical, 12)
                 
                 //Divider().background(.white)
                 
@@ -333,14 +362,16 @@ struct MainMenuView: View {
     private func loadAllAvailableDates() {
         guard !hasLoadedInitialDates else { return }
         
-        print("🚀 Loading all available dates (one-time initialization)")
+        print("... 🗘 MainMenuView: loadAllAvailableDates(): Loading all dates for all games (one-time initialization):")
         
         // Load dates for all available games
+        loadAvailableDatesForGame("decode")
         loadAvailableDatesForGame("flashdance")
         loadAvailableDatesForGame("anagrams")
         
+        
         hasLoadedInitialDates = true
-        print("✅ Finished loading all available dates")
+        print("✅ Finished loading, sorting & filtering all available dates.")
     }
     
     // Load dates for a specific game only if not already cached
@@ -355,14 +386,17 @@ struct MainMenuView: View {
     
     // Actually load the dates for a game and cache them
     private func loadAvailableDatesForGame(_ gameId: String) {
-        print("🔍 Loading available dates for gameId: \(gameId)")
+        //print("🔍 Loading available dates for gameId: \(gameId)")
         let today = Calendar.current.startOfDay(for: Date())
         //print("   → Today (startOfDay): \(today)")
-        print("   → Today formatted: \(DateFormatter.debugFormatter.string(from: today))")
+        //print("   → Today formatted: \(DateFormatter.debugFormatter.string(from: today))")
         
         var dates: [Date] = []
 
         switch gameId {
+        case "decode":
+            dates = gameCoordinator.dailyCodeSetManager.getAvailableDates()
+            print("   → Loaded \(dates.count) archive dates for decode")
         case "flashdance":
             dates = gameCoordinator.dailyEquationManager.getAvailableDates()
             print("   → Loaded \(dates.count) archive dates for flashdance")
@@ -395,16 +429,16 @@ struct MainMenuView: View {
 
         // Log the converted dates
         //print("   → First 5 converted local dates:")
-        for (_, _) in dates.prefix(5).enumerated() {
+        //for (_, _) in dates.prefix(5).enumerated() {
             //print("     [\(index)]: \(date) -> \(DateFormatter.debugFormatter.string(from: date))")
-        }
+        //}
 
         // Filter out today and future dates, then sort
         dates = dates.filter { $0 < today }.sorted(by: >)
         
         // Log the first few filtered dates
-        print("   → First 5 filtered dates (after sorting):")
-        for (index, date) in dates.prefix(5).enumerated() {
+        print("   →   → Date Sample after sorting, filtering:")
+        for (index, date) in dates.prefix(1).enumerated() {
             print("     [\(index)]: \(date) -> \(DateFormatter.debugFormatter.string(from: date))")
         }
         
@@ -420,24 +454,6 @@ struct MainMenuView: View {
     }
     
     
-//    // Helper function for fallback sample data
-//    private func generateSampleDates(count: Int, gameId: String) -> [Date] {
-//        print("   → generateSampleDates: Creating \(count) dates for \(gameId)")
-//        let calendar = Calendar.current
-//        let today = Date()
-//        var dates: [Date] = []
-//
-//        // Create dates going back in time to span multiple months for color testing
-//        let startDaysBack = gameId == "flashdance" ? 45 : 35 // Different starting points
-//
-//        for i in 0..<count {
-//            if let date = calendar.date(byAdding: .day, value: -(startDaysBack + i), to: today) {
-//                dates.append(date)
-//            }
-//        }
-//
-//        return dates.sorted(by: >) // Most recent first
-//    }
     
     // Helper function to create date buttons
     @ViewBuilder
@@ -486,12 +502,7 @@ struct MainMenuView: View {
                         Image(systemName: "checkmark.seal.fill")
                             .font(.system(size: 20, weight: .bold))
                             .foregroundColor(.yellow)
-//                            .background(
-//                                Circle()
-//                                    .fill(Color.green)
-//                                    .frame(width: 18, height: 18)
-//                            )
-                            .offset(x: 10, y: 10) // Position in btm-right corner
+                           .offset(x: 10, y: 10) // Position in btm-right corner
                     }
                 }
             )
@@ -507,25 +518,13 @@ struct MainMenuView: View {
             )
         }
     }
-
-
-    // Helper function to launch archived game
-//    private func launchArchivedGame(gameId: String, date: Date) {
-//        print("🏁 launchArchivedGame(): Launch \(gameId) for date: \(date)")
-//        
-//        // Store the selected date and game
-//        selectedArchiveDate = date
-//        selectedArchiveGame = gameId
-//        
-//        // Trigger navigation
-//        navigateToArchivedGame = true
-//    }
-//    
+    
+    
     private func launchArchivedGame(gameId: String, date: Date) {
         print("🏁 launchArchivedGame(): Launch \(gameId) for date: \(date)")
         navigateToArchivedGame = (gameId: gameId, date: date)
     }
-  
+    
     
     // MARK: - Helper Views
     @ViewBuilder
@@ -533,7 +532,7 @@ struct MainMenuView: View {
         HStack(spacing: 15) {
             Image(systemName: icon)
                 .font(.system(size: 20))
-                .foregroundColor(Color.myAccentColor1)
+                .foregroundColor(Color.myAccentColor2)
                 .frame(width: 30)
             
             VStack(alignment: .leading, spacing: 2) {
@@ -555,39 +554,15 @@ struct MainMenuView: View {
                 .foregroundColor(.white)
         }
         .padding()
-        .background(Color.myAccentColor2.opacity(0.2))
+        .background(Color.myOverlaysColor)//Color.myAccentColor2.opacity(0.2))
         .cornerRadius(10)
         .frame(maxWidth: .infinity)
     }
     
-//    // Helper function to determine which game view to show
-//    @ViewBuilder
-//    private func gameDestination(for gameId: String) -> some View {
-//        switch gameId {
-//        case "decode":
-//            AnyView(DecodeGameView()
-//                .environmentObject(scoreManager)
-//                .onAppear { gameCoordinator.setActiveGame("decode") }
-//                .onDisappear { gameCoordinator.clearActiveGame() })
-//        case "flashdance":
-//            AnyView(FlashdanceGameView()
-//                .environmentObject(scoreManager)
-//                .onAppear { gameCoordinator.setActiveGame("flashdance") }
-//                .onDisappear { gameCoordinator.clearActiveGame() })
-//        case "anagrams":
-//            AnyView(AnagramsGameView()
-//                .environmentObject(scoreManager)
-//                .onAppear { gameCoordinator.setActiveGame("anagrams") }
-//                .onDisappear { gameCoordinator.clearActiveGame() })
-//        default:
-//            AnyView(EmptyView())
-//        }
-//    }
-    
     
     // Helper function to calculate 3D tilt based on drag position
     private func calculateTilt(dragValue: DragGesture.Value, buttonWidth: CGFloat, buttonHeight: CGFloat) -> (x: Double, y: Double) {
-        let maxTilt: Double = 3.0 // Much more subtle tilt in degrees
+        let maxTilt: Double = 3.0
         
         // Calculate relative position from center (-1 to 1)
         let relativeX = (dragValue.location.x - (buttonWidth / 2)) / (buttonWidth / 2)
@@ -602,7 +577,7 @@ struct MainMenuView: View {
         return (x: xTilt, y: yTilt)
     }
     
-    // Update your tiltableGameButton to use state-based navigation
+    // Update tiltableGameButton to use state-based navigation
     @ViewBuilder
     private func tiltableGameButton(for gameInfo: GameInfo) -> some View {
         let buttonWidth = screenWidth - 120
@@ -658,9 +633,12 @@ struct MainMenuView: View {
         )
     }
     
-    // Add this method to your MainMenuView struct
     @ViewBuilder
     private func destinationView(for gameId: String) -> some View {
+        //let _ = print("🔍 TRACE: destinationView called with gameId: \(gameId)")
+        //let _ =  print("   Stack trace: \(Thread.callStackSymbols.prefix(5).joined(separator: "\n   "))")
+            
+        
         switch gameId {
         case "decode":
             DecodeGameView()
@@ -805,7 +783,13 @@ struct MainMenuView: View {
                 .environmentObject(scoreManager)
                 .onAppear { gameCoordinator.setActiveGame("anagrams") }
                 .onDisappear { gameCoordinator.clearActiveGame() }
+        case "decode":
+            DecodeGameView(targetDate: date)
+                .environmentObject(scoreManager)
+                .onAppear { gameCoordinator.setActiveGame("decode") }
+                .onDisappear { gameCoordinator.clearActiveGame() }
         default:
+            let _ = print("🔍 TRACE: Unknown gameId in archivedGameDestination: \(gameId)")
             EmptyView()
         }
     }

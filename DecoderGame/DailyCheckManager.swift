@@ -80,7 +80,7 @@ class DailyCheckManager: ObservableObject {
         // If it's a different day (forward OR backward), trigger the overlay
         // This handles both normal progression and testing scenarios
         if today != lastCheckDay {
-            print("Day change detected! Last check: \(lastCheckDay), Today: \(today)")
+            print("Day change detected!\n ⇉ Last check: \(lastCheckDay), \n ⇉ Today: \(today)")
             
             // IMPORTANT: Refresh the wordset and equation managers for the new day
             DailyWordsetManager.shared.refreshForNewDay()

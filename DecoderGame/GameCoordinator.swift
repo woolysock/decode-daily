@@ -14,6 +14,7 @@ class GameCoordinator: ObservableObject, DailyCheckGameDelegate {
     private let dailyCheckManager = DailyCheckManager.shared
     @Published var dailyEquationManager = DailyEquationManager.shared
     @Published var dailyWordsetManager = DailyWordsetManager.shared
+    @Published var dailyCodeSetManager = DailyCodeSetManager.shared
     
     init() {
         dailyCheckManager.gameDelegate = self
@@ -45,9 +46,12 @@ class GameCoordinator: ObservableObject, DailyCheckGameDelegate {
                 // Handled by AnagramsGameView
                 break
             case "flashdance":
-                // Handled by FlashdanceGameView when it observes the overlay
+                // Handled by FlashdanceGameView
                 break
-            case "decode", "numbers":
+            case "decode":
+                // Handled by DecodeGameView
+                break
+            case  "numbers":
                 // For future implementation when these games have daily features
                 print("GameCoordinator: \(activeGame) doesn't have daily features yet")
                 break

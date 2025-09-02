@@ -35,14 +35,61 @@ struct DecodeGameView: View {
     
     // Initialize with proper dependency injection
     init(targetDate: Date? = nil) {
-        self._game = StateObject(wrappedValue: DecodeGame(scoreManager: GameScoreManager.shared))
+        //print("🔍 TRACE: DecodeGameView init() - targetDate: \(String(describing: targetDate))")
+        
         self.targetDate = targetDate
+        
+        //print("🔍 TRACE: About to create StateObject with closure...")
+        self._game = StateObject(wrappedValue: {
+            //print("🔍 TRACE: Inside StateObject closure, creating DecodeGame...")
+            
+            //print("🔍 TRACE: About to access GameScoreManager.shared")
+            let scoreManager = GameScoreManager.shared
+            //print("🔍 TRACE: GameScoreManager.shared accessed successfully: \(type(of: scoreManager))")
+            
+            //print("🔍 TRACE: About to call DecodeGame init")
+            let game = DecodeGame(scoreManager: scoreManager, targetDate: targetDate)
+            //print("🔍 TRACE: DecodeGame created in closure successfully")
+            return game
+        }())
+        
+        //print("🔍 TRACE: DecodeGameView init completed")
     }
     
     var body: some View {
-        NavigationStack {
-            ZStack {
-                Color.black.ignoresSafeArea()
+               
+        ZStack {
+            Color.black.ignoresSafeArea()
+            
+            if game.theCode.isEmpty {
+                // Loading state - show while game initializes
+                VStack {
+                    Text("Loading...")
+                        .foregroundColor(.white)
+                        .font(.custom("LuloOne", size: 20))
+                }
+                .onAppear {
+                    //let _ = print("🔍 TRACE: Loading state - triggering game start")
+                    // Inject the real scoreManager into the game
+                    game.scoreManager = scoreManager
+                    
+                    // Check if user has seen How-to-Play before
+                    let key = "hasSeenHowToPlay_decode"
+                    let hasSeenBefore = UserDefaults.standard.bool(forKey: key)
+                    
+                    if !hasSeenBefore && isFirstLaunch {
+                        // Start game without animation, then show how-to-play
+                        game.startGameWithoutAnimation()
+                        showHowToPlay = true
+                        shouldAnimateAfterHowToPlay = true // Flag that we need to animate after dialog
+                    } else {
+                        // Normal start with animation
+                        game.startGame()
+                    }
+                    isFirstLaunch = false
+                }
+            } else {
+                // Main game content - only shown when game is properly initialized
                 VStack() {
                     Spacer().frame(height: 10)
                     
@@ -83,12 +130,12 @@ struct DecodeGameView: View {
                             }
                             //REUSE THIS WHEN DAILIES WORK:
                             
-//                            else if let codeset = codeSetManager.currentCodeSet {
-//                                // Show the wordset date when in normal mode
-//                                Text(DateFormatter.dayFormatter.string(from: codeset.date))
-//                                    .font(.custom("LuloOne", size: 12))
-//                                    .foregroundColor(.gray)
-//                            }
+    //                            else if let codeset = codeSetManager.currentCodeSet {
+    //                                // Show the wordset date when in normal mode
+    //                                Text(DateFormatter.dayFormatter.string(from: codeset.date))
+    //                                    .font(.custom("LuloOne", size: 12))
+    //                                    .foregroundColor(.gray)
+    //                            }
                         }
                         
                         // Top-center game clock
@@ -286,25 +333,6 @@ struct DecodeGameView: View {
                     
                     Spacer()
                 }
-                .onAppear {
-                    // Inject the real scoreManager into the game
-                    game.scoreManager = scoreManager
-                    
-                    // Check if user has seen How-to-Play before
-                    let key = "hasSeenHowToPlay_decode"
-                    let hasSeenBefore = UserDefaults.standard.bool(forKey: key)
-                    
-                    if !hasSeenBefore && isFirstLaunch {
-                        // Start game without animation, then show how-to-play
-                        game.startGameWithoutAnimation()
-                        showHowToPlay = true
-                        shouldAnimateAfterHowToPlay = true // Flag that we need to animate after dialog
-                    } else {
-                        // Normal start with animation
-                        game.startGame()
-                    }
-                    isFirstLaunch = false
-                }
                 .onChange(of: showHowToPlay, initial: false) { oldValue, newValue in
                     // Only animate if this was the initial how-to-play for a first-time user
                     if oldValue && !newValue && shouldAnimateAfterHowToPlay {
@@ -331,108 +359,104 @@ struct DecodeGameView: View {
                         //                        }
                     }
                 }
-                
-                
-                
-                // Color Picker Overlay
-                if showingColorPicker {
-                    ColorPickerOverlay(
-                        showingPicker: $showingColorPicker,
-                        pickerPosition: $colorPickerPosition,
-                        colors: Array(game.pegShades.dropFirst()),
-                        onColorSelected: { colorIndex in
-                            let gameColorIndex = colorIndex + 1
-                            game.theBoard[selectedSquare.row][selectedSquare.col] = gameColorIndex
-                            
-                            // Check if row is now complete
-                            let isRowComplete = game.theBoard[game.currentTurn].allSatisfy { $0 != 0 }
-                            if isRowComplete {
-                                game.statusText = "Tap the checkmark to submit your guess."
-                            } else {
-                                game.statusText = "Tap the checkmark when you're ready to submit a guess. You have \(7 - game.currentTurn) guesses left."
-                            }
-                        }
-                    )
-                    .background(
-                        GeometryReader { geo in
-                            Color.clear
-                                .preference(key: SizePreferenceKey.self, value: geo.size)
-                        }
-                    )
-                    .zIndex(1)
-                }
-                
-                // How-to-Play Overlay ▢ ▢ ▢ ▢ ▢  ➜
-                if showHowToPlay {
-                    HowToPlayOverlay(
-                        gameID: game.gameInfo.id,
-                        instructions: """
-                        Crack the secret color code! 
+            }
+            
+            // Color Picker Overlay
+            if showingColorPicker {
+                ColorPickerOverlay(
+                    showingPicker: $showingColorPicker,
+                    pickerPosition: $colorPickerPosition,
+                    colors: Array(game.pegShades.dropFirst()),
+                    onColorSelected: { colorIndex in
+                        let gameColorIndex = colorIndex + 1
+                        game.theBoard[selectedSquare.row][selectedSquare.col] = gameColorIndex
                         
-                        You get 7 tries. Each turn, tap a square to assign a color. Check your pattern by tapping the circle.
-                        
-                        🟪 🟪 🟦 🟨  ➜   ⃝
-                                                
-                        Hints will appear to guide you:
-                        🟢 : correct color & spot
-                        🟡 : correct color but wrong spot 
-                        
-                        Less guesses yield higher scores!
-                        """,
-                        isVisible: $showHowToPlay
-                    )
-                    .transition(.opacity)
-                    .zIndex(2)
-                }
-                
-                // Code Reveal Overlay
-                if showCodeReveal {
-                    //let _ = print("game.currentTurn: \(game.currentTurn) vs game.numRows: \(game.numRows)")
-                    CodeRevealOverlay(
-                        theCode: game.theCode,
-                        theBoard: game.theBoard,
-                        lastTurn: game.currentTurn,
-                        won: game.gameOver == 1 && (game.currentTurn + 1) < game.numRows,
-                        pegShades: game.pegShades
-                    ) {
-                        withAnimation {
-                            showCodeReveal = false
-                            showEndGameOverlay = true
+                        // Check if row is now complete
+                        let isRowComplete = game.theBoard[game.currentTurn].allSatisfy { $0 != 0 }
+                        if isRowComplete {
+                            game.statusText = "Tap the checkmark to submit your guess."
+                        } else {
+                            game.statusText = "Tap the checkmark when you're ready to submit a guess. You have \(7 - game.currentTurn) guesses left."
                         }
                     }
-                    .transition(.opacity)
-                    .zIndex(3)
-                }
-                
-                
-                // End Game Overlay
-                if showEndGameOverlay {
-                    EndGameOverlay(
-                        gameID: game.gameInfo.id,
-                        finalScore: game.lastScore?.finalScore ?? game.currentTurn,
-                        displayName: game.gameInfo.displayName,
-                        isVisible: $showEndGameOverlay,
-                        onPlayAgain: { startNewGame() },
-                        onHighScores: { navigateToHighScores = true },
-                        onMenu: {
-                            // Use dismiss instead of navigation
-                            showEndGameOverlay = false
-                            dismiss()
-                        },
-                        gameScore: game.lastScore
-                    )
-                    .transition(.opacity)
-                    .zIndex(3)
-                }
-                
-                
+                )
+                .background(
+                    GeometryReader { geo in
+                        Color.clear
+                            .preference(key: SizePreferenceKey.self, value: geo.size)
+                    }
+                )
+                .zIndex(1)
             }
-            // Remove the navigationDestination for menu, keep only high scores
-            .navigationDestination(isPresented: $navigateToHighScores) {
-                MultiGameLeaderboardView(selectedGameID: game.gameInfo.id)
+            
+            // How-to-Play Overlay ▢ ▢ ▢ ▢ ▢  ➜
+            if showHowToPlay {
+                HowToPlayOverlay(
+                    gameID: game.gameInfo.id,
+                    instructions: """
+                    Crack the secret color code! 
+                    
+                    You get 7 tries. Each turn, tap a square to assign a color. Check your pattern by tapping the circle.
+                    
+                    🟪 🟪 🟦 🟨  ➜   ⃝
+                                            
+                    Hints will appear to guide you:
+                    🟢 : correct color & spot
+                    🟡 : correct color but wrong spot 
+                    
+                    Less guesses yield higher scores!
+                    """,
+                    isVisible: $showHowToPlay
+                )
+                .transition(.opacity)
+                .zIndex(2)
+            }
+            
+            // Code Reveal Overlay
+            if showCodeReveal {
+                //let _ = print("game.currentTurn: \(game.currentTurn) vs game.numRows: \(game.numRows)")
+                CodeRevealOverlay(
+                    theCode: game.theCode,
+                    theBoard: game.theBoard,
+                    lastTurn: game.currentTurn,
+                    won: game.gameOver == 1 && (game.currentTurn + 1) < game.numRows,
+                    pegShades: game.pegShades
+                ) {
+                    withAnimation {
+                        showCodeReveal = false
+                        showEndGameOverlay = true
+                    }
+                }
+                .transition(.opacity)
+                .zIndex(3)
+            }
+            
+            
+            // End Game Overlay
+            if showEndGameOverlay {
+                EndGameOverlay(
+                    gameID: game.gameInfo.id,
+                    finalScore: game.lastScore?.finalScore ?? game.currentTurn,
+                    displayName: game.gameInfo.displayName,
+                    isVisible: $showEndGameOverlay,
+                    onPlayAgain: { startNewGame() },
+                    onHighScores: { navigateToHighScores = true },
+                    onMenu: {
+                        // Use dismiss instead of navigation
+                        showEndGameOverlay = false
+                        dismiss()
+                    },
+                    gameScore: game.lastScore
+                )
+                .transition(.opacity)
+                .zIndex(3)
             }
         }
+        .navigationDestination(isPresented: $navigateToHighScores) {
+            MultiGameLeaderboardView(selectedGameID: game.gameInfo.id)
+        }
     }
+    
     
     // MARK: - Start New Game
     private func startNewGame() {

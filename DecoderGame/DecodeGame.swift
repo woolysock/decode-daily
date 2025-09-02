@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+//import Combine
 
 class DecodeGame: ObservableObject, GameProtocol {
     @Published var currentTurn: Int = 0
@@ -27,6 +28,8 @@ class DecodeGame: ObservableObject, GameProtocol {
     var scoreManager: GameScoreManager
     let targetDate: Date?
     private let codeSetManager: DailyCodeSetManager
+    @Published var dailyCodeSet: DailyCodeSet?
+    //private var cancellables = Set<AnyCancellable>()
     
     // Animation timer
     private var animationTimer: Timer?
@@ -46,17 +49,20 @@ class DecodeGame: ObservableObject, GameProtocol {
     let numRows = 7
     let numCols = 5
     
-    // Updated initializer to accept targetDate and use DailyCodeSetManager
     init(scoreManager: GameScoreManager, targetDate: Date? = nil) {
-        self.scoreManager = scoreManager
+        // Temporarily comment out ALL property assignments and see if this works
+       // print("🔍 TRACE: DecodeGame init - VERY FIRST LINE")
+        
         self.targetDate = targetDate
         self.codeSetManager = DailyCodeSetManager.shared
-        startGame()
+        self.scoreManager = GameScoreManager.shared
+        
+        //print("🔍 TRACE: DecodeGame init - END")
     }
     
     let gameInfo = GameInfo(
            id: "decode",
-           displayName: "decode",
+           displayName: "Decode",
            description: "crack the color code",
            isAvailable: true,
            //gameLocation: AnyView(DecodeGameView()),
@@ -64,11 +70,25 @@ class DecodeGame: ObservableObject, GameProtocol {
        )
 
     func startGame() {
+        //print("🚀 DecodeGame.startGame() called")
+        
         // Set animation state FIRST to hide the board
         isAnimating = true
         gameInteractive = false
         
+        let gameDate = targetDate ?? Date()
+        
+        guard let todaysCodeSet = codeSetManager.getTodaysCodeSet(for: gameDate) else {
+            print(" ❌ startGame(): No codeset available")
+            statusText = "No codeset available for this day!"
+            return
+        }
+        
+        print("📜 loaded todaysCodeSet: \(todaysCodeSet)")
+        
+        //set the colors for the game
         pegShades = [myPegColor1, myPegColor2, myPegColor3, myPegColor4, myPegColor5, myPegColor6]
+        
         currentTurn = 0
         gameOver = 0
         
@@ -114,6 +134,8 @@ class DecodeGame: ObservableObject, GameProtocol {
     // New method to get the daily code
     private func getDailyCode() -> [Int] {
         let gameDate = targetDate ?? Date()
+        print("getDailyCode(): targetDate = \(String(describing: targetDate))")
+        print("getDailyCode(): gameDate = \(gameDate)")
         
         if let codeSet = codeSetManager.getTodaysCodeSet(for: gameDate) {
             let dailyCode = [codeSet.peg1, codeSet.peg2, codeSet.peg3, codeSet.peg4, codeSet.peg5]
@@ -296,6 +318,8 @@ class DecodeGame: ObservableObject, GameProtocol {
         print("Saving game score: \(finalScore) points, won: \(won), attempts: \(attempts)")
         
         scoreManager.saveDecodeScore(
+            date: Date(),                    // When the game was actually played
+            archiveDate: targetDate,         // Add this line - the target/archive date
             attempts: attempts,
             timeElapsed: timeElapsed,
             won: won,
@@ -308,7 +332,7 @@ class DecodeGame: ObservableObject, GameProtocol {
             self.lastScore = self.scoreManager.getMostRecentScore(for: "decode")
         }
         
-        print("Score saved successfully to \(type(of: scoreManager))")
+        //print("Score saved successfully to \(type(of: scoreManager))")
     }
 
     func getRecentScores() -> [GameScore] {

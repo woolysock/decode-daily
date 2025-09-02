@@ -78,7 +78,7 @@ final class DailyCodeSetManager: ObservableObject {
         let today = Calendar.current.startOfDay(for: Date())
         
         // Debug
-        print("getTodaysCodeSet -> requestedDate: \(requestedDate), today: \(today)")
+        print("getTodaysCodeSet:\n -> requestedDate: \(requestedDate)\n -> today: \(today)")
         
         // For today's date, use the cached currentCodeSet if available
         if Calendar.current.isDate(requestedDate, inSameDayAs: today) {
@@ -120,7 +120,7 @@ final class DailyCodeSetManager: ObservableObject {
         
         do {
             let data = try Data(contentsOf: url)
-            print("📊 JSON file size: \(data.count) bytes")
+            //print("📊 JSON file size: \(data.count) bytes")
             
             let decoder = JSONDecoder()
             decoder.dateDecodingStrategy = .formatted(Self.dateFormatter)
@@ -128,14 +128,14 @@ final class DailyCodeSetManager: ObservableObject {
             
             print("✅ Successfully loaded \(allCodeSets.count) Code sets")
             if let first = allCodeSets.first {
-                print("📝 First set: \(first.id) : [\(first.peg1),\(first.peg2),\(first.peg3),\(first.peg4),\(first.peg5)]")
+                print("   → First set: \(first.id) : [\(first.peg1),\(first.peg2),\(first.peg3),\(first.peg4),\(first.peg5)]")
             }
             
-            // Debug: Print all loaded dates
-            print("🗓️ All loaded dates:")
-            for codeSet in allCodeSets {
-                print("   - \(codeSet.id): [\(codeSet.peg1),\(codeSet.peg2),\(codeSet.peg3),\(codeSet.peg4),\(codeSet.peg5)]")
-            }
+//            // Debug: Print all loaded dates
+//            print("🗓️ All loaded dates:")
+//            for codeSet in allCodeSets {
+//                print("   - \(codeSet.id): [\(codeSet.peg1),\(codeSet.peg2),\(codeSet.peg3),\(codeSet.peg4),\(codeSet.peg5)]")
+//            }
         } catch {
             print("❌ Failed to load/parse DailyCodes.json: \(error)")
         }

@@ -170,7 +170,7 @@ class GameScoreManager: ObservableObject {
     
     // Save a new score - FIXED to ensure main thread updates
     func saveScore(_ score: GameScore) {
-        print("🔄 About to save score: \(score.finalScore) for \(score.gameId)")
+        //print("🔄 About to save score: \(score.finalScore) for \(score.gameId)")
 
         DispatchQueue.main.async { [weak self] in
             guard let self = self else { return }
@@ -206,7 +206,7 @@ class GameScoreManager: ObservableObject {
         longestStreak: Int,
         gameDate: Date  // Add this parameter
     ) {
-        print("Calling saveScore()")
+        //print("Calling saveFlashdanceScore()")
         let additionalProps = FlashdanceAdditionalProperties(
             gameDuration: gameDuration,
             correctAnswers: correctAnswers,
@@ -240,7 +240,7 @@ class GameScoreManager: ObservableObject {
         turnsToSolve: Int,
         codeLength: Int
     ) {
-        print("Calling saveDecodeScore()")
+        //print("Calling saveDecodeScore()")
         let additionalProps = DecodeAdditionalProperties(
             gameDuration: timeElapsed,
             turnsToSolve: turnsToSolve,
@@ -393,7 +393,7 @@ class GameScoreManager: ObservableObject {
         let key = "completed_\(gameId)_\(dateString)"
         UserDefaults.standard.set(true, forKey: key)
         
-        print("markGameCompleted: \(UserDefaults.standard.bool(forKey: key)) for \(key)")
+        print("✅ markGameCompleted: \(UserDefaults.standard.bool(forKey: key)) for \(key)")
         objectWillChange.send()
     }
 

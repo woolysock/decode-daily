@@ -102,7 +102,7 @@ final class DailyEquationManager: ObservableObject {
         
         do {
             let data = try Data(contentsOf: url)
-            print("📊 JSON file size: \(data.count) bytes")
+            //print("📊 JSON file size: \(data.count) bytes")
             
             let decoder = JSONDecoder()
             decoder.dateDecodingStrategy = .formatted(Self.dateFormatter)

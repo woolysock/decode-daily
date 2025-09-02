@@ -75,32 +75,22 @@ final class DailyWordsetManager: ObservableObject {
 
     /// Ensures today's wordset is loaded into `currentWordset`.
     func loadTodaysWordset() {
-        // Prevent infinite loops from multiple calls
-        guard !isLoadingTodaysWordset else {
-            print("⚠️ loadTodaysWordset() already in progress, skipping...")
-            return
-        }
+        guard !isLoadingTodaysWordset else { return }
         
         let today = Calendar.current.startOfDay(for: Date())
-        print("Trying to load wordset for today: \(today)")
-        
         isLoadingTodaysWordset = true
         
         if let wordset = loadWordset(for: today) {
-            print("✅ Found existing wordset for today with \(wordset.words.count) words")
-            // Use async dispatch to avoid publishing during view updates
             DispatchQueue.main.async { [weak self] in
                 self?.currentWordset = wordset
                 self?.isLoadingTodaysWordset = false
             }
         } else {
-            print("🔄 No existing wordset found for today, generating new one...")
-            // If not prebuilt in JSON, generate one from master list
             generateWordsetForDate(today)
             isLoadingTodaysWordset = false
         }
     }
-
+    
     /// Return the current cached wordset (if any)
     func getTodaysWordset(for date: Date) -> DailyWordset? {
         let requestedDate = Calendar.current.startOfDay(for: date) // normalize to local start of day
@@ -322,6 +312,8 @@ final class DailyWordsetManager: ObservableObject {
             print("DailyWordsetManager - no \(dailyWordsetsResource).json found in bundle.")
             return
         }
+        
+        print("✅ Found DailyWordset.json at: \(url)")
 
         do {
             let data = try Data(contentsOf: url)

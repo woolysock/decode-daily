@@ -50,7 +50,7 @@ class AnagramsGame: GameProtocol, ObservableObject {
     
     let gameInfo = GameInfo(
         id: "anagrams",
-        displayName: "letters",
+        displayName: "'Grams",
         description: "rearrange letters into words",
         isAvailable: true,
         //gameLocation: AnyView(EmptyView()), // replace with real view if needed
@@ -63,7 +63,7 @@ class AnagramsGame: GameProtocol, ObservableObject {
         self.wordsetManager = DailyWordsetManager.shared  // Use singleton
         self.targetDate = targetDate
         
-        print("AnagramsGame initialized with scoreManager: \(type(of: scoreManager))")
+        print("✅ AnagramsGame initialized with scoreManager: \(type(of: scoreManager))")
         
         // Observe wordset manager changes
         wordsetManager.$currentWordset
@@ -91,7 +91,7 @@ class AnagramsGame: GameProtocol, ObservableObject {
         print("   - wordsetManager.currentWordset date: \(String(describing: wordsetManager.currentWordset?.date))")
         
         guard let todaysWordset = wordsetManager.getTodaysWordset(for: gameDate) else {
-            print("startGame(): ❌ No wordset available")
+            print(" ❌ startGame(): No wordset available")
             statusText = "No wordset available for this day!"
             return
         }
