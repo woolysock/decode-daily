@@ -5,14 +5,6 @@
 //  Created by Megan Donahue on 8/28/25.
 //
 
-
-//
-//  NewDayOverlay.swift
-//  Decode! Daily iOS
-//
-//  Created by Megan Donahue
-//
-
 import SwiftUI
 
 struct NewDayOverlay: View {
@@ -56,7 +48,7 @@ struct NewDayOverlay: View {
                         .foregroundColor(Color.mySunColor)
                         .symbolRenderingMode(.hierarchical)
                     
-                    Text("Fresh challenges await!")
+                    Text("Play fresh challenges for \(DateFormatter.day2Formatter.string(from: Date()))!")
                         .font(.custom("LuloOne", size: 14))
                         .foregroundColor(.white.opacity(0.8))
                         .multilineTextAlignment(.center)

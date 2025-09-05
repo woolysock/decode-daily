@@ -116,18 +116,11 @@ struct DecodeGameView: View {
                                         .cornerRadius(4)
                                 }
                             }
-                            // Date
-                            if let targetDate = targetDate {
-                                // Show the archive date when in archive mode
-                                Text(DateFormatter.dayFormatter.string(from: targetDate))
-                                    .font(.custom("LuloOne", size: 12))
-                                    .foregroundColor(.gray)
-                            } else {
-                                //temp until DAILIES work:
-                                Text(DateFormatter.dayFormatter.string(from: Date()))
-                                    .font(.custom("LuloOne", size: 12))
-                                    .foregroundColor(.gray)
-                            }
+                            
+                            Text(game.displayMode)
+                                .font(.custom("LuloOne", size: 12))
+                                .foregroundColor(game.willScoreCount ? .gray : .yellow) // Different color for practice mode
+                            
                             //REUSE THIS WHEN DAILIES WORK:
                             
     //                            else if let codeset = codeSetManager.currentCodeSet {
@@ -389,6 +382,26 @@ struct DecodeGameView: View {
                 .zIndex(1)
             }
             
+            if game.showAlreadyPlayedOverlay {
+                AlreadyPlayedOverlay(
+                    targetDate: game.targetDate ?? Date(),
+                    isVisible: $game.showAlreadyPlayedOverlay,
+                    onPlayWithoutScore: {
+                        game.startGameWithoutScore()
+                    },
+                    onPlayRandom: {
+                        game.startGameWithRandomCode()
+                    },
+                    onChooseOtherDate: {
+                        // Navigate to archive tab - you'll need to implement this
+                        // based on your navigation structure
+                        dismiss()
+                        // Trigger navigation to archive tab
+                    }
+                )
+                .zIndex(10)  // Behind how-to-play overlay
+            }
+            
             // How-to-Play Overlay ▢ ▢ ▢ ▢ ▢  ➜
             if showHowToPlay {
                 HowToPlayOverlay(
@@ -409,17 +422,44 @@ struct DecodeGameView: View {
                     isVisible: $showHowToPlay
                 )
                 .transition(.opacity)
-                .zIndex(2)
+                .zIndex(20)
+            }
+            
+            // Game over overlay
+            if game.gameOver > 0 {
+                EndGameOverlay(
+                    gameID: game.gameInfo.id,
+                    finalScore: game.lastScore?.finalScore ?? 0,
+                    displayName: game.gameInfo.displayName,
+                    isVisible: .constant(true),
+                    onPlayAgain: {
+                        game.startGame()  // This will check for replay again
+                    },
+                    onHighScores: {
+                        // Handle high scores
+                    },
+                    onMenu: {
+                        dismiss()
+                    },
+                    timeElapsed: 300.0,
+                    additionalInfo: game.willScoreCount ? nil : "Practice round - no score saved",
+                    gameScore: game.lastScore
+                )
+                .zIndex(30)  // Top level
             }
             
             // Code Reveal Overlay
             if showCodeReveal {
-                //let _ = print("game.currentTurn: \(game.currentTurn) vs game.numRows: \(game.numRows)")
+                let _ = print("game.currentTurn: \(game.currentTurn) vs game.numRows: \(game.numRows)")
+                let _ = print("game.gameOver: \(game.gameOver)")
+                let _ = print("game.currentTurn + 1: \(game.currentTurn+1)")
+                let _ = print("game.numRows: \(game.numRows)")
+                
                 CodeRevealOverlay(
                     theCode: game.theCode,
                     theBoard: game.theBoard,
                     lastTurn: game.currentTurn,
-                    won: game.gameOver == 1 && (game.currentTurn + 1) < game.numRows,
+                    won: game.gameWon,
                     pegShades: game.pegShades
                 ) {
                     withAnimation {
@@ -428,33 +468,15 @@ struct DecodeGameView: View {
                     }
                 }
                 .transition(.opacity)
-                .zIndex(3)
+                .zIndex(40)
             }
             
             
-            // End Game Overlay
-            if showEndGameOverlay {
-                EndGameOverlay(
-                    gameID: game.gameInfo.id,
-                    finalScore: game.lastScore?.finalScore ?? game.currentTurn,
-                    displayName: game.gameInfo.displayName,
-                    isVisible: $showEndGameOverlay,
-                    onPlayAgain: { startNewGame() },
-                    onHighScores: { navigateToHighScores = true },
-                    onMenu: {
-                        // Use dismiss instead of navigation
-                        showEndGameOverlay = false
-                        dismiss()
-                    },
-                    gameScore: game.lastScore
-                )
-                .transition(.opacity)
-                .zIndex(3)
-            }
         }
         .navigationDestination(isPresented: $navigateToHighScores) {
             MultiGameLeaderboardView(selectedGameID: game.gameInfo.id)
         }
+        
     }
     
     

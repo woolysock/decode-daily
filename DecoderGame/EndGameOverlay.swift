@@ -120,7 +120,7 @@ struct EndGameOverlay: View {
             
         case "anagrams":
             guard let theseProps = gameScore.anagramsProperties else { return nil }
-            return "\(theseProps.wordsCompleted) words solved\n\n(\(theseProps.totalWordsInSet) possible words)\n\nlongest word solved:\n\(theseProps.longestWord) letters\n"
+            return "\(theseProps.wordsCompleted) words solved\n\n\(theseProps.totalWordsInSet) possible, \(theseProps.skippedWords) skipped\n\nlongest word solved:\n\(theseProps.longestWord) letters\n"
             
         default:
             //print("🔍 DEBUG: In default case")
@@ -202,7 +202,7 @@ struct EndGameOverlay: View {
                 
                 // Action buttons
                 VStack(spacing: 15) {
-                    Button("Play Again") {
+                    Button(gameID == "decode" ? "New code?" : "Replay?"){
                         dismiss(startNewGame: true)
                     }
                     .font(.custom("LuloOne-Bold", size: 18))
@@ -219,7 +219,7 @@ struct EndGameOverlay: View {
                             dismiss()
                         }
                         .font(.custom("LuloOne", size: 14))
-                        .foregroundColor(buttonsAreActive ? .white : .gray)
+                        .foregroundColor(buttonsAreActive ? .white : .black)
                         .padding(.horizontal, 20)
                         .padding(.vertical, 12)
                         .background(buttonsAreActive ? Color.myAccentColor2 : Color.black.opacity(0.4))
@@ -232,7 +232,7 @@ struct EndGameOverlay: View {
                             dismiss()
                         }
                         .font(.custom("LuloOne", size: 14))
-                        .foregroundColor(buttonsAreActive ? .white : .gray)
+                        .foregroundColor(buttonsAreActive ? .white : .black)
                         .padding(.horizontal, 20)
                         .padding(.vertical, 12)
                         .background(buttonsAreActive ? Color.myAccentColor2 : Color.black.opacity(0.4))
@@ -247,7 +247,8 @@ struct EndGameOverlay: View {
             .cornerRadius(15)
             .overlay(
                 RoundedRectangle(cornerRadius: 15)
-                    .stroke(Color.white.opacity(0.3), lineWidth: 1)
+                    .stroke(Color.white, lineWidth: 1)
+                    .foregroundColor(.clear)
             )
             .padding(.horizontal, 40)
             .opacity(1.0) // Always show the content box immediately
@@ -310,7 +311,7 @@ struct CelebrationAnimationView: View {
                 let angle = Double(index) * 15.0 + rotationBonus // 24 rays, 15 degrees apart
                 
                 Capsule()
-                    .fill(index % 3 == 0 ? Color.myAccentColor1 : Color.white)
+                    .fill(index % 3 == 0 ? Color.myAccentColor1 : Color.mySunColor.opacity(0.7))
                     .frame(width: 10, height: showBurst ? 400 : 30) // Even longer rays
                     .offset(y: -(showBurst ? 200 : 15)) // Offset to center
                     .rotationEffect(.degrees(angle))

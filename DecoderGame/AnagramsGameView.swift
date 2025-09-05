@@ -28,11 +28,13 @@ struct AnagramsGameView: View {
     private let instructionsText = """
     Race against the clock to unscramble as many words as you can!
     
-    Each day brings a fresh set of words to challenge you. Tap a letter to spell out the correct word in the boxes above.
+    Tap a letter to spell out the correct word in the boxes above.
     
     O R W D  →  W O R D 
 
     If you make a mistake, tap "clear" to remove the letters and try again. 
+    
+    If you're stumped, "skip" a word and try it later!
     """
     
     init(targetDate: Date? = nil) {
@@ -452,7 +454,7 @@ struct AnagramsGameView: View {
                 .overlay(
                     Group {
                         if isScrambled {
-                            Circle().stroke(Color.myAccentColor1, lineWidth: 3)
+                            Circle().stroke(Color.myAccentColor2, lineWidth: 3)
                         } else {
                             RoundedRectangle(cornerRadius: 0).stroke(Color.black, lineWidth: 1)
                         }
@@ -497,9 +499,17 @@ struct AnagramsGameView: View {
                     // Show progress through daily words
                     
                     if let wordset = wordsetManager.currentWordset {
-                        Text("On word\n\(anagramsGame.currentWordIndex + 1) of \(wordset.words.count)")
-                            .font(.custom("LuloOne", size: 12))
-                            .foregroundColor(.white)
+                        VStack(alignment: .trailing, spacing: 2) {
+                            Text("Word \(anagramsGame.currentWordIndex + 1) of \(wordset.words.count)")
+                                .font(.custom("LuloOne", size: 12))
+                                .foregroundColor(.white)
+                            
+                            if !anagramsGame.skippedWordIndices.isEmpty {
+                                Text("Skipped: \(anagramsGame.skippedWordIndices.count)")
+                                    .font(.custom("LuloOne", size: 10))
+                                    .foregroundColor(.orange)
+                            }
+                        }
                     }
                 }
                 Divider().background(Color.myAccentColor1).padding(5)
@@ -533,16 +543,31 @@ struct AnagramsGameView: View {
                 }
                 .frame(minHeight: 55)
                 
-                Button("erase") {
-                    anagramsGame.clearAnswer()
+                HStack(spacing: 25) {
+                    // Skip button
+                    Button("skip") {
+                        anagramsGame.skipCurrentWord()
+                    }
+                    .font(.custom("LuloOne", size: 12))
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 8)
+                    .background(Color.mySunColor.opacity(0.7))
+                    .cornerRadius(8)
+                    .disabled(anagramsGame.isGamePaused || wordsetManager.isGeneratingWordsets)
+                    
+                    // Clear button
+                    Button("clear") {
+                        anagramsGame.clearAnswer()
+                    }
+                    .font(.custom("LuloOne", size: 12))
+                    .foregroundColor(anagramsGame.userAnswer.isEmpty ? .gray : .white)
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 8)
+                    .background(anagramsGame.userAnswer.isEmpty ? Color.gray.opacity(0.3) : Color.pink.opacity(0.7))
+                    .cornerRadius(8)
+                    .disabled(anagramsGame.userAnswer.isEmpty || anagramsGame.isGamePaused || wordsetManager.isGeneratingWordsets)
                 }
-                .font(.custom("LuloOne", size: 12))
-                .foregroundColor(anagramsGame.userAnswer.isEmpty ? .gray : .white)
-                .padding(.horizontal, 20)
-                .padding(.vertical, 8)
-                .background(anagramsGame.userAnswer.isEmpty ? Color.gray.opacity(0.3) : Color.pink.opacity(0.7))
-                .cornerRadius(8)
-                .disabled(anagramsGame.userAnswer.isEmpty || anagramsGame.isGamePaused || wordsetManager.isGeneratingWordsets)
             }
             
             Spacer().frame(height: 25)

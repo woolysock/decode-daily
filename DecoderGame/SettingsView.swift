@@ -96,6 +96,28 @@ struct SettingsView: View {
                 
                 eraseScoresButton
                 
+                // REMOVE THESE BEFORE LAUNCHING
+                Button("Clear All Completion Status") {
+                    scoreManager.clearAllCompletionStatus()
+                }
+                .foregroundColor(.red)
+                
+                Button("Clear Anagrams Status") {
+                    scoreManager.clearCompletionStatus(for: "anagrams")
+                }
+                
+                Button("Clear Flashdance Status") {
+                    scoreManager.clearCompletionStatus(for: "flashdance")
+                }
+                
+                Button("Clear Decode Status") {
+                    scoreManager.clearCompletionStatus(for: "decode")
+                }
+                
+                Button("Clear Today's Status") {
+                    scoreManager.clearCompletionStatus(for: Date())
+                }
+                
                 // Placeholder for future settings items
             
                 

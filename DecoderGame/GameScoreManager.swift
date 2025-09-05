@@ -32,6 +32,7 @@ struct AnagramsAdditionalProperties: Codable {
     let wordsetId: String         // NEW
     let completedWordLengths: [Int]  // NEW
     let difficultyScore: Double      // NEW
+    let skippedWords: Int
 }
 
 // MARK: - Enhanced GameScore with additional properties
@@ -400,11 +401,131 @@ class GameScoreManager: ObservableObject {
 
 
     func isGameCompleted(gameId: String, date: Date) -> Bool {
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "yyyy-MM-dd"
-        let dateString = dateFormatter.string(from: date)
+        let utcCalendar = Calendar(identifier: .gregorian)
+        var calendar = utcCalendar
+        calendar.timeZone = TimeZone(secondsFromGMT: 0)!
+        let startOfDayUTC = calendar.startOfDay(for: date)
+        
+        let thisFormatter = DateFormatter()
+        thisFormatter.dateFormat = "yyyy-MM-dd"
+        thisFormatter.timeZone = TimeZone(secondsFromGMT: 0)
+        thisFormatter.locale = Locale(identifier: "en_US_POSIX")
+        
+        let dateString = thisFormatter.string(from: startOfDayUTC)
+        
         let key = "completed_\(gameId)_\(dateString)"
+        
         //print("isGameCompleted: \(UserDefaults.standard.bool(forKey: key)) for \(key)")
         return UserDefaults.standard.bool(forKey: key)
     }
+    
+    func debugGameCompletion(gameId: String, date: Date) {
+        let utcCalendar = Calendar(identifier: .gregorian)
+        var calendar = utcCalendar
+        calendar.timeZone = TimeZone(secondsFromGMT: 0)!
+        let startOfDayUTC = calendar.startOfDay(for: date)
+        
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        formatter.timeZone = TimeZone(secondsFromGMT: 0)
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        let dateString = formatter.string(from: startOfDayUTC)
+        
+        let key = "completed_\(gameId)_\(dateString)"
+        let isCompleted = UserDefaults.standard.bool(forKey: key)
+        
+        print("""
+        🔍 GAME COMPLETION DEBUG for \(gameId):
+        - Input date: \(date)
+        - UTC start of day: \(startOfDayUTC)
+        - Date string: \(dateString)
+        - UserDefaults key: \(key)
+        - Stored value: \(isCompleted)
+        - Current timezone: \(TimeZone.current.identifier)
+        """)
+    }
+
+    func clearAllCompletionStatus() {
+        let userDefaults = UserDefaults.standard
+        let allKeys = userDefaults.dictionaryRepresentation().keys
+        
+        // Find all completion keys (they start with "completed_")
+        let completionKeys = allKeys.filter { $0.hasPrefix("completed_") }
+        
+        print("🗑️ Clearing \(completionKeys.count) completion status entries:")
+        
+        // Remove each completion key
+        for key in completionKeys {
+            userDefaults.removeObject(forKey: key)
+            print("   - Removed: \(key)")
+        }
+        
+        // Force UserDefaults to save immediately
+        userDefaults.synchronize()
+        
+        print("✅ All completion status cleared")
+        
+        // Notify observers that the state changed
+        DispatchQueue.main.async {
+            self.objectWillChange.send()
+        }
+    }
+
+    // Alternative: Clear completion status for a specific game only
+    func clearCompletionStatus(for gameId: String) {
+        let userDefaults = UserDefaults.standard
+        let allKeys = userDefaults.dictionaryRepresentation().keys
+        
+        // Find completion keys for this specific game
+        let gameCompletionKeys = allKeys.filter { $0.hasPrefix("completed_\(gameId)_") }
+        
+        print("🗑️ Clearing \(gameCompletionKeys.count) completion entries for \(gameId):")
+        
+        for key in gameCompletionKeys {
+            userDefaults.removeObject(forKey: key)
+            print("   - Removed: \(key)")
+        }
+        
+        userDefaults.synchronize()
+        print("✅ Completion status cleared for \(gameId)")
+        
+        DispatchQueue.main.async {
+            self.objectWillChange.send()
+        }
+    }
+
+    // Alternative: Clear completion status for a specific date across all games
+    func clearCompletionStatus(for date: Date) {
+        let utcCalendar = Calendar(identifier: .gregorian)
+        var calendar = utcCalendar
+        calendar.timeZone = TimeZone(secondsFromGMT: 0)!
+        let startOfDayUTC = calendar.startOfDay(for: date)
+        
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        formatter.timeZone = TimeZone(secondsFromGMT: 0)
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        let dateString = formatter.string(from: startOfDayUTC)
+        
+        let userDefaults = UserDefaults.standard
+        let allKeys = userDefaults.dictionaryRepresentation().keys
+        
+        // Find completion keys for this specific date
+        let dateCompletionKeys = allKeys.filter { $0.contains("_\(dateString)") && $0.hasPrefix("completed_") }
+        
+        print("🗑️ Clearing \(dateCompletionKeys.count) completion entries for \(dateString):")
+        
+        for key in dateCompletionKeys {
+            userDefaults.removeObject(forKey: key)
+            print("   - Removed: \(key)")
+        }
+        
+        userDefaults.synchronize()
+        print("✅ Completion status cleared for \(dateString)")
+        
+        DispatchQueue.main.async {
+            self.objectWillChange.send()
+        }
+    }
+    
 }

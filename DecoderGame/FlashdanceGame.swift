@@ -168,14 +168,16 @@ class FlashdanceGame: GameProtocol, ObservableObject {
         isPreCountdownActive = false
         isGamePaused = false
         gameOver = 1
-
+        
         calculateFinalScore()
         statusText = "Game over!"
-
-        // Save score with targetDate as archiveDate
+        
+        let gameDate = targetDate ?? Date()
+        let playDate = Date()
+        
         scoreManager.saveFlashdanceScore(
-            date: Date(),                        // actual play date
-            archiveDate: targetDate,             // target/archived date
+            date: playDate,                      // when actually played
+            archiveDate: gameDate,               // what date this counts for
             attempts: correctAttempts + incorrectAttempts,
             timeElapsed: 30.0,
             finalScore: totalScore,
@@ -183,16 +185,15 @@ class FlashdanceGame: GameProtocol, ObservableObject {
             correctAnswers: correctAttempts,
             incorrectAnswers: incorrectAttempts,
             longestStreak: maxStreak,
-            gameDate: targetDate ?? Date()
+            gameDate: gameDate  // Use consistent date
         )
-
-        // Update lastScore after save completes on main thread
+        
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
             self.lastScore = self.scoreManager.getMostRecentScore(for: "flashdance")
-            completion?()  // Call completion after lastScore is updated
+            completion?()
         }
 
-        //print("Score saved successfully: \(totalScore) points, \(correctAttempts) correct, \(incorrectAttempts) wrong")
+        print("Score saved, playDate: \(playDate), gameDate: \(gameDate)")
     }
 
     

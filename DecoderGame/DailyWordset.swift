@@ -15,10 +15,19 @@ struct DailyWordset: Codable, Identifiable, Equatable {
     var completedAt: Date?
     
     init(date: Date, words: [String]) {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd"
-        self.id = formatter.string(from: date)
-        self.date = date
-        self.words = words
+            // Use the UTC formatter directly on the input date
+            self.id = Self.utcDateFormatter.string(from: date)
+            self.date = date  // Keep the original date
+            self.words = words
+            
+            print("🔆 DailyWordset init() with id: \(self.id), input date: \(date)")
+        }
+        
+        private static let utcDateFormatter: DateFormatter = {
+            let f = DateFormatter()
+            f.dateFormat = "yyyy-MM-dd"
+            f.timeZone = TimeZone(secondsFromGMT: 0)  // UTC
+            f.locale = Locale(identifier: "en_US_POSIX")
+            return f
+        }()
     }
-}

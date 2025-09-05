@@ -35,7 +35,7 @@ struct HowToPlayOverlay: View {
                 .frame(maxHeight: 300)
                 
                 Toggle("do not show again", isOn: $dontShowAgain)
-                    .foregroundColor(.myAccentColor1)
+                    .foregroundColor(.myAccentColor2)
                     .font(.custom("LuloOne-Bold", size: 12))
                     .padding(.horizontal)
                     .onChange(of: dontShowAgain) {
@@ -62,7 +62,7 @@ struct HowToPlayOverlay: View {
                 RoundedRectangle(cornerRadius: 16)
                             .stroke(Color.white, lineWidth: 1)
             )
-            .background(Color.myAccentColor2)
+            .background(Color.myOverlaysColor)
             .cornerRadius(16)
             .padding(30)
             .contentShape(Rectangle())

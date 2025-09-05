@@ -44,6 +44,8 @@ struct MainMenuView: View {
     @State private var currentPage = 0
     @State private var selectedArchiveGame: String = "decode"
     
+    @State private var hasUserSwiped: Bool = false
+    
     //For Archives
     @State private var selectedArchiveDate: Date?
    // @State private var navigateToArchivedGame = false
@@ -94,6 +96,12 @@ struct MainMenuView: View {
                 .onAppear {
                     loadAllAvailableDates()
                 }
+                .onChange(of: currentPage) {
+                    // Hide the swipe instruction once user has swiped away from main page
+                    if currentPage != 0 && !hasUserSwiped {
+                        hasUserSwiped = true
+                    }
+                }
                 
                 // Bottom swipe nav bar
                 HStack(alignment: .center) {
@@ -107,7 +115,7 @@ struct MainMenuView: View {
                     }
                     Spacer()
                 }
-                .frame(height: 60)
+                .frame(height: 55)
                 .background(.black)
                 Spacer().frame(height:20)
             }
@@ -164,13 +172,15 @@ struct MainMenuView: View {
                     HStack{
                         Image(systemName: "hand.draw")
                             .font(.system(size: 16))
-                            .foregroundColor(Color.mySunColor)
+                            .foregroundColor(.white)
                         Text("Swipe left to view archive & settings")
-                            .font(.custom("LuloOne", size: 8))
+                            .font(.custom("LuloOne", size: 9))
                             .foregroundColor(.white)
                             .multilineTextAlignment(.center)
                     }
                     .padding(.horizontal,50)
+                    .opacity(hasUserSwiped ? 0 : 1)
+                    .animation(.easeOut(duration: 0.5), value: hasUserSwiped)
                                         
                     Spacer()
                 }
@@ -190,33 +200,26 @@ struct MainMenuView: View {
                 
                 // Title for the second page
                 VStack(spacing: 10) {
-                    Text("Stats&\nAccount")
+                    Text("Stats &\nAccount")
                         .font(.custom("LuloOne-Bold", size: 40))
                         .foregroundColor(.white)
+                        .lineLimit(2, reservesSpace: true)
                     
                     Text("Your gaming overview")
                         .font(.custom("LuloOne", size: 12))
                         .foregroundColor(.white.opacity(0.8))
                 }
                 
-                Spacer()
-                    .frame(height: 10)
+//                Spacer()
+//                    .frame(height: 10)
                 
-                // Add your second page content here
-                // For example, stats overview, achievements, etc.
-                VStack(spacing: 20) {
+                // Stats go here
+                VStack(spacing: 18) {
                     // Total games played
                     statCard(
                         title: "Games Played",
                         value: "\(scoreManager.allScores.count)",
                         icon: "gamecontroller"
-                    )
-                    
-                    // Best scores
-                    statCard(
-                        title: "Highest Score",
-                        value: "\(scoreManager.getTopScores(limit: 1).first?.finalScore ?? 0)",
-                        icon: "trophy"
                     )
                     
                     // Recent activity
@@ -226,9 +229,39 @@ struct MainMenuView: View {
                         subtitle: "this week",
                         icon: "calendar"
                     )
+                    
+                    Text("High Scores")
+                        .font(.custom("LuloOne", size: 12))
+                        .foregroundColor(.white.opacity(0.8))
+                    
+                    // Game-specific high scores
+                    VStack(spacing: 10) {
+                        // Decode high score
+                        gameStatCard(
+                            gameId: "decode",
+                            gameName: "Decode",
+                            icon: "circle.hexagonpath"
+                        )
+                        
+                        // Flashdance high score
+                        gameStatCard(
+                            gameId: "flashdance",
+                            gameName: "Flashdance",
+                            icon: "bolt.circle"
+                        )
+                        
+                        // Anagrams high score
+                        gameStatCard(
+                            gameId: "anagrams",
+                            gameName: "'Grams",
+                            icon: "60.arrow.trianglehead.clockwise"
+                        )
+                    }
+                    .padding(.horizontal, 20)
+                    
                 }
                 
-                Divider().background(.white).padding(5)
+                Divider().background(.white)
                 
                 // Settings button with tilt effect
                 tiltableSettingsButton
@@ -261,8 +294,8 @@ struct MainMenuView: View {
                         .font(.custom("LuloOne", size: 16))
                         .foregroundColor(.white)
                         .multilineTextAlignment(.leading)
-                    Spacer().frame(height:1)
-                    Text(" ")
+                    //Spacer().frame(height:1)
+                    Text("● Tap the buttons to switch games.\n● Scroll to view past dates.")
                         .font(.custom("LuloOne", size: 10))
                         .foregroundColor(.white)
                         .multilineTextAlignment(.leading)
@@ -284,7 +317,7 @@ struct MainMenuView: View {
                         Text("Decode")
                             .font(.custom("LuloOne-Bold", size: 12))
                             .foregroundColor(selectedArchiveGame == "decode" ? .black : .white)
-                            .padding(.horizontal, 20)
+                            .padding(.horizontal, 25)
                             .padding(.vertical, 15)
                             .background(selectedArchiveGame == "decode" ? Color.white : Color.clear)
                             .overlay(
@@ -302,7 +335,7 @@ struct MainMenuView: View {
                         Text("Flash\ndance")
                             .font(.custom("LuloOne-Bold", size: 12))
                             .foregroundColor(selectedArchiveGame == "flashdance" ? .black : .white)
-                            .padding(.horizontal, 20)
+                            .padding(.horizontal, 25)
                             .padding(.vertical, 10)
                             .background(selectedArchiveGame == "flashdance" ? Color.white : Color.clear)
                             .overlay(
@@ -320,7 +353,7 @@ struct MainMenuView: View {
                         Text("'Grams")
                             .font(.custom("LuloOne-Bold", size: 12))
                             .foregroundColor(selectedArchiveGame == "anagrams" ? .black : .white)
-                            .padding(.horizontal, 20)
+                            .padding(.horizontal, 25)
                             .padding(.vertical, 15)
                             .background(selectedArchiveGame == "anagrams" ? Color.white : Color.clear)
                             .overlay(
@@ -330,8 +363,9 @@ struct MainMenuView: View {
                             .cornerRadius(8)
                     }
                 }
-                .padding(.horizontal, 20)
-                .padding(.vertical, 12)
+                //.padding(.horizontal, 20)
+                .padding(.top, 12)
+                .padding(.bottom, 10)
                 
                 //Divider().background(.white)
                 
@@ -343,10 +377,8 @@ struct MainMenuView: View {
                         }
                     }
                     .padding(.horizontal, 40)
-                   // .padding(.vertical, 0)
+                    .padding(.vertical, 3)
                 }
-                
-                //Divider().background(.white.opacity(0.8))
                 
             }
         }
@@ -388,8 +420,8 @@ struct MainMenuView: View {
     private func loadAvailableDatesForGame(_ gameId: String) {
         //print("🔍 Loading available dates for gameId: \(gameId)")
         let today = Calendar.current.startOfDay(for: Date())
-        //print("   → Today (startOfDay): \(today)")
-        //print("   → Today formatted: \(DateFormatter.debugFormatter.string(from: today))")
+        print("   → Today (startOfDay): \(today)")
+        print("   → Today formatted: \(DateFormatter.debugFormatter.string(from: today))")
         
         var dates: [Date] = []
 
@@ -409,10 +441,10 @@ struct MainMenuView: View {
         }
 
         // Log the first few raw dates before processing
-        //print("   → First 5 raw dates:")
-        for (_, _) in dates.prefix(5).enumerated() {
-            //print("     [\(index)]: \(date) -> \(DateFormatter.debugFormatter.string(from: date))")
-        }
+//        print("   → First 3 raw dates:")
+//        for (_, _) in dates.prefix(1).enumerated() {
+//            print("     [\(index)]: \(dates)") // -> \(dates.isoDayString)")
+//        }
 
         // Convert UTC dates to local timezone dates
         let localCalendar = Calendar.current
@@ -439,7 +471,7 @@ struct MainMenuView: View {
         // Log the first few filtered dates
         print("   →   → Date Sample after sorting, filtering:")
         for (index, date) in dates.prefix(1).enumerated() {
-            print("     [\(index)]: \(date) -> \(DateFormatter.debugFormatter.string(from: date))")
+            print("     [\(index)]: \(date) -> \(date.isoDayString)")
         }
         
         // Cache the results
@@ -538,12 +570,12 @@ struct MainMenuView: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
                     .font(.custom("LuloOne", size: 12))
-                    .foregroundColor(.white.opacity(0.8))
+                    .foregroundColor(.white)
                 
                 if let subtitle = subtitle {
                     Text(subtitle)
                         .font(.custom("LuloOne", size: 8))
-                        .foregroundColor(.white.opacity(0.5))
+                        .foregroundColor(.white.opacity(0.8))
                 }
             }
             
@@ -553,8 +585,61 @@ struct MainMenuView: View {
                 .font(.custom("LuloOne-Bold", size: 18))
                 .foregroundColor(.white)
         }
-        .padding()
-        .background(Color.myOverlaysColor)//Color.myAccentColor2.opacity(0.2))
+        .padding(.horizontal, 20)
+        .padding(.vertical, 11)
+        .background(Color.myOverlaysColor.opacity(0.8))
+        .cornerRadius(10)
+        .frame(maxWidth: .infinity)
+    }
+    
+    @ViewBuilder
+    private func gameStatCard(gameId: String, gameName: String, icon: String) -> some View {
+        let gameScores = scoreManager.getScores(for: gameId)
+        let highestScore = gameScores.first  // Add this line
+        let highScore = highestScore?.finalScore ?? 0  // Update this line
+        let gamesPlayed = gameScores.count
+        
+        HStack(spacing: 15) {
+            
+            //Game Name & Count Played on left
+            VStack(alignment: .leading, spacing: 3) {
+                Text(gameName)
+                    .font(.custom("LuloOne-Bold", size: 12))
+                    .foregroundColor(.white)
+                
+                if gamesPlayed > 0 {
+                    Text("\(gamesPlayed) game\(gamesPlayed == 1 ? "" : "s")")
+                        .font(.custom("LuloOne", size: 10))
+                        .foregroundColor(.white.opacity(0.8))
+                } else {
+                    Text("Not played")
+                        .font(.custom("LuloOne", size: 10))
+                        .foregroundColor(.white.opacity(0.8))
+                }
+            }
+            
+            Spacer()
+            
+            // Highest score & date achieved
+            VStack(alignment: .trailing, spacing: 2) {
+                Text(gamesPlayed > 0 ? "\(highScore)" : "—")
+                    .font(.custom("LuloOne-Bold", size: 18))
+                    .foregroundColor(gamesPlayed > 0 ? .white : .white.opacity(0.4))
+                
+                if gamesPlayed > 0, let score = highestScore {
+                    Text(DateFormatter.day2Formatter.string(from: score.date))
+                        .font(.custom("LuloOne", size: 10))
+                        .foregroundColor(.white.opacity(0.8))
+                } else {
+                    Text("Not played")
+                        .font(.custom("LuloOne", size: 10))
+                        .foregroundColor(.white.opacity(0.8))
+                }
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 11)
+        .background(Color.myAccentColor2)
         .cornerRadius(10)
         .frame(maxWidth: .infinity)
     }
@@ -584,6 +669,15 @@ struct MainMenuView: View {
         let buttonHeight: CGFloat = 40 + 32
         let tilt = gameButtonTilts[gameInfo.id] ?? (0, 0)
         let isPressed = gameButtonPressed[gameInfo.id] ?? false
+        let checkDate =  Calendar.current.startOfDay(for: Date())
+        let isCompleted = scoreManager.isGameCompleted(gameId: gameInfo.id, date: checkDate)
+        
+        // Debug the completion check
+        if gameInfo.id == "flashdance" {
+            let _ = print("🔍 Button checking completion for \(gameInfo.id) at \(checkDate)")
+            
+            let _ = scoreManager.debugGameCompletion(gameId: gameInfo.id, date: checkDate)
+        }
         
         Button(action: {
             navigateToGame = gameInfo.id  // Set the state instead of using NavigationLink
@@ -631,7 +725,20 @@ struct MainMenuView: View {
                     }
                 }
         )
+        .overlay(
+            // Checkmark overlay for completed games
+            Group {
+                if isCompleted {
+                    Image(systemName: "checkmark.seal.fill")
+                        .font(.system(size: 20, weight: .bold))
+                        .foregroundColor(.yellow)
+                    .offset(x: (buttonWidth/2)-3, y: 15) // Position in btm-right corner
+                }
+            }
+        )
+       
     }
+    
     
     @ViewBuilder
     private func destinationView(for gameId: String) -> some View {
@@ -677,7 +784,7 @@ struct MainMenuView: View {
                     Image(systemName: "trophy")
                         .font(.system(size: 10))
                     
-                    Text("High Scores")
+                    Text("Top Scores")
                         .font(.custom("LuloOne-Bold", size: 14))
                 }
                 Text("How did you do?")
