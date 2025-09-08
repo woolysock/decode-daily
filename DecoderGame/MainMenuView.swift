@@ -25,6 +25,7 @@ struct MainMenuView: View {
     @EnvironmentObject var scoreManager: GameScoreManager
     @EnvironmentObject var gameCoordinator: GameCoordinator
     
+    
     let screenHeight = UIScreen.main.bounds.height
     let screenWidth = UIScreen.main.bounds.width
     var logoPadding: CGFloat = -25
@@ -41,19 +42,25 @@ struct MainMenuView: View {
     @State private var navigateToArchivedGame: (gameId: String, date: Date)? = nil
     
     // State for page tracking
-    @State private var currentPage = 0
+    @State private var currentPage: Int
     @State private var selectedArchiveGame: String = "decode"
     
-    @State private var hasUserSwiped: Bool = false
+    //@State private var hasUserSwiped: Bool = false
+    @State private var hasUserSwiped: Bool = UserDefaults.standard.bool(forKey: "hasSeenSwipeInstruction")
     
     //For Archives
     @State private var selectedArchiveDate: Date?
    // @State private var navigateToArchivedGame = false
+
     
     // CACHE AVAILABLE DATES TO PREVENT FREQUENT CALLS
     @State private var cachedAvailableDates: [String: [Date]] = [:]
     @State private var hasLoadedInitialDates = false
 
+    init(initialPage: Int = 0, selectedGame: String = "decode") {
+            _currentPage = State(initialValue: initialPage)
+            _selectedArchiveGame = State(initialValue: selectedGame)
+        }
     
     var body: some View {
             NavigationStack {
@@ -100,6 +107,7 @@ struct MainMenuView: View {
                     // Hide the swipe instruction once user has swiped away from main page
                     if currentPage != 0 && !hasUserSwiped {
                         hasUserSwiped = true
+                        UserDefaults.standard.set(true, forKey: "hasSeenSwipeInstruction")
                     }
                 }
                 
@@ -121,7 +129,15 @@ struct MainMenuView: View {
             }
             .background(.black)
             .ignoresSafeArea(.all, edges: .bottom) // Move this here if needed
-        }
+            }
+            .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("NavigateToArchive"))) { notification in
+                if let userInfo = notification.userInfo,
+                   let gameId = userInfo["gameId"] as? String {
+                    // Navigate to archive tab and select the game
+                    currentPage = 1  // Archive page
+                    selectedArchiveGame = gameId
+                }
+            }
     }
     
     // MARK: - Main Menu Page
@@ -205,9 +221,9 @@ struct MainMenuView: View {
                         .foregroundColor(.white)
                         .lineLimit(2, reservesSpace: true)
                     
-                    Text("Your gaming overview")
-                        .font(.custom("LuloOne", size: 12))
-                        .foregroundColor(.white.opacity(0.8))
+//                    Text("Your gaming overview")
+//                        .font(.custom("LuloOne", size: 12))
+//                        .foregroundColor(.white.opacity(0.8))
                 }
                 
 //                Spacer()
@@ -225,7 +241,7 @@ struct MainMenuView: View {
                     // Recent activity
                     statCard(
                         title: "Recent Games",
-                        value: "\(scoreManager.getRecentScores(limit: 7).count)",
+                        value:  "\(scoreManager.getScoresFromLastWeek().count)",
                         subtitle: "this week",
                         icon: "calendar"
                     )
@@ -421,7 +437,6 @@ struct MainMenuView: View {
         //print("🔍 Loading available dates for gameId: \(gameId)")
         let today = Calendar.current.startOfDay(for: Date())
         print("   → Today (startOfDay): \(today)")
-        print("   → Today formatted: \(DateFormatter.debugFormatter.string(from: today))")
         
         var dates: [Date] = []
 
@@ -548,6 +563,9 @@ struct MainMenuView: View {
             .accessibilityLabel(
                 Text("\(monthAbbrevFormatter.string(from: date)) \(day), \(year)\(isCompleted ? ", completed" : "")")
             )
+//            .onTapGesture {
+//                let _ = print("⏩ Tapped to play \(selectedArchiveGame) for \(date)")
+//            }
         }
     }
     
@@ -586,8 +604,9 @@ struct MainMenuView: View {
                 .foregroundColor(.white)
         }
         .padding(.horizontal, 20)
-        .padding(.vertical, 11)
-        .background(Color.myOverlaysColor.opacity(0.8))
+        .padding(.vertical, 8)
+        //.background(Color.myOverlaysColor.opacity(0.8))
+        .background(.clear)
         .cornerRadius(10)
         .frame(maxWidth: .infinity)
     }
@@ -599,49 +618,53 @@ struct MainMenuView: View {
         let highScore = highestScore?.finalScore ?? 0  // Update this line
         let gamesPlayed = gameScores.count
         
-        HStack(spacing: 15) {
+        NavigationLink(destination: MultiGameLeaderboardView(selectedGameID: gameId)) {
             
-            //Game Name & Count Played on left
-            VStack(alignment: .leading, spacing: 3) {
-                Text(gameName)
-                    .font(.custom("LuloOne-Bold", size: 12))
-                    .foregroundColor(.white)
+            HStack(spacing: 15) {
                 
-                if gamesPlayed > 0 {
-                    Text("\(gamesPlayed) game\(gamesPlayed == 1 ? "" : "s")")
-                        .font(.custom("LuloOne", size: 10))
-                        .foregroundColor(.white.opacity(0.8))
-                } else {
-                    Text("Not played")
-                        .font(.custom("LuloOne", size: 10))
-                        .foregroundColor(.white.opacity(0.8))
+                //Game Name & Count Played on left
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(gameName)
+                        .font(.custom("LuloOne-Bold", size: 12))
+                        .foregroundColor(.white)
+                    
+                    if gamesPlayed > 0 {
+                        Text("\(gamesPlayed) game\(gamesPlayed == 1 ? "" : "s")")
+                            .font(.custom("LuloOne", size: 10))
+                            .foregroundColor(.white.opacity(0.8))
+                    } else {
+                        Text("Not played")
+                            .font(.custom("LuloOne", size: 10))
+                            .foregroundColor(.white.opacity(0.8))
+                    }
+                }
+                
+                Spacer()
+                
+                // Highest score & date achieved
+                VStack(alignment: .trailing, spacing: 2) {
+                    Text(gamesPlayed > 0 ? "\(highScore)" : "—")
+                        .font(.custom("LuloOne-Bold", size: 18))
+                        .foregroundColor(gamesPlayed > 0 ? .white : .white.opacity(0.4))
+                    
+                    if gamesPlayed > 0, let score = highestScore {
+                        Text(DateFormatter.day2Formatter.string(from: score.date))
+                            .font(.custom("LuloOne", size: 10))
+                            .foregroundColor(.white.opacity(0.8))
+                    } else {
+                        Text("Not played")
+                            .font(.custom("LuloOne", size: 10))
+                            .foregroundColor(.white.opacity(0.8))
+                    }
                 }
             }
-            
-            Spacer()
-            
-            // Highest score & date achieved
-            VStack(alignment: .trailing, spacing: 2) {
-                Text(gamesPlayed > 0 ? "\(highScore)" : "—")
-                    .font(.custom("LuloOne-Bold", size: 18))
-                    .foregroundColor(gamesPlayed > 0 ? .white : .white.opacity(0.4))
-                
-                if gamesPlayed > 0, let score = highestScore {
-                    Text(DateFormatter.day2Formatter.string(from: score.date))
-                        .font(.custom("LuloOne", size: 10))
-                        .foregroundColor(.white.opacity(0.8))
-                } else {
-                    Text("Not played")
-                        .font(.custom("LuloOne", size: 10))
-                        .foregroundColor(.white.opacity(0.8))
-                }
-            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 11)
+            .background(Color.myAccentColor2)
+            .cornerRadius(10)
+            .frame(maxWidth: .infinity)
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 11)
-        .background(Color.myAccentColor2)
-        .cornerRadius(10)
-        .frame(maxWidth: .infinity)
+        .buttonStyle(PlainButtonStyle()) // Prevents default button styling
     }
     
     
@@ -671,14 +694,7 @@ struct MainMenuView: View {
         let isPressed = gameButtonPressed[gameInfo.id] ?? false
         let checkDate =  Calendar.current.startOfDay(for: Date())
         let isCompleted = scoreManager.isGameCompleted(gameId: gameInfo.id, date: checkDate)
-        
-        // Debug the completion check
-        if gameInfo.id == "flashdance" {
-            let _ = print("🔍 Button checking completion for \(gameInfo.id) at \(checkDate)")
-            
-            let _ = scoreManager.debugGameCompletion(gameId: gameInfo.id, date: checkDate)
-        }
-        
+                
         Button(action: {
             navigateToGame = gameInfo.id  // Set the state instead of using NavigationLink
         }) {
@@ -739,6 +755,26 @@ struct MainMenuView: View {
        
     }
     
+    // Add this helper method to your MainMenuView class
+    private func getMostRecentlyPlayedGame() -> String? {
+        //print("🔍 DEBUG: Getting most recently played game...")
+        //print("   - Total scores count: \(scoreManager.allScores.count)")
+        
+        // Print all scores with dates for debugging
+        let sortedScores = scoreManager.allScores.sorted { $0.date > $1.date }
+        //print("   - All scores (most recent first):")
+//        for (index, score) in sortedScores.prefix(5).enumerated() {
+//            print("     [\(index)]: \(score.gameId) - \(score.date) - Score: \(score.finalScore)")
+//        }
+        
+        let recentScore = sortedScores.first
+        let gameId = recentScore?.gameId ?? "decode"
+        
+        //print("   - Most recent score: \(String(describing: recentScore))")
+       // print("   - Returning game ID: '\(gameId)'")
+        
+        return gameId
+    }
     
     @ViewBuilder
     private func destinationView(for gameId: String) -> some View {
@@ -778,13 +814,16 @@ struct MainMenuView: View {
         let buttonWidth = screenWidth - 120
         let buttonHeight: CGFloat = 60 + 32 // Including padding
         
-        NavigationLink(destination: MultiGameLeaderboardView()) {
+        // Determine the most recently played game
+        let mostRecentGameId = getMostRecentlyPlayedGame()
+        
+        NavigationLink(destination: MultiGameLeaderboardView(selectedGameID: mostRecentGameId)) {
             VStack(spacing: 5) {
                 HStack(spacing: 10) {
                     Image(systemName: "trophy")
                         .font(.system(size: 10))
                     
-                    Text("Top Scores")
+                    Text("High Scores")
                         .font(.custom("LuloOne-Bold", size: 14))
                 }
                 Text("How did you do?")
@@ -823,6 +862,15 @@ struct MainMenuView: View {
                 }
         )
     }
+
+//    // Add this helper method to your MainMenuView class
+//    private func getMostRecentlyPlayedGame() -> String? {
+//        let recentScore = scoreManager.allScores
+//            .sorted { $0.date > $1.date }
+//            .first
+//        
+//        return recentScore?.gameId ?? "decode" // Default to decode if no scores exist
+//    }
     
     // Tiltable button for Settings
     @ViewBuilder

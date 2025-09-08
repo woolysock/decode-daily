@@ -18,6 +18,7 @@ struct AnagramsGameView: View {
 
     @StateObject private var game = GameContainer()
     @StateObject private var dailyCheckManager = DailyCheckManager.shared
+    @State private var navigateToSpecificLeaderboard = false
 
     @State private var showHowToPlay = false
     @State private var showEndGameOverlay = false
@@ -60,12 +61,16 @@ struct AnagramsGameView: View {
                         initializeGame()
                     }
                 }
-                .navigationDestination(isPresented: $navigateToHighScores) {
+                .navigationDestination(isPresented: $navigateToSpecificLeaderboard) {
                     if let anagramsGame = game.anagramsGame {
                         MultiGameLeaderboardView(selectedGameID: anagramsGame.gameInfo.id)
                     }
                 }
             }
+            .navigationBarBackButtonHidden(
+                showEndGameOverlay ||
+                showHowToPlay
+            )
             
             // Move overlays outside NavigationStack to root ZStack level
             if let anagramsGame = game.anagramsGame {
@@ -76,7 +81,11 @@ struct AnagramsGameView: View {
                         displayName: anagramsGame.gameInfo.displayName,
                         isVisible: $showEndGameOverlay,
                         onPlayAgain: { startNewGame() },
-                        onHighScores: { navigateToHighScores = true },
+                        //onHighScores: { navigateToHighScores = true },
+                        onHighScores: {
+                            // Navigate to specific game leaderboard
+                            navigateToSpecificLeaderboard = true
+                        },
                         onMenu: {
                             showEndGameOverlay = false
                             dismiss()
@@ -120,7 +129,6 @@ struct AnagramsGameView: View {
                 }
             }
         }
-
         // Also add this onChange to handle when the overlay is dismissed:
         .onChange(of: dailyCheckManager.showNewDayOverlay) { oldValue, newValue in
             // When overlay is dismissed (goes from true to false), return to main menu
@@ -129,6 +137,14 @@ struct AnagramsGameView: View {
                 dismiss()
             }
         }
+        .onAppear {
+            if let anagramsGame = game.anagramsGame, anagramsGame.gameOver > 0 {
+                // If the game is over, reset it
+                anagramsGame.resetGame()
+            }
+            initializeGame()
+        }
+       
     }
     
     // MARK: - Initialization
@@ -162,7 +178,7 @@ struct AnagramsGameView: View {
               let anagramsGame = game.anagramsGame,
               wordsetManager.currentWordset != nil,
               !wordsetManager.isGeneratingWordsets else {
-            print("❌ tryToStartGame(): Cannot start - conditions not met")
+            //print("❌ tryToStartGame(): Cannot start - conditions not met")
             return
         }
         

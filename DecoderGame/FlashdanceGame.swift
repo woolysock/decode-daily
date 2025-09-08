@@ -89,8 +89,9 @@ class FlashdanceGame: GameProtocol, ObservableObject {
         print("🎯 TARGET DATE DEBUG:")
         print("   - targetDate: \(String(describing: targetDate))")
         print("   - Current Date(): \(Date())")
+        print("")
         print("   - gameDate (final): \(gameDate)")
-        print("   - gameDate formatted: \(DateFormatter.debugFormatter.string(from: gameDate))")
+        print("   - gameDate formatted: \(DateFormatter.dayStringFormatter.string(from: gameDate))")
         
         // Debug: Check what the equation manager thinks about this date
         print("🔍 Before calling getTodaysEquationSet:")

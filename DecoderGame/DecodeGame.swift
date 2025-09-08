@@ -76,7 +76,7 @@ class DecodeGame: ObservableObject, GameProtocol {
     func startGame() {
         print("🚀 DecodeGame.startGame() called")
         
-        let gameDate = targetDate ?? Date()
+        let gameDate = targetDate ?? Calendar.current.startOfDay(for: Date())
         gameOver = 0
         
         // Check if this date has already been played
@@ -170,7 +170,7 @@ class DecodeGame: ObservableObject, GameProtocol {
 
     // New method to get the daily code
     private func getDailyCode() -> [Int] {
-        let gameDate = targetDate ?? Date()
+        let gameDate = targetDate ?? Calendar.current.startOfDay(for: Date())
         print("getDailyCode(): targetDate = \(String(describing: targetDate))")
         print("getDailyCode(): gameDate = \(gameDate)")
         
@@ -343,9 +343,11 @@ class DecodeGame: ObservableObject, GameProtocol {
             print("Error: No start time recorded for game")
             return
         }
-
+        
         let timeElapsed = Date().timeIntervalSince(startTime)
         let attempts = currentTurn + 1
+        let todayDate = Calendar.current.startOfDay(for: Date())
+        let gameDate = targetDate ?? Calendar.current.startOfDay(for: Date()) // check if nil, and if so save today's Date instead
         
         let finalScore = GameScoreManager.calculateDecodeScore(
             attempts: attempts,
@@ -353,14 +355,14 @@ class DecodeGame: ObservableObject, GameProtocol {
             won: won,
             maxAttempts: numRows
         )
-
+        
         print("Saving game score: \(finalScore) points, won: \(won), attempts: \(attempts)")
         
         // Only save score if this game counts for scoring
         if willScoreCount {
             scoreManager.saveDecodeScore(
-                date: Date(),                    // When the game was actually played
-                archiveDate: targetDate,         // The target/archive date
+                date: todayDate,                    // When the game was actually played
+                archiveDate: gameDate,         // The target/archive date
                 attempts: attempts,
                 timeElapsed: timeElapsed,
                 won: won,
@@ -378,7 +380,7 @@ class DecodeGame: ObservableObject, GameProtocol {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
                 self.lastScore = GameScore(
                     gameId: "decode",
-                    date: Date(),
+                    date: Calendar.current.startOfDay(for: Date()),
                     attempts: attempts,
                     timeElapsed: timeElapsed,
                     won: won,

@@ -25,6 +25,9 @@ struct DecodeGameView: View {
     @State private var showHowToPlay = false
     @State private var showEndGameOverlay = false
     @State private var showCodeReveal = false
+    @State private var navigateToSpecificLeaderboard = false
+    @State private var shouldNavigateToArchive = false
+    //let onNavigateToArchive: (() -> Void)?
     
     // Remove navigateToMenu since we'll use dismiss
     @State private var navigateToHighScores = false
@@ -32,6 +35,7 @@ struct DecodeGameView: View {
     // Track if this is the first launch AND if we should animate after how-to-play
     @State private var isFirstLaunch = true
     @State private var shouldAnimateAfterHowToPlay = false
+    
     
     // Initialize with proper dependency injection
     init(targetDate: Date? = nil) {
@@ -50,6 +54,8 @@ struct DecodeGameView: View {
             //print("🔍 TRACE: About to call DecodeGame init")
             let game = DecodeGame(scoreManager: scoreManager, targetDate: targetDate)
             //print("🔍 TRACE: DecodeGame created in closure successfully")
+            
+            //self.onNavigateToArchive = onNavigateToArchive
             return game
         }())
         
@@ -57,7 +63,7 @@ struct DecodeGameView: View {
     }
     
     var body: some View {
-               
+        
         ZStack {
             Color.black.ignoresSafeArea()
             
@@ -103,7 +109,7 @@ struct DecodeGameView: View {
                                 Text(game.gameInfo.displayName)
                                     .foregroundColor(.white)
                                     .font(.custom("LuloOne-Bold", size: 20))
-                                  
+                                
                                 
                                 // Archive indicator
                                 if targetDate != nil {
@@ -123,12 +129,12 @@ struct DecodeGameView: View {
                             
                             //REUSE THIS WHEN DAILIES WORK:
                             
-    //                            else if let codeset = codeSetManager.currentCodeSet {
-    //                                // Show the wordset date when in normal mode
-    //                                Text(DateFormatter.dayFormatter.string(from: codeset.date))
-    //                                    .font(.custom("LuloOne", size: 12))
-    //                                    .foregroundColor(.gray)
-    //                            }
+                            //                            else if let codeset = codeSetManager.currentCodeSet {
+                            //                                // Show the wordset date when in normal mode
+                            //                                Text(DateFormatter.dayFormatter.string(from: codeset.date))
+                            //                                    .font(.custom("LuloOne", size: 12))
+                            //                                    .foregroundColor(.gray)
+                            //                            }
                         }
                         
                         // Top-center game clock
@@ -386,17 +392,11 @@ struct DecodeGameView: View {
                 AlreadyPlayedOverlay(
                     targetDate: game.targetDate ?? Date(),
                     isVisible: $game.showAlreadyPlayedOverlay,
-                    onPlayWithoutScore: {
-                        game.startGameWithoutScore()
-                    },
-                    onPlayRandom: {
-                        game.startGameWithRandomCode()
-                    },
-                    onChooseOtherDate: {
-                        // Navigate to archive tab - you'll need to implement this
-                        // based on your navigation structure
+                    onPlayWithoutScore: { game.startGameWithoutScore() },
+                    onPlayRandom: { game.startGameWithRandomCode() },
+                    onNavigateToArchive: {
+                        shouldNavigateToArchive = true
                         dismiss()
-                        // Trigger navigation to archive tab
                     }
                 )
                 .zIndex(10)  // Behind how-to-play overlay
@@ -436,7 +436,8 @@ struct DecodeGameView: View {
                         game.startGame()  // This will check for replay again
                     },
                     onHighScores: {
-                        // Handle high scores
+                        // Navigate to specific game leaderboard
+                        navigateToSpecificLeaderboard = true
                     },
                     onMenu: {
                         dismiss()
@@ -470,11 +471,32 @@ struct DecodeGameView: View {
                 .transition(.opacity)
                 .zIndex(40)
             }
-            
-            
         }
-        .navigationDestination(isPresented: $navigateToHighScores) {
+        //        .onDisappear {
+        //            // When this view disappears, check if we should navigate to archive
+        //            if shouldNavigateToArchive {
+        //                // Pass the gameId in userInfo, not object
+        //                NotificationCenter.default.post(
+        //                    name: NSNotification.Name("NavigateToArchive"),
+        //                    object: nil,
+        //                    userInfo: ["gameId": "decode"]
+        //                )
+        //            }
+        //        }
+        .navigationDestination(isPresented: $navigateToSpecificLeaderboard) {
             MultiGameLeaderboardView(selectedGameID: game.gameInfo.id)
+        }
+        .navigationBarBackButtonHidden(
+            game.gameOver > 0 ||
+            showCodeReveal ||
+            showEndGameOverlay ||
+            showHowToPlay ||
+            game.showAlreadyPlayedOverlay
+        )
+        .onAppear {
+            if game.gameOver > 0 {
+                game.resetGame()
+            }
         }
         
     }

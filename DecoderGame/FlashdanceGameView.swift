@@ -18,6 +18,7 @@ struct FlashdanceGameView: View {
     @StateObject private var game: FlashdanceGame
     @StateObject private var dailyCheckManager = DailyCheckManager.shared
     @State private var finalGameData: GameScore?
+    @State private var navigateToSpecificLeaderboard = false
     
     @State private var dragOffset: CGSize = .zero
     @State private var showHowToPlay = false
@@ -257,18 +258,21 @@ struct FlashdanceGameView: View {
                     }
                     .onChange(of: game.gameOver, initial: false) { _, newValue in
                         if newValue == 1 {
+                            let archiveDate = game.targetDate ?? Date()
+                            
                             // Create a GameScore with the current game data
                             let additionalProps = FlashdanceAdditionalProperties(
                                 gameDuration: 30,
                                 correctAnswers: game.correctAttempts,
                                 incorrectAnswers: game.incorrectAttempts,
                                 longestStreak: game.maxStreak,
-                                gameDate: game.targetDate ?? Date()
+                                gameDate: archiveDate
                             )
                             
                             finalGameData = GameScore(
                                 gameId: "flashdance",
                                 date: Date(),
+                                archiveDate: archiveDate,
                                 attempts: game.correctAttempts + game.incorrectAttempts,
                                 timeElapsed: 30.0,
                                 won: true,
@@ -282,10 +286,12 @@ struct FlashdanceGameView: View {
                         }
                     }
                 }
-                .navigationDestination(isPresented: $navigateToHighScores) {
+                .navigationDestination(isPresented: $navigateToSpecificLeaderboard) {
                     MultiGameLeaderboardView(selectedGameID: game.gameInfo.id)
                 }
             }
+            .navigationBarBackButtonHidden(showEndGameOverlay)
+            .navigationBarBackButtonHidden(showHowToPlay)
             
             // === Overlays ===
             if showHowToPlay {
@@ -306,7 +312,10 @@ struct FlashdanceGameView: View {
                     displayName: game.gameInfo.displayName,
                     isVisible: $showEndGameOverlay,
                     onPlayAgain: { startNewGame() },
-                    onHighScores: { navigateToHighScores = true },
+                    onHighScores: {
+                        // Navigate to specific game leaderboard
+                        navigateToSpecificLeaderboard = true
+                    },
                     onMenu: {
                         showEndGameOverlay = false
                         dismiss()
@@ -315,8 +324,6 @@ struct FlashdanceGameView: View {
                 )
                 .transition(.opacity)
             }
-            
-    
         }
         .onChange(of: dailyCheckManager.showNewDayOverlay) { oldValue, newValue in
             // Only respond to new day overlay if this is NOT an archived game
@@ -338,6 +345,17 @@ struct FlashdanceGameView: View {
                     dismiss()
                 }
             }
+        }
+        .navigationBarBackButtonHidden(
+            game.gameOver > 0 ||
+            showEndGameOverlay ||
+            showHowToPlay
+        )
+        .onAppear {
+            if game.gameOver > 0 {
+                game.resetGame()
+            }
+            //startNewGame()
         }
     }
     

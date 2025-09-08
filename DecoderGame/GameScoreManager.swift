@@ -190,6 +190,13 @@ class GameScoreManager: ObservableObject {
         }
     }
 
+    func getScoresFromLastWeek() -> [GameScore] {
+        let oneWeekAgo = Calendar.current.date(byAdding: .day, value: -7, to: Date()) ?? Date()
+        
+        return allScores.filter { score in
+            score.date >= oneWeekAgo
+        }
+    }
     
     // MARK: - Convenience Save Methods for Specific Games
     
@@ -269,7 +276,7 @@ class GameScoreManager: ObservableObject {
             .filter { $0.gameId == gameId }
             .sorted { $0.finalScore > $1.finalScore }
         
-        print("📊 getScores for '\(gameId)': found \(filteredScores.count) scores")
+        //print("📊 getScores for '\(gameId)': found \(filteredScores.count) scores")
         return filteredScores
     }
 

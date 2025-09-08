@@ -65,7 +65,7 @@ struct EndGameOverlay: View {
         onMenu: @escaping () -> Void,
         timeElapsed: TimeInterval? = nil,
         additionalInfo: String? = nil,
-        gameScore: GameScore?
+        gameScore: GameScore? = nil
     ) {
         self.gameID = gameID
         self.finalScore = finalScore
@@ -202,7 +202,7 @@ struct EndGameOverlay: View {
                 
                 // Action buttons
                 VStack(spacing: 15) {
-                    Button(gameID == "decode" ? "New code?" : "Replay?"){
+                    Button(gameID == "decode" ? "New game?" : "Replay?"){
                         dismiss(startNewGame: true)
                     }
                     .font(.custom("LuloOne-Bold", size: 18))
@@ -227,18 +227,36 @@ struct EndGameOverlay: View {
                         .disabled(!buttonsAreActive)
                         .animation(.easeInOut(duration: 0.3), value: buttonsAreActive)
                         
-                        Button("Main Menu") {
-                            onMenu()
-                            dismiss()
+//                        Button("Main Menu") {
+//                            onMenu()
+//                            dismiss()
+//                        }
+//                        .font(.custom("LuloOne", size: 14))
+//                        .foregroundColor(buttonsAreActive ? .white : .black)
+//                        .padding(.horizontal, 20)
+//                        .padding(.vertical, 12)
+//                        .background(buttonsAreActive ? Color.myAccentColor2 : Color.black.opacity(0.4))
+//                        .cornerRadius(8)
+//                        .disabled(!buttonsAreActive)
+//                        .animation(.easeInOut(duration: 0.3), value: buttonsAreActive)
+                        
+                        NavigationLink(destination: MainMenuView(initialPage: 0)) {
+                            Text("Main Menu")
+                                .font(.custom("LuloOne", size: 14))
+                                .foregroundColor(buttonsAreActive ? .white : .black)
+                                .padding(.horizontal, 20)
+                                .padding(.vertical, 12)
+                                .background(buttonsAreActive ? Color.myAccentColor2 : Color.black.opacity(0.4))
+                                .cornerRadius(8)
                         }
-                        .font(.custom("LuloOne", size: 14))
-                        .foregroundColor(buttonsAreActive ? .white : .black)
-                        .padding(.horizontal, 20)
-                        .padding(.vertical, 12)
-                        .background(buttonsAreActive ? Color.myAccentColor2 : Color.black.opacity(0.4))
-                        .cornerRadius(8)
                         .disabled(!buttonsAreActive)
                         .animation(.easeInOut(duration: 0.3), value: buttonsAreActive)
+                        .simultaneousGesture(
+                            TapGesture()
+                                .onEnded { _ in
+                                    isVisible = false  // Dismiss the overlay
+                                }
+                        )
                     }
                 }
             }

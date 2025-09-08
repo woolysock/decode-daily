@@ -256,7 +256,6 @@ class AnagramsGame: GameProtocol, ObservableObject {
         startGame()
     }
     
-    // Problem 3: Enhanced endGame with verification
     func endGame() {
         print("🏁 endGame() called - setting isEndingGame = true")
         isEndingGame = true
@@ -286,9 +285,10 @@ class AnagramsGame: GameProtocol, ObservableObject {
         usedLetterIndices = []
         userAnswer = ""
 
-        let scoreDate = dailyWordset?.date ?? Date()
-        
-        // Create AnagramsAdditionalProperties
+        // FIX: Use the same pattern as Flashdance
+        let gameDate = targetDate ?? Date()  // What date this counts for
+        let playDate = Date()                // When actually played
+
         let anagramsProps = AnagramsAdditionalProperties(
             gameDuration: 60.0,
             longestWord: longestWord,
@@ -300,28 +300,26 @@ class AnagramsGame: GameProtocol, ObservableObject {
             skippedWords: skippedWords
         )
         
-        // Create GameScore with the generic initializer that includes additionalProperties
         let newScore = GameScore(
             gameId: gameInfo.id,
-            date: scoreDate,
-            archiveDate: nil,
+            date: playDate,        // ✅ FIXED: When actually played
+            archiveDate: gameDate, // ✅ FIXED: What date this counts for
             attempts: wordsCompleted,
             timeElapsed: 60.0,
             won: gameWon,
             finalScore: finalScore,
-            additionalProperties: anagramsProps  // This will be encoded as Data
+            additionalProperties: anagramsProps
         )
 
         scoreManager.saveScore(newScore)
         lastScore = newScore
 
         print("""
-        ✅ Score saved with current game state:
+        ✅ Score saved with corrected dates:
+           - playDate: \(playDate)
+           - gameDate: \(gameDate)
            - finalScore: \(finalScore)
-           - longestWord: \(longestWord)
            - wordsCompleted: \(wordsCompleted)
-           - skippedWords: \(skippedWords)
-           - difficultyScore: \(difficultyScore)
         """)
 
         if let wordset = dailyWordset {
@@ -573,7 +571,7 @@ class AnagramsGame: GameProtocol, ObservableObject {
     
     // 8. Fixed skipCurrentWord to use consistent logic
     func skipCurrentWord() {
-        guard let wordset = dailyWordset else { return }
+        guard dailyWordset != nil else { return }
         
         print("⏭️ Skipping word at index \(currentWordIndex): '\(currentWord)'")
         

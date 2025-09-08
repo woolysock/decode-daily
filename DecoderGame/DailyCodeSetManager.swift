@@ -82,11 +82,13 @@ final class DailyCodeSetManager: ObservableObject {
         
         // For today's date, use the cached currentCodeSet if available
         if Calendar.current.isDate(requestedDate, inSameDayAs: today) {
-            if let current = currentCodeSet {
-                print("📋 Using cached currentCodeSet: [\(current.peg1),\(current.peg2),\(current.peg3),\(current.peg4),\(current.peg5)]")
-                return current
-            }
+            return currentCodeSet
         }
+//            if let current = currentCodeSet {
+//                print("📋 Using cached currentCodeSet: [\(current.peg1),\(current.peg2),\(current.peg3),\(current.peg4),\(current.peg5)]")
+//                return current
+//            }
+//        }
         
         // For any date (including today if not cached), load from JSON
         if let codeSet = getCodeSet(for: requestedDate) {

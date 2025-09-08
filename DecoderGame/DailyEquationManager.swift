@@ -119,12 +119,12 @@ final class DailyEquationManager: ObservableObject {
     
     private func loadEquationSet(for date: Date) -> DailyEquationSet? {
         let dateKey = Self.dateFormatter.string(from: date)
-        print("🔍 Looking for equation set with dateKey: \(dateKey)")
+        print("🛻 loadEquationSet(): dateKey: \(dateKey)")
         
         // Skip UserDefaults - go directly to bundled JSON
-        print("🔍 Searching in \(allEquationSets.count) bundled equation sets...")
+        print(" --> Searching in \(allEquationSets.count) bundled equation sets...")
         if let found = allEquationSets.first(where: { $0.id == dateKey }) {
-            print("✅ Found equation set in bundled JSON for \(dateKey)")
+            print(" --> ✅ Found equation set in bundled JSON for \(dateKey)")
             return found
         }
 
