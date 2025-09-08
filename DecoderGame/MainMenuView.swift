@@ -24,7 +24,9 @@ struct MainMenuView: View {
     
     @EnvironmentObject var scoreManager: GameScoreManager
     @EnvironmentObject var gameCoordinator: GameCoordinator
-    
+    @StateObject private var subscriptionManager = SubscriptionManager.shared
+    @State private var showArchiveUpsell = false
+
     
     let screenHeight = UIScreen.main.bounds.height
     let screenWidth = UIScreen.main.bounds.width
@@ -138,6 +140,7 @@ struct MainMenuView: View {
                     selectedArchiveGame = gameId
                 }
             }
+            .environmentObject(subscriptionManager)
     }
     
     // MARK: - Main Menu Page
@@ -395,6 +398,15 @@ struct MainMenuView: View {
                     .padding(.horizontal, 40)
                     .padding(.vertical, 3)
                 }
+                .overlay(
+                    // Archive upsell overlay
+                    Group {
+                        if showArchiveUpsell {
+                            ArchiveUpsellOverlay(isPresented: $showArchiveUpsell)
+                                .environmentObject(subscriptionManager)
+                        }
+                    }
+                )
                 
             }
         }
@@ -505,8 +517,6 @@ struct MainMenuView: View {
     // Helper function to create date buttons
     @ViewBuilder
     private func dateButton(for date: Date) -> some View {
-        
-        //let _ = print("*️⃣ dateButton(\(date))")
         let calendar = Calendar.current
         let day   = calendar.component(.day, from: date)
         let month = calendar.component(.month, from: date)
@@ -522,54 +532,69 @@ struct MainMenuView: View {
         
         // Check if this game is completed using scoreManager
         let isCompleted = scoreManager.isGameCompleted(gameId: selectedArchiveGame, date: date)
+        
+        // Check if this date is accessible based on subscription tier
+        let canAccess = subscriptionManager.canAccessArchiveDate(date)
 
         Button(action: {
-            launchArchivedGame(gameId: selectedArchiveGame, date: date)
+            if canAccess {
+                launchArchivedGame(gameId: selectedArchiveGame, date: date)
+            } else {
+                // Show upsell overlay
+                showArchiveUpsell = true
+            }
         }) {
             VStack(spacing: showMonth ? 2 : 0) {
                 Text("\(day)")
                     .font(.custom("LuloOne-Bold", size: 16))
-                    .foregroundColor(.white)
+                    .foregroundColor(canAccess ? .white : .white.opacity(0.4))
 
                 if showMonth {
                     Text(monthAbbrev)
                         .font(.custom("LuloOne-Bold", size: 8))
-                        .foregroundColor(.white.opacity(0.85))
+                        .foregroundColor(canAccess ? .white.opacity(0.85) : .white.opacity(0.3))
                         .minimumScaleFactor(0.7)
                         .lineLimit(1)
                 }
             }
             .frame(width: 50, height: 50)
-            .background(backgroundColor)
+            .background(canAccess ? backgroundColor : backgroundColor.opacity(0.3))
             .cornerRadius(8)
             .overlay(
-                // Checkmark overlay for completed games
+                // Checkmark overlay for completed games (only if accessible)
                 Group {
-                    if isCompleted {
+                    if isCompleted && canAccess {
                         Image(systemName: "checkmark.seal.fill")
                             .font(.system(size: 20, weight: .bold))
                             .foregroundColor(.yellow)
-                           .offset(x: 10, y: 10) // Position in btm-right corner
+                           .offset(x: 10, y: 10)
                     }
                 }
             )
             .overlay(
-                // White border for completed games
+                // Lock icon for inaccessible dates
+                Group {
+                    if !canAccess {
+                        Image(systemName: "lock.fill")
+                            .font(.system(size: 12))
+                            .foregroundColor(.white.opacity(0.6))
+                    }
+                }
+            )
+            .overlay(
+                // White border for completed games (only if accessible)
                 RoundedRectangle(cornerRadius: 8)
-                    .stroke(isCompleted ? Color.white : Color.clear, lineWidth: 1)
+                    .stroke(isCompleted && canAccess ? Color.white : Color.clear, lineWidth: 1)
             )
             .contentShape(RoundedRectangle(cornerRadius: 8))
             .accessibilityElement(children: .ignore)
             .accessibilityLabel(
-                Text("\(monthAbbrevFormatter.string(from: date)) \(day), \(year)\(isCompleted ? ", completed" : "")")
+                Text("\(monthAbbrevFormatter.string(from: date)) \(day), \(year)\(isCompleted ? ", completed" : "")\(canAccess ? "" : ", requires subscription")")
             )
-//            .onTapGesture {
-//                let _ = print("⏩ Tapped to play \(selectedArchiveGame) for \(date)")
-//            }
         }
+        .disabled(!canAccess) // This will help with accessibility
     }
-    
-    
+
     private func launchArchivedGame(gameId: String, date: Date) {
         print("🏁 launchArchivedGame(): Launch \(gameId) for date: \(date)")
         navigateToArchivedGame = (gameId: gameId, date: date)
