@@ -412,6 +412,8 @@ class GameScoreManager: ObservableObject {
         var calendar = utcCalendar
         calendar.timeZone = TimeZone(secondsFromGMT: 0)!
         let startOfDayUTC = calendar.startOfDay(for: date)
+        //print("❓ isGameCompleted(): date in: \(date)")
+        //print(" ➠ isGameCompleted(): startOfDayUTC: \(startOfDayUTC)")
         
         let thisFormatter = DateFormatter()
         thisFormatter.dateFormat = "yyyy-MM-dd"
@@ -420,7 +422,11 @@ class GameScoreManager: ObservableObject {
         
         let dateString = thisFormatter.string(from: startOfDayUTC)
         
+        //print(" ➠ isGameCompleted(): dateString: \(dateString)")
+        
         let key = "completed_\(gameId)_\(dateString)"
+        
+        //print(" ❓ isGameCompleted() for key: \(key)")
         
         //print("isGameCompleted: \(UserDefaults.standard.bool(forKey: key)) for \(key)")
         return UserDefaults.standard.bool(forKey: key)

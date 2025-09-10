@@ -30,7 +30,14 @@ struct DecoderGameApp: App {
         WindowGroup {
             ContentView()
                 .environmentObject(GameScoreManager.shared)
+                .onAppear {
+                                    configureStoreKit()
+                                }
         }
         .modelContainer(sharedModelContainer)
+    }
+    
+    func configureStoreKit() {
+        _ = StoreManager.shared
     }
 }

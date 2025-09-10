@@ -85,17 +85,19 @@ class FlashdanceGame: GameProtocol, ObservableObject {
     func startGame() {
         print("🚀 FlashdanceGame.startGame() called")
         
-        let gameDate = targetDate ?? Date()
+        let gameDate = targetDate ?? Calendar.current.startOfDay(for: Date())
+        
         print("🎯 TARGET DATE DEBUG:")
         print("   - targetDate: \(String(describing: targetDate))")
-        print("   - Current Date(): \(Date())")
-        print("")
-        print("   - gameDate (final): \(gameDate)")
-        print("   - gameDate formatted: \(DateFormatter.dayStringFormatter.string(from: gameDate))")
+        print("   - Calendar.current.startOfDay(for: \(Date())): \(Calendar.current.startOfDay(for: Date()))")
+        print("   - and thus.... ")
+        print("   - gameDate: \(gameDate)")
+        print("   - gameDate with dayStringFormatter: \(DateFormatter.dayStringFormatter.string(from: gameDate))")
         
         // Debug: Check what the equation manager thinks about this date
         print("🔍 Before calling getTodaysEquationSet:")
-        print("   - equationManager.currentEquationSet date: \(String(describing: equationManager.currentEquationSet?.date))")
+        print("   - equationManager.currentEquationSet's date:")
+        print("   - \(String(describing: equationManager.currentEquationSet?.date))")
         
         guard let todaysEquationSet = equationManager.getTodaysEquationSet(for: gameDate) else {
             print(" ❌ startGame(): No equation set available for date: \(gameDate)")
@@ -103,10 +105,8 @@ class FlashdanceGame: GameProtocol, ObservableObject {
             return
         }
         
-        print("✅ Got equation set for date: \(todaysEquationSet.date)")
-        print("   - Requested date: \(gameDate)")
-        print("   - Returned set date: \(todaysEquationSet.date)")
-        print("   - Are they the same day? \(Calendar.current.isDate(gameDate, inSameDayAs: todaysEquationSet.date))")
+        print("🔮 Requested equation set for: \(gameDate)")
+        print("✅ Recieved equation set for: \(todaysEquationSet.date)")
         
         dailyEquationSet = todaysEquationSet
         totalEquationsInSet = todaysEquationSet.equations.count
@@ -173,8 +173,8 @@ class FlashdanceGame: GameProtocol, ObservableObject {
         calculateFinalScore()
         statusText = "Game over!"
         
-        let gameDate = targetDate ?? Date()
-        let playDate = Date()
+        let gameDate = targetDate ?? Calendar.current.startOfDay(for: Date())
+        let playDate = Calendar.current.startOfDay(for: Date())
         
         scoreManager.saveFlashdanceScore(
             date: playDate,                      // when actually played

@@ -126,11 +126,29 @@ struct SettingsView: View {
                     clearCompletionSection
                 }
                 
+                
                 // Developer Section (only if in developer mode)
                 if isDeveloperMode {
                     settingsSection(title: "Developer Testing") {
                         paidTierTestingCard
                     }
+                    
+                    Button("Print All Scores") {
+                        print("=== ALL GAME SCORES ===")
+                        print("Total scores: \(scoreManager.allScores.count)")
+                        for (index, score) in scoreManager.allScores.enumerated() {
+                            print("[\(index)] \(score.gameId): \(score.finalScore) points on \(score.date)")
+                        }
+                        print("=== END SCORES ===")
+                    }
+                    .font(.custom("LuloOne", size: 12))
+                    .foregroundColor(.blue)
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 8)
+                    .background(Color.blue.opacity(0.2))
+                    .cornerRadius(8)
+                    
+                    
                 }
                 
                 Spacer()
@@ -239,52 +257,52 @@ struct SettingsView: View {
     private var clearCompletionSection: some View {
         VStack(spacing: 8) {
             // Section header
-            HStack {
-                Text("Clear Game Completion")
-                    .font(.custom("LuloOne-Bold", size: 12))
-                    .foregroundColor(.gray)
-                Spacer()
-            }
-            .padding(.horizontal, 4)
-            
-            // Clear all button
-            clearButton(
-                title: "Clear All Games",
-                subtitle: "Reset completion for all games",
-                icon: "arrow.clockwise.circle",
-                action: "all"
-            )
-            
-            // Individual game clear buttons
-            VStack(spacing: 6) {
-                clearButton(
-                    title: "Clear Decode",
-                    subtitle: "Reset Decode completion status",
-                    icon: "circle.hexagonpath",
-                    action: "decode"
-                )
-                
-                clearButton(
-                    title: "Clear Flashdance",
-                    subtitle: "Reset Flashdance completion status",
-                    icon: "bolt.circle",
-                    action: "flashdance"
-                )
-                
-                clearButton(
-                    title: "Clear Anagrams",
-                    subtitle: "Reset Anagrams completion status",
-                    icon: "textformat",
-                    action: "anagrams"
-                )
-                
-                clearButton(
-                    title: "Clear Today's Games",
-                    subtitle: "Reset today's completion status",
-                    icon: "calendar.circle",
-                    action: "today"
-                )
-            }
+//            HStack {
+//                Text("Clear Game Completion")
+//                    .font(.custom("LuloOne-Bold", size: 12))
+//                    .foregroundColor(.gray)
+//                Spacer()
+//            }
+//            .padding(.horizontal, 4)
+//            
+//            // Clear all button
+//            clearButton(
+//                title: "Clear All Games",
+//                subtitle: "Reset completion for all games",
+//                icon: "arrow.clockwise.circle",
+//                action: "all"
+//            )
+//            
+//            // Individual game clear buttons
+//            VStack(spacing: 6) {
+//                clearButton(
+//                    title: "Clear Decode",
+//                    subtitle: "Reset Decode completion status",
+//                    icon: "circle.hexagonpath",
+//                    action: "decode"
+//                )
+//                
+//                clearButton(
+//                    title: "Clear Flashdance",
+//                    subtitle: "Reset Flashdance completion status",
+//                    icon: "bolt.circle",
+//                    action: "flashdance"
+//                )
+//                
+//                clearButton(
+//                    title: "Clear Anagrams",
+//                    subtitle: "Reset Anagrams completion status",
+//                    icon: "textformat",
+//                    action: "anagrams"
+//                )
+//                
+//                clearButton(
+//                    title: "Clear Today's Games",
+//                    subtitle: "Reset today's completion status",
+//                    icon: "calendar.circle",
+//                    action: "today"
+//                )
+//            }
         }
     }
     

@@ -289,9 +289,12 @@ struct FlashdanceGameView: View {
                 .navigationDestination(isPresented: $navigateToSpecificLeaderboard) {
                     MultiGameLeaderboardView(selectedGameID: game.gameInfo.id)
                 }
+                .navigationBarBackButtonHidden(
+                    showEndGameOverlay ||
+                    showHowToPlay
+                )
             }
-            .navigationBarBackButtonHidden(showEndGameOverlay)
-            .navigationBarBackButtonHidden(showHowToPlay)
+            
             
             // === Overlays ===
             if showHowToPlay {
@@ -315,6 +318,7 @@ struct FlashdanceGameView: View {
                     onHighScores: {
                         // Navigate to specific game leaderboard
                         navigateToSpecificLeaderboard = true
+                        dismiss()
                     },
                     onMenu: {
                         showEndGameOverlay = false

@@ -62,85 +62,125 @@ struct MainMenuView: View {
     init(initialPage: Int = 0, selectedGame: String = "decode") {
             _currentPage = State(initialValue: initialPage)
             _selectedArchiveGame = State(initialValue: selectedGame)
+        
+        // Print all UserDefaults keys and values
+//        print("=== GAME USER DEFAULTS ===")
+//        let userDefaults = UserDefaults.standard
+//        let allKeys = userDefaults.dictionaryRepresentation()
+//
+//        // Filter for keys that might be related to your game
+//        let gameKeys = allKeys.filter { key, _ in
+//            key.contains("game") ||
+//            key.contains("score") ||
+//            key.contains("completion") ||
+//            key.contains("userPaidTier") ||
+//            key.contains("hasSeenSwipeInstruction") ||
+//            key.contains("decode") ||
+//            key.contains("flashdance") ||
+//            key.contains("anagrams")
+//        }
+//
+//        for (key, value) in gameKeys.sorted(by: { $0.key < $1.key }) {
+//            print("\(key): \(value)")
+//        }
+//        print("=== END GAME USER DEFAULTS ===")
+        
         }
     
     var body: some View {
-            NavigationStack {
-            VStack(spacing: 0) {
-                
-                // Top swipe nav bar (just dates - dots at bottom)
-                Spacer().frame(height: 25)
-                Text(DateFormatter.day2Formatter.string(from: today))
-                    .font(.custom("LuloOne-Bold", size: 14))
-                    .foregroundColor(Color.myAccentColor2)
-                    .padding(20)
-                    //.background(.yellow)
-                //Spacer().frame(height : 10)
-                
-                TabView(selection: $currentPage) {
-                    mainMenuPage.tag(0)
-                    archivesPage.tag(1)
-                    accountPage.tag(2)
-                }
-                .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
-                .navigationDestination(isPresented: Binding<Bool>(
-                    get: { navigateToGame != nil },
-                    set: { if !$0 { navigateToGame = nil } }
-                )) {
-                    if let gameId = navigateToGame {
-                        destinationView(for: gameId)
+        NavigationStack {
+            ZStack {
+                // Main content layer
+                VStack(spacing: 0) {
+                    // Top swipe top nav bar w/ sub tier badging
+                    
+                    Spacer().frame(height: 10)
+                    
+                    // Subscription tier badge - positioned above date
+                    HStack {
+                        Spacer()
+                        SubscriptionTierSeal(tier: subscriptionManager.currentTier)
+                        //SubscriptionTierBadge(tier: subscriptionManager.currentTier)
+                        Spacer().frame(width:10)
                     }
-                }
-                .navigationDestination(isPresented: Binding<Bool>(
-                    get: { navigateToArchivedGame != nil },
-                    set: { if !$0 { navigateToArchivedGame = nil } }
-                )) {
-                    //let _ = print("🔍 TRACE: navigationDestination called")
-                    //let _ = print("   Stack trace: \(Thread.callStackSymbols.prefix(5).joined(separator: "\n   "))")
-                        
-                    if let archivedGame = navigateToArchivedGame {
-                        archivedGameDestination(for: archivedGame.gameId, date: archivedGame.date)
+                    .padding(.bottom, 10)
+                    
+                    // Today's Date
+                    Text(DateFormatter.day2Formatter.string(from: today))
+                        .font(.custom("LuloOne-Bold", size: 14))
+                        .foregroundColor(Color.myAccentColor2)
+                        .padding(20)
+                    
+                    TabView(selection: $currentPage) {
+                        mainMenuPage.tag(0)
+                        archivesPage.tag(1)
+                        accountPage.tag(2)
                     }
-                }
-                .onAppear {
-                    loadAllAvailableDates()
-                }
-                .onChange(of: currentPage) {
-                    // Hide the swipe instruction once user has swiped away from main page
-                    if currentPage != 0 && !hasUserSwiped {
-                        hasUserSwiped = true
-                        UserDefaults.standard.set(true, forKey: "hasSeenSwipeInstruction")
+                    .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
+                    .navigationDestination(isPresented: Binding<Bool>(
+                        get: { navigateToGame != nil },
+                        set: { if !$0 { navigateToGame = nil } }
+                    )) {
+                        if let gameId = navigateToGame {
+                            destinationView(for: gameId)
+                        }
                     }
-                }
-                
-                // Bottom swipe nav bar
-                HStack(alignment: .center) {
-                    Spacer()
-                    ForEach([0, 1, 2], id: \.self) { pageIndex in
-                        Image(systemName: currentPage == pageIndex ? "smallcircle.filled.circle.fill" : "smallcircle.filled.circle")
-                            .font(.system(size: currentPage == pageIndex ? 14 : 12))
-                            .foregroundColor(.white)
-                            .padding(.leading, pageIndex == 0 ? 30 : 0)
-                            .padding(.trailing, pageIndex == 2 ? 30 : 0)
+                    .navigationDestination(isPresented: Binding<Bool>(
+                        get: { navigateToArchivedGame != nil },
+                        set: { if !$0 { navigateToArchivedGame = nil } }
+                    )) {
+                        if let archivedGame = navigateToArchivedGame {
+                            archivedGameDestination(for: archivedGame.gameId, date: archivedGame.date)
+                        }
                     }
-                    Spacer()
+                    .onAppear {
+                        loadAllAvailableDates()
+                    }
+                    .onChange(of: currentPage) {
+                        // Hide the swipe instruction once user has swiped away from main page
+                        if currentPage != 0 && !hasUserSwiped {
+                            hasUserSwiped = true
+                            UserDefaults.standard.set(true, forKey: "hasSeenSwipeInstruction")
+                        }
+                    }
+                    
+                    // Bottom swipe nav bar
+                    HStack(alignment: .center) {
+                        Spacer()
+                        ForEach([0, 1, 2], id: \.self) { pageIndex in
+                            Image(systemName: currentPage == pageIndex ? "smallcircle.filled.circle.fill" : "smallcircle.filled.circle")
+                                .font(.system(size: currentPage == pageIndex ? 14 : 12))
+                                .foregroundColor(.white)
+                                .padding(.leading, pageIndex == 0 ? 30 : 0)
+                                .padding(.trailing, pageIndex == 2 ? 30 : 0)
+                        }
+                        Spacer()
+                    }
+                    .frame(height: 55)
+                    .background(.black)
+                    Spacer().frame(height: 20)
                 }
-                .frame(height: 55)
+                .zIndex(0) // Main content at base layer
                 .background(.black)
-                Spacer().frame(height:20)
-            }
-            .background(.black)
-            .ignoresSafeArea(.all, edges: .bottom) // Move this here if needed
-            }
-            .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("NavigateToArchive"))) { notification in
-                if let userInfo = notification.userInfo,
-                   let gameId = userInfo["gameId"] as? String {
-                    // Navigate to archive tab and select the game
-                    currentPage = 1  // Archive page
-                    selectedArchiveGame = gameId
+                .ignoresSafeArea(.all, edges: .bottom)
+                
+                // Overlay layer - appears on top of everything
+                if showArchiveUpsell {
+                    ArchiveUpsellOverlay(isPresented: $showArchiveUpsell)
+                        .environmentObject(subscriptionManager)
+                        .zIndex(1) // Overlay on top
                 }
             }
-            .environmentObject(subscriptionManager)
+        }
+        .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("NavigateToArchive"))) { notification in
+            if let userInfo = notification.userInfo,
+               let gameId = userInfo["gameId"] as? String {
+                // Navigate to archive tab and select the game
+                currentPage = 1  // Archive page
+                selectedArchiveGame = gameId
+            }
+        }
+        .environmentObject(subscriptionManager)
     }
     
     // MARK: - Main Menu Page
@@ -151,8 +191,9 @@ struct MainMenuView: View {
             
             GeometryReader { geo in
                 VStack(spacing: 20) {
+                    
                     Spacer()
-                        .frame(height : 20)
+                        .frame(height: 10)
                     
                     //game title header
                     VStack (spacing: 5){
@@ -388,7 +429,7 @@ struct MainMenuView: View {
                 
                 //Divider().background(.white)
                 
-                // Date Grid - now using cached dates
+                // Date Grid
                 ScrollView {
                     LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 10), count: 5), spacing: 10) {
                         ForEach(getCachedAvailableDates(for: selectedArchiveGame), id: \.self) { date in
@@ -398,15 +439,6 @@ struct MainMenuView: View {
                     .padding(.horizontal, 40)
                     .padding(.vertical, 3)
                 }
-                .overlay(
-                    // Archive upsell overlay
-                    Group {
-                        if showArchiveUpsell {
-                            ArchiveUpsellOverlay(isPresented: $showArchiveUpsell)
-                                .environmentObject(subscriptionManager)
-                        }
-                    }
-                )
                 
             }
         }
@@ -437,7 +469,7 @@ struct MainMenuView: View {
     // Load dates for a specific game only if not already cached
     private func loadAvailableDatesIfNeeded(for gameId: String) {
         guard cachedAvailableDates[gameId] == nil else {
-            print("📋 Using cached dates for \(gameId) (\(cachedAvailableDates[gameId]?.count ?? 0) dates)")
+            //print("📋 Using cached dates for \(gameId) (\(cachedAvailableDates[gameId]?.count ?? 0) dates)")
             return
         }
         
@@ -455,13 +487,13 @@ struct MainMenuView: View {
         switch gameId {
         case "decode":
             dates = gameCoordinator.dailyCodeSetManager.getAvailableDates()
-            print("   → Loaded \(dates.count) archive dates for decode")
+            print("   → Loaded \(dates.count) days of data for decode")
         case "flashdance":
             dates = gameCoordinator.dailyEquationManager.getAvailableDates()
-            print("   → Loaded \(dates.count) archive dates for flashdance")
+            print("   → Loaded \(dates.count)  days of data for flashdance")
         case "anagrams":
             dates = gameCoordinator.dailyWordsetManager.getAvailableDates()
-            print("   → Loaded \(dates.count) archive dates for anagrams")
+            print("   → Loaded \(dates.count)  days of data for anagrams")
         default:
             print("   → Unknown gameId: \(gameId)")
             break
@@ -496,14 +528,14 @@ struct MainMenuView: View {
         dates = dates.filter { $0 < today }.sorted(by: >)
         
         // Log the first few filtered dates
-        print("   →   → Date Sample after sorting, filtering:")
-        for (index, date) in dates.prefix(1).enumerated() {
-            print("     [\(index)]: \(date) -> \(date.isoDayString)")
-        }
+//        print("  →→→ Date Sample after sorting, filtering:")
+//        for (index, date) in dates.prefix(1).enumerated() {
+//            print("  →→→ [\(index)]: \(date) -> \(date.isoDayString)")
+//        }
         
         // Cache the results
         cachedAvailableDates[gameId] = dates
-        print("   → Cached \(dates.count) dates for \(gameId)")
+        print("   → Cached \(dates.count) past dates for \(gameId)")
     }
     
     
@@ -538,9 +570,12 @@ struct MainMenuView: View {
 
         Button(action: {
             if canAccess {
+                //let _ = print("🔓 UNLOCKED: Date tapped: \(date), canAccess: \(canAccess), tier: \(subscriptionManager.currentTier)")
+                
                 launchArchivedGame(gameId: selectedArchiveGame, date: date)
             } else {
                 // Show upsell overlay
+                //let _ = print("🔒 LOCKED: Date tapped: \(date), canAccess: \(canAccess), tier: \(subscriptionManager.currentTier)")
                 showArchiveUpsell = true
             }
         }) {
@@ -576,8 +611,8 @@ struct MainMenuView: View {
                 Group {
                     if !canAccess {
                         Image(systemName: "lock.fill")
-                            .font(.system(size: 12))
-                            .foregroundColor(.white.opacity(0.6))
+                            .font(.system(size: 18))
+                            .foregroundColor(.white.opacity(0.8))
                     }
                 }
             )
@@ -592,7 +627,7 @@ struct MainMenuView: View {
                 Text("\(monthAbbrevFormatter.string(from: date)) \(day), \(year)\(isCompleted ? ", completed" : "")\(canAccess ? "" : ", requires subscription")")
             )
         }
-        .disabled(!canAccess) // This will help with accessibility
+        // Remove this line: .disabled(!canAccess)
     }
 
     private func launchArchivedGame(gameId: String, date: Date) {

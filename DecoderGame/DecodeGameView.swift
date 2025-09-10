@@ -575,7 +575,7 @@ struct CodeRevealOverlay: View {
         }
         .padding()
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color.black.opacity(0.9).ignoresSafeArea())
+        .background(Color.black.ignoresSafeArea())
         .contentShape(Rectangle()) // 👈 makes whole area tappable
         .onTapGesture {
             onContinue()

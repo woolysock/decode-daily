@@ -239,7 +239,7 @@ final class DailyWordsetManager: ObservableObject {
         
         print("🔍 Searching in \(allWordsets.count) bundled wordsets...")
         if let found = allWordsets.first(where: { $0.id == dateKey }) {
-            print("✅ Found wordset in bundled JSON for \(dateKey)")
+            print("✅ Found wordset in bundled JSON for \(dateKey): \(found.words)")
             return found
         }
 

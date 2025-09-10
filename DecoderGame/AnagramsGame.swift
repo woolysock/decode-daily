@@ -94,7 +94,7 @@ class AnagramsGame: GameProtocol, ObservableObject {
            print("🚀 AnagramsGame.startGame() called")
            isEndingGame = false  // Reset flag when starting new game
            
-           let gameDate = targetDate ?? Date()
+           let gameDate = targetDate ?? Calendar.current.startOfDay(for: Date())
            
            guard let todaysWordset = wordsetManager.getTodaysWordset(for: gameDate) else {
                print("❌ startGame(): No wordset available")
@@ -286,8 +286,8 @@ class AnagramsGame: GameProtocol, ObservableObject {
         userAnswer = ""
 
         // FIX: Use the same pattern as Flashdance
-        let gameDate = targetDate ?? Date()  // What date this counts for
-        let playDate = Date()                // When actually played
+        let gameDate = targetDate ?? Calendar.current.startOfDay(for: Date())  // What date this counts for
+        let playDate = Calendar.current.startOfDay(for: Date())// When actually played
 
         let anagramsProps = AnagramsAdditionalProperties(
             gameDuration: 60.0,
