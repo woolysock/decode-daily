@@ -329,7 +329,7 @@ struct CelebrationAnimationView: View {
                 let angle = Double(index) * 15.0 + rotationBonus // 24 rays, 15 degrees apart
                 
                 Capsule()
-                    .fill(index % 3 == 0 ? Color.myAccentColor1 : Color.mySunColor.opacity(0.7))
+                    .fill(index % 3 == 0 ? Color.myAccentColor1 : Color.myAccentColor2.opacity(0.7))
                     .frame(width: 10, height: showBurst ? 400 : 30) // Even longer rays
                     .offset(y: -(showBurst ? 200 : 15)) // Offset to center
                     .rotationEffect(.degrees(angle))
@@ -346,7 +346,7 @@ struct CelebrationAnimationView: View {
             }
         }
         .onAppear {
-            print("CelebrationAnimationView appeared - rays of light only!")
+            print("🎉 CelebrationAnimationView appeared - rays of light!")
             
             // Start the ray burst immediately
             burstOpacity = 1.0

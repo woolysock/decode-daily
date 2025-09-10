@@ -10,7 +10,7 @@ struct HowToPlayOverlay: View {
     var body: some View {
         ZStack {
             // Dimmed background
-            Color.black.opacity(0.6)
+            Color.black.opacity(0.8)
                 .edgesIgnoringSafeArea(.all)
                 .onTapGesture {
                     dismissOverlay()
@@ -62,7 +62,7 @@ struct HowToPlayOverlay: View {
                 RoundedRectangle(cornerRadius: 16)
                             .stroke(Color.white, lineWidth: 1)
             )
-            .background(Color.myOverlaysColor)
+            .background(Color.myNavy.opacity(0.8))
             .cornerRadius(16)
             .padding(30)
             .contentShape(Rectangle())

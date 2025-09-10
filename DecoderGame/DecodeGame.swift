@@ -54,8 +54,7 @@ class DecodeGame: ObservableObject, GameProtocol {
     let numCols = 5
     
     init(scoreManager: GameScoreManager, targetDate: Date? = nil) {
-        // Temporarily comment out ALL property assignments and see if this works
-       // print("🔍 TRACE: DecodeGame init - VERY FIRST LINE")
+        print("🔍 DecodeGame() init: targetDate: \(String(describing: targetDate))")
         
         self.targetDate = targetDate
         self.codeSetManager = DailyCodeSetManager.shared
@@ -76,8 +75,21 @@ class DecodeGame: ObservableObject, GameProtocol {
     func startGame() {
         print("🚀 DecodeGame.startGame() called")
         
+        
         let gameDate = targetDate ?? Calendar.current.startOfDay(for: Date())
-        gameOver = 0
+        
+        print("🎯 startGame(): DATE DEBUG:")
+        print("   - targetDate: \(String(describing: targetDate))")
+        print("   - Calendar.current.startOfDay(for: \(Date())): \(Calendar.current.startOfDay(for: Date()))")
+        print("   - and thus.... ")
+        print("   - gameDate: \(gameDate)")
+        print("   - gameDate with dayStringFormatter: \(DateFormatter.dayStringFormatter.string(from: gameDate))")
+        
+        // Debug: Check what the equation manager thinks about this date
+        print("🔍 Before calling getTodaysEquationSet:")
+        print("   - equationManager.currentEquationSet's date:")
+        print("   - \(String(describing: codeSetManager.currentCodeSet?.date))")
+        
         
         // Check if this date has already been played
         if scoreManager.isGameCompleted(gameId: "decode", date: gameDate) {
@@ -89,6 +101,8 @@ class DecodeGame: ObservableObject, GameProtocol {
         
         // Continue with normal game start
         willScoreCount = true
+        //showAlreadyPlayedOverlay = false
+        gameOver = 0
         startGameInternal()
     }
     
@@ -346,7 +360,9 @@ class DecodeGame: ObservableObject, GameProtocol {
         
         let timeElapsed = Date().timeIntervalSince(startTime)
         let attempts = currentTurn + 1
-        let todayDate = Calendar.current.startOfDay(for: Date())
+        //let todayDate = Calendar.current.startOfDay(for: Date())
+        let todayDate = Date()
+        
         let gameDate = targetDate ?? Calendar.current.startOfDay(for: Date()) // check if nil, and if so save today's Date instead
         
         let finalScore = GameScoreManager.calculateDecodeScore(

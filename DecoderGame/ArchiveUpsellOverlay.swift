@@ -5,7 +5,6 @@
 //  Created by Megan Donahue on 9/8/25.
 //
 
-
 // MARK: - ArchiveUpsellOverlay.swift
 import SwiftUI
 import StoreKit
@@ -26,9 +25,10 @@ struct ArchiveUpsellOverlay: View {
             VStack(spacing: 20) {
                 // Header
                 VStack(spacing: 8) {
-                    Image(systemName: "star.circle.fill")
+                    Image(systemName: "key.2.on.ring.fill")
                         .font(.system(size: 50))
-                        .foregroundColor(.yellow)
+                        .foregroundColor(Color.mySunColor)
+                        .padding(3)
                     
                     Text("Unlock More Dailies")
                         .font(.custom("LuloOne-Bold", size: 18))
@@ -45,9 +45,10 @@ struct ArchiveUpsellOverlay: View {
                         .foregroundColor(.white)
                         .multilineTextAlignment(.center)
                     
-                    Text("Always play the\nlast 3 days free.\nUpgrade for more!")
+                    // Dynamic free tier description
+                    Text("Always play today's daily games plus the past \(PaidTier.basicAccess.archiveDaysAllowed) days free.\n ★ \nOr, Upgrade for more!")
                         .font(.custom("LuloOne", size: 10))
-                        .foregroundColor(.white.opacity(0.8))
+                        .foregroundColor(.white.opacity(0.9))
                         .multilineTextAlignment(.center)
                         .padding(5)
                    
@@ -118,19 +119,19 @@ struct ArchiveUpsellOverlay: View {
                 }) {
                     Text("Maybe Later")
                         .font(.custom("LuloOne", size: 12))
-                        .foregroundColor(.white.opacity(0.6))
+                        .foregroundColor(.white.opacity(0.9))
                         .padding(.horizontal, 20)
                         .padding(.vertical, 8)
                         .background(Color.clear)
                         .overlay(
                             RoundedRectangle(cornerRadius: 8)
-                                .stroke(Color.white.opacity(0.3), lineWidth: 1)
+                                .stroke(Color.white.opacity(0.8), lineWidth: 1)
                         )
                 }
                 .padding(.top, 10)
             }
             .padding(30)
-            .background(Color.myAccentColor1)
+            .background(Color.myNavy)
             .cornerRadius(20)
             .padding(.horizontal, 40)
         }
@@ -150,11 +151,12 @@ struct ArchiveUpsellOverlay: View {
                     .foregroundColor(.white)
                 
                 if subscriptionManager.currentTier == .basicAccess {
-                    Text("Current")
+                    Text("Current Plan")
                         .font(.custom("LuloOne-Bold", size: 10))
                         .foregroundColor(Color.mySunColor)
                 }
-                Text("Last 3 days of games")
+                // Dynamic description for basic tier
+                Text("Last \(PaidTier.basicAccess.archiveDaysAllowed) days of games")
                     .font(.custom("LuloOne", size: 11))
                     .foregroundColor(.white.opacity(0.8))
             }
@@ -167,12 +169,12 @@ struct ArchiveUpsellOverlay: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
-        .background(Color.myAccentColor2.opacity(0.5))
+        .background(Color.myAccentColor2)
         .cornerRadius(12)
-        .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(Color.green.opacity(0.5), lineWidth: 1)
-        )
+//        .overlay(
+//            RoundedRectangle(cornerRadius: 12)
+//                .stroke(Color.white.opacity(0.5), lineWidth: 1)
+//        )
     }
     
     @ViewBuilder
@@ -181,7 +183,6 @@ struct ArchiveUpsellOverlay: View {
         let productTier = ProductID(rawValue: product.id)?.tier
         let description = tierDescription(for: productTier)
         
-        //let _ = print("productCard")
         Button(action: {
             if !isPurchased {
                 Task {
@@ -198,8 +199,8 @@ struct ArchiveUpsellOverlay: View {
                         .font(.custom("LuloOne-Bold", size: 14))
                         .foregroundColor(.white)
              
-                    if productTier == .basicAccess {
-                        Text("Current")
+                    if subscriptionManager.currentTier == productTier {
+                        Text("Current Plan")
                             .font(.custom("LuloOne-Bold", size: 10))
                             .foregroundColor(Color.mySunColor)
                     }
@@ -210,19 +211,25 @@ struct ArchiveUpsellOverlay: View {
                 
                 Spacer()
                 
-                if isPurchased {
-                    Text("✔︎")
-                        .font(.custom("LuloOne-Bold", size: 16))
-                        .foregroundColor(.green)
-                } else {
-                    Text(product.displayPrice)
-                        .font(.custom("LuloOne-Bold", size: 14))
-                        .foregroundColor(.white)
+                VStack(alignment: .trailing, spacing: 3) {
+                    if isPurchased {
+                        Text("✔︎")
+                            .font(.custom("LuloOne-Bold", size: 26))
+                            .foregroundColor(.green)
+                    } else {
+                        Text(product.displayPrice)
+                            .font(.custom("LuloOne-Bold", size: 14))
+                            .foregroundColor(.white)
+                        Text("/yr")
+                            .font(.custom("LuloOne", size: 6))
+                            .foregroundColor(.white)
+                    }
                 }
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
-            .background(isPurchased ? Color.myAccentColor2.opacity(0.5) : Color.myAccentColor2)
+            //.background(isPurchased ? Color.myAccentColor2 : Color.myAccentColor2.opacity(0.8))
+            .background(Color.myAccentColor2)
             .cornerRadius(12)
         }
         .buttonStyle(PlainButtonStyle())
@@ -230,10 +237,15 @@ struct ArchiveUpsellOverlay: View {
     }
     
     private func tierDescription(for tier: PaidTier?) -> String {
+        guard let tier = tier else { return "Unknown tier" }
+        
         switch tier {
-        case .premiumAccess: return "Unlimited play"
-        case .standardAccess: return "Last 7 days of games"
-        case .basicAccess, .none: return "Last 7 days of games"
+        case .premiumAccess:
+            return "Unlimited\nplay!"
+        case .standardAccess:
+            return "Last \(tier.archiveDaysAllowed) days of games"
+        case .basicAccess:
+            return "Last \(tier.archiveDaysAllowed) days of games"
         }
     }
 }

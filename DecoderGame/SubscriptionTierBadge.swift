@@ -12,7 +12,7 @@ struct SubscriptionTierBadge: View {
     let tier: PaidTier
     
     var body: some View {
-        HStack(spacing: 6) {
+        HStack(alignment: .lastTextBaseline, spacing: 6) {
             // Tier icon/symbol
             tierIcon
                 .font(.system(size: 12, weight: .bold))
@@ -20,11 +20,11 @@ struct SubscriptionTierBadge: View {
             
             // Tier name
             Text(tierDisplayName)
-                .font(.custom("LuloOne-Bold", size: 10))
+                .font(.custom("LuloOne-Bold", size: 11))
                 .foregroundColor(tierTextColor)
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 6)
+        .padding(.horizontal, 15)
+        .padding(.vertical, 10)
         .background(tierBackgroundView)
         .overlay(
             RoundedRectangle(cornerRadius: 12)
@@ -39,11 +39,11 @@ struct SubscriptionTierBadge: View {
     private var tierIcon: Image {
         switch tier {
         case .basicAccess:
-            return Image(systemName: "lock.trianglebadge.exclamationmark.fill")
+            return Image(systemName: "lock.fill")//"lock.trianglebadge.exclamationmark.fill")
         case .standardAccess:
-            return Image(systemName: "lock.badge.clock.fill")
+            return Image(systemName: "checkmark.seal.fill")//"lock.badge.clock.fill")
         case .premiumAccess:
-            return Image(systemName: "lock.open.fill")
+            return Image(systemName: "crown.fill")
         }
     }
     
@@ -54,13 +54,19 @@ struct SubscriptionTierBadge: View {
     private var tierBackgroundView: some View {
         switch tier {
         case .basicAccess:
-            return AnyView(Color.gray.opacity(0.2))
+            return AnyView(Color.myAccentColor2.opacity(0.2))
         case .standardAccess:
-            return AnyView(Color.mySunColor.opacity(0.9))
+            return AnyView(
+                LinearGradient(
+                    colors: [Color.myAccentColor1, Color.myAccentColor2],
+                    startPoint: .leading,
+                    endPoint: .trailing
+                )
+            )
         case .premiumAccess:
             return AnyView(
                 LinearGradient(
-                    colors: [Color.purple.opacity(0.8), Color.blue.opacity(0.8)],
+                    colors: [Color.purple.opacity(0.8), Color.myAccentColor1],
                     startPoint: .leading,
                     endPoint: .trailing
                 )
@@ -71,9 +77,9 @@ struct SubscriptionTierBadge: View {
     private var tierTextColor: Color {
         switch tier {
         case .basicAccess:
-            return .white.opacity(0.8)
+            return .white.opacity(0.9)
         case .standardAccess:
-            return .black
+            return .white
         case .premiumAccess:
             return .white
         }
@@ -84,7 +90,7 @@ struct SubscriptionTierBadge: View {
         case .basicAccess:
             return .white.opacity(0.3)
         case .standardAccess:
-            return Color.mySunColor
+            return .white.opacity(0.6)
         case .premiumAccess:
             return .white.opacity(0.6)
         }
@@ -95,7 +101,7 @@ struct SubscriptionTierBadge: View {
         case .basicAccess:
             return .clear
         case .standardAccess:
-            return Color.mySunColor.opacity(0.3)
+            return Color.myAccentColor2.opacity(0.3)
         case .premiumAccess:
             return .purple.opacity(0.3)
         }
@@ -129,9 +135,9 @@ struct SubscriptionTierSeal: View {
     private var sealIcon: Image {
         switch tier {
         case .basicAccess:
-            return Image(systemName: "lock.trianglebadge.exclamationmark.fill")
+            return Image(systemName: "lock.fill")
         case .standardAccess:
-            return Image(systemName: "lock.badge.clock.fill")
+            return Image(systemName: "hourglass")
         case .premiumAccess:
             return Image(systemName: "lock.open.fill")
         }
@@ -142,7 +148,12 @@ struct SubscriptionTierSeal: View {
         case .basicAccess:
             return AnyShapeStyle(Color.gray.opacity(0.6))
         case .standardAccess:
-            return AnyShapeStyle(Color.mySunColor)
+            return AnyShapeStyle(
+                LinearGradient(
+                    colors: [Color.mySunColor, Color.mySunColor.opacity(0.5)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            ))
         case .premiumAccess:
             return AnyShapeStyle(
                 LinearGradient(

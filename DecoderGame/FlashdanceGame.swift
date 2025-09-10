@@ -174,7 +174,8 @@ class FlashdanceGame: GameProtocol, ObservableObject {
         statusText = "Game over!"
         
         let gameDate = targetDate ?? Calendar.current.startOfDay(for: Date())
-        let playDate = Calendar.current.startOfDay(for: Date())
+        //let playDate = Calendar.current.startOfDay(for: Date())
+        let playDate = Date()
         
         scoreManager.saveFlashdanceScore(
             date: playDate,                      // when actually played

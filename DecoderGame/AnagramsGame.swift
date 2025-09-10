@@ -287,7 +287,8 @@ class AnagramsGame: GameProtocol, ObservableObject {
 
         // FIX: Use the same pattern as Flashdance
         let gameDate = targetDate ?? Calendar.current.startOfDay(for: Date())  // What date this counts for
-        let playDate = Calendar.current.startOfDay(for: Date())// When actually played
+        //let playDate = Calendar.current.startOfDay(for: Date())// When actually played
+        let playDate = Date()
 
         let anagramsProps = AnagramsAdditionalProperties(
             gameDuration: 60.0,

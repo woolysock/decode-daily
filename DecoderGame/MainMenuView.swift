@@ -7,26 +7,12 @@
 
 import SwiftUI
 
-extension Color {
-//    static let myAccentColor1 = Color(red:88/255,green:93/255,blue:123/255)
-//    static let myAccentColor2 = Color(red:49/255,green:52/255,blue:66/255)
-    static let myAccentColor1 = Color(red:36/255,green:76/255,blue:141/255)
-    
-    //static let myAccentColor2 = Color(red:58/255,green:108/255,blue:190/255)
-    static let myAccentColor2 = Color(red:87/255,green:152/255,blue:212/255)
-    //static let myAccentColor2 = Color(red:98/255,green:136/255,blue:199/255)
-    
-    static let mySunColor = Color(red:246/255,green:211/255,blue:71/255)
-    static let myOverlaysColor = Color(red:61/255,green:81/255,blue:116/255)
-}
-
 struct MainMenuView: View {
     
     @EnvironmentObject var scoreManager: GameScoreManager
     @EnvironmentObject var gameCoordinator: GameCoordinator
     @StateObject private var subscriptionManager = SubscriptionManager.shared
     @State private var showArchiveUpsell = false
-
     
     let screenHeight = UIScreen.main.bounds.height
     let screenWidth = UIScreen.main.bounds.width
@@ -41,23 +27,15 @@ struct MainMenuView: View {
     @State private var settingsTilt: (x: Double, y: Double) = (0, 0)
     @State private var settingsPressed: Bool = false
     @State private var navigateToGame: String? = nil
-    @State private var navigateToArchivedGame: (gameId: String, date: Date)? = nil
     
     // State for page tracking
     @State private var currentPage: Int
-    @State private var selectedArchiveGame: String = "decode"
-    
-    //@State private var hasUserSwiped: Bool = false
     @State private var hasUserSwiped: Bool = UserDefaults.standard.bool(forKey: "hasSeenSwipeInstruction")
     
     //For Archives
     @State private var selectedArchiveDate: Date?
-   // @State private var navigateToArchivedGame = false
-
-    
-    // CACHE AVAILABLE DATES TO PREVENT FREQUENT CALLS
-    @State private var cachedAvailableDates: [String: [Date]] = [:]
-    @State private var hasLoadedInitialDates = false
+    @State private var selectedArchiveGame: String = "decode"
+    @State private var navigateToArchivedGame: (gameId: String, date: Date)? = nil
 
     init(initialPage: Int = 0, selectedGame: String = "decode") {
             _currentPage = State(initialValue: initialPage)
@@ -90,27 +68,42 @@ struct MainMenuView: View {
     var body: some View {
         NavigationStack {
             ZStack {
+                Color.black.ignoresSafeArea()
+                
                 // Main content layer
                 VStack(spacing: 0) {
-                    // Top swipe top nav bar w/ sub tier badging
+                    // Top swipe top nav bar w/ paid tier badging
                     
-                    Spacer().frame(height: 10)
+                    Spacer().frame(height: 5)
                     
                     // Subscription tier badge - positioned above date
                     HStack {
+                        // Today's Date
+                        Text(DateFormatter.day2Formatter.string(from: today))
+                            .font(.custom("LuloOne-Bold", size: 12))
+                            .foregroundColor(Color.myAccentColor1)
+                            .padding(20)
+                        
                         Spacer()
-                        SubscriptionTierSeal(tier: subscriptionManager.currentTier)
-                        //SubscriptionTierBadge(tier: subscriptionManager.currentTier)
-                        Spacer().frame(width:10)
+                        //SubscriptionTierSeal(tier: subscriptionManager.currentTier)
+                        
+                        Button(action: {
+                            //if subscriptionManager.currentTier != .premium {
+                                showArchiveUpsell = true//}
+                            let _ = print("🛒 subscriptionManager.currentTier: \(subscriptionManager.currentTier)")
+                        }) {
+                            SubscriptionTierBadge(tier: subscriptionManager.currentTier)
+                        }
                     }
                     .padding(.bottom, 10)
-                    
-                    // Today's Date
-                    Text(DateFormatter.day2Formatter.string(from: today))
-                        .font(.custom("LuloOne-Bold", size: 14))
-                        .foregroundColor(Color.myAccentColor2)
-                        .padding(20)
-                    
+                    .padding(.horizontal, 50)
+                    .overlay(
+                        Rectangle()
+                            .frame(height: 0.5)
+                            .foregroundColor(.white),
+                        alignment: .bottom
+                    )
+                                        
                     TabView(selection: $currentPage) {
                         mainMenuPage.tag(0)
                         archivesPage.tag(1)
@@ -134,7 +127,7 @@ struct MainMenuView: View {
                         }
                     }
                     .onAppear {
-                        loadAllAvailableDates()
+                        //loadAllAvailableDates()
                     }
                     .onChange(of: currentPage) {
                         // Hide the swipe instruction once user has swiped away from main page
@@ -146,6 +139,7 @@ struct MainMenuView: View {
                     
                     // Bottom swipe nav bar
                     HStack(alignment: .center) {
+                                                
                         Spacer()
                         ForEach([0, 1, 2], id: \.self) { pageIndex in
                             Image(systemName: currentPage == pageIndex ? "smallcircle.filled.circle.fill" : "smallcircle.filled.circle")
@@ -157,11 +151,12 @@ struct MainMenuView: View {
                         Spacer()
                     }
                     .frame(height: 55)
-                    .background(.black)
+                    .background(LinearGradient.bottomSwipeBarGradient)
+                    
                     Spacer().frame(height: 20)
                 }
                 .zIndex(0) // Main content at base layer
-                .background(.black)
+                .background(.clear) //top nav bar color?
                 .ignoresSafeArea(.all, edges: .bottom)
                 
                 // Overlay layer - appears on top of everything
@@ -171,6 +166,7 @@ struct MainMenuView: View {
                         .zIndex(1) // Overlay on top
                 }
             }
+            .navigationBarBackButtonHidden(true)
         }
         .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("NavigateToArchive"))) { notification in
             if let userInfo = notification.userInfo,
@@ -187,13 +183,14 @@ struct MainMenuView: View {
     @ViewBuilder
     private var mainMenuPage: some View {
         ZStack {
-            Color.black.ignoresSafeArea()
+            //Color.black.ignoresSafeArea()
+            LinearGradient.mainmenuViewGradient.ignoresSafeArea()
             
             GeometryReader { geo in
                 VStack(spacing: 20) {
                     
                     Spacer()
-                        .frame(height: 10)
+                        .frame(height: 50)
                     
                     //game title header
                     VStack (spacing: 5){
@@ -252,11 +249,12 @@ struct MainMenuView: View {
     @ViewBuilder
     private var accountPage: some View {
         ZStack {
-            Color.black.ignoresSafeArea()
+            //Color.black.ignoresSafeArea()
+            LinearGradient.statsViewGradient.ignoresSafeArea()
             
             VStack(spacing: 20) {
                 Spacer()
-                    .frame(height: 20)
+                    .frame(height: 30)
                 
                 // Title for the second page
                 VStack(spacing: 10) {
@@ -289,6 +287,9 @@ struct MainMenuView: View {
                         subtitle: "this week",
                         icon: "calendar"
                     )
+                    
+                    Spacer()
+                        .frame(height:5)
                     
                     Text("High Scores")
                         .font(.custom("LuloOne", size: 12))
@@ -337,16 +338,17 @@ struct MainMenuView: View {
     @ViewBuilder
     private var archivesPage: some View {
         ZStack {
-            Color.black.ignoresSafeArea()
+            //Color.black.ignoresSafeArea()
+            LinearGradient.archivesViewGradient.ignoresSafeArea()
             
             VStack() {
                 
                 Spacer()
-                    .frame(height: 40)
+                    .frame(height: 50)
                         
                 // Title for Archives page
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("DAILY ARCHIVES")
+                    Text("DAILY ARCHIVE")
                         .font(.custom("LuloOne-Bold", size: 40))
                         .foregroundColor(.white)
                         .multilineTextAlignment(.leading)
@@ -355,7 +357,7 @@ struct MainMenuView: View {
                         .foregroundColor(.white)
                         .multilineTextAlignment(.leading)
                     //Spacer().frame(height:1)
-                    Text("● Tap the buttons to switch games.\n● Scroll to view past dates.")
+                    Text("Can you play them all?")
                         .font(.custom("LuloOne", size: 10))
                         .foregroundColor(.white)
                         .multilineTextAlignment(.leading)
@@ -363,21 +365,21 @@ struct MainMenuView: View {
                 .padding(.horizontal, 40)
                 
                 Spacer()
-                    .frame(height:15)
+                    .frame(height:25)
                 
-                Divider().background(.white)
+                //Divider().background(.white)
                                 
                 // Game Selector
                 HStack(spacing: 10) {
                     Button(action: {
                         selectedArchiveGame = "decode"
                         // Load dates for new selection if not cached
-                        loadAvailableDatesIfNeeded(for: "decode")
+                       // loadAvailableDatesIfNeeded(for: "decode")
                     }) {
                         Text("Decode")
-                            .font(.custom("LuloOne-Bold", size: 12))
+                            .font(.custom("LuloOne-Bold", size: 11))
                             .foregroundColor(selectedArchiveGame == "decode" ? .black : .white)
-                            .padding(.horizontal, 25)
+                            .padding(.horizontal, 18)
                             .padding(.vertical, 15)
                             .background(selectedArchiveGame == "decode" ? Color.white : Color.clear)
                             .overlay(
@@ -390,12 +392,12 @@ struct MainMenuView: View {
                     Button(action: {
                         selectedArchiveGame = "flashdance"
                         // Load dates for new selection if not cached
-                        loadAvailableDatesIfNeeded(for: "flashdance")
+                      //  loadAvailableDatesIfNeeded(for: "flashdance")
                     }) {
                         Text("Flash\ndance")
-                            .font(.custom("LuloOne-Bold", size: 12))
+                            .font(.custom("LuloOne-Bold", size: 11))
                             .foregroundColor(selectedArchiveGame == "flashdance" ? .black : .white)
-                            .padding(.horizontal, 25)
+                            .padding(.horizontal, 18)
                             .padding(.vertical, 10)
                             .background(selectedArchiveGame == "flashdance" ? Color.white : Color.clear)
                             .overlay(
@@ -408,12 +410,12 @@ struct MainMenuView: View {
                     Button(action: {
                         selectedArchiveGame = "anagrams"
                         // Load dates for new selection if not cached
-                        loadAvailableDatesIfNeeded(for: "anagrams")
+                      //  loadAvailableDatesIfNeeded(for: "anagrams")
                     }) {
                         Text("'Grams")
-                            .font(.custom("LuloOne-Bold", size: 12))
+                            .font(.custom("LuloOne-Bold", size: 11))
                             .foregroundColor(selectedArchiveGame == "anagrams" ? .black : .white)
-                            .padding(.horizontal, 25)
+                            .padding(.horizontal, 18)
                             .padding(.vertical, 15)
                             .background(selectedArchiveGame == "anagrams" ? Color.white : Color.clear)
                             .overlay(
@@ -444,105 +446,101 @@ struct MainMenuView: View {
         }
         .onAppear {
             // Load dates for the current selection when archives page appears
-            loadAvailableDatesIfNeeded(for: selectedArchiveGame)
+          //  loadAvailableDatesIfNeeded(for: selectedArchiveGame)
         }
     }
 
     // MARK: - Date Loading Functions
     
-    // Load all available dates once when the app starts
-    private func loadAllAvailableDates() {
-        guard !hasLoadedInitialDates else { return }
-        
-        print("... 🗘 MainMenuView: loadAllAvailableDates(): Loading all dates for all games (one-time initialization):")
-        
-        // Load dates for all available games
-        loadAvailableDatesForGame("decode")
-        loadAvailableDatesForGame("flashdance")
-        loadAvailableDatesForGame("anagrams")
-        
-        
-        hasLoadedInitialDates = true
-        print("✅ Finished loading, sorting & filtering all available dates.")
-    }
+//    // Load all available dates once when the app starts
+//    private func loadAllAvailableDates() {
+//        guard !hasLoadedInitialDates else { return }
+//        
+//        print("... 🗘 MainMenuView: loadAllAvailableDates():")
+//        // Load dates for all available games
+//        loadAvailableDatesForGame("decode")
+//        loadAvailableDatesForGame("flashdance")
+//        loadAvailableDatesForGame("anagrams")
+//        
+//        
+//        hasLoadedInitialDates = true
+//        print("✅ Finished loading, sorting & filtering all available dates.")
+//    }
     
-    // Load dates for a specific game only if not already cached
-    private func loadAvailableDatesIfNeeded(for gameId: String) {
-        guard cachedAvailableDates[gameId] == nil else {
-            //print("📋 Using cached dates for \(gameId) (\(cachedAvailableDates[gameId]?.count ?? 0) dates)")
-            return
-        }
-        
-        loadAvailableDatesForGame(gameId)
-    }
-    
-    // Actually load the dates for a game and cache them
-    private func loadAvailableDatesForGame(_ gameId: String) {
-        //print("🔍 Loading available dates for gameId: \(gameId)")
-        let today = Calendar.current.startOfDay(for: Date())
-        print("   → Today (startOfDay): \(today)")
-        
-        var dates: [Date] = []
-
-        switch gameId {
-        case "decode":
-            dates = gameCoordinator.dailyCodeSetManager.getAvailableDates()
-            print("   → Loaded \(dates.count) days of data for decode")
-        case "flashdance":
-            dates = gameCoordinator.dailyEquationManager.getAvailableDates()
-            print("   → Loaded \(dates.count)  days of data for flashdance")
-        case "anagrams":
-            dates = gameCoordinator.dailyWordsetManager.getAvailableDates()
-            print("   → Loaded \(dates.count)  days of data for anagrams")
-        default:
-            print("   → Unknown gameId: \(gameId)")
-            break
-        }
-
-        // Log the first few raw dates before processing
-//        print("   → First 3 raw dates:")
-//        for (_, _) in dates.prefix(1).enumerated() {
-//            print("     [\(index)]: \(dates)") // -> \(dates.isoDayString)")
+////    // Load dates for a specific game only if not already cached
+////    private func loadAvailableDatesIfNeeded(for gameId: String) {
+////        guard cachedAvailableDates[gameId] == nil else {
+////            //print("📋 Using cached dates for \(gameId) (\(cachedAvailableDates[gameId]?.count ?? 0) dates)")
+////            return
+////        }
+////        
+////        loadAvailableDatesForGame(gameId)
+////    }
+////    
+//    // Actually load the dates for a game and cache them
+//    private func loadAvailableDatesForGame(_ gameId: String) {
+//        //print("🔍 Loading available dates for gameId: \(gameId)")
+//        let today = Calendar.current.startOfDay(for: Date())
+//        print("   → Today (startOfDay): \(today)")
+//        
+//        var dates: [Date] = []
+//
+//        switch gameId {
+//        case "decode":
+//            dates = gameCoordinator.dailyCodeSetManager.getAvailableDates()
+//            print("   → Loaded \(dates.count) days of data for decode")
+//        case "flashdance":
+//            dates = gameCoordinator.dailyEquationManager.getAvailableDates()
+//            print("   → Loaded \(dates.count)  days of data for flashdance")
+//        case "anagrams":
+//            dates = gameCoordinator.dailyWordsetManager.getAvailableDates()
+//            print("   → Loaded \(dates.count)  days of data for anagrams")
+//        default:
+//            print("   → Unknown gameId: \(gameId)")
+//            break
 //        }
-
-        // Convert UTC dates to local timezone dates
-        let localCalendar = Calendar.current
-        dates = dates.compactMap { utcDate in
-            // Extract date components from the UTC date
-            var utcCalendar = Calendar(identifier: .gregorian)
-            utcCalendar.timeZone = TimeZone(abbreviation: "UTC")!
-            
-            let components = utcCalendar.dateComponents([.year, .month, .day], from: utcDate)
-            
-            // Create a new date using local timezone
-            return localCalendar.date(from: components)
-        }
-
-        // Log the converted dates
-        //print("   → First 5 converted local dates:")
-        //for (_, _) in dates.prefix(5).enumerated() {
-            //print("     [\(index)]: \(date) -> \(DateFormatter.debugFormatter.string(from: date))")
-        //}
-
-        // Filter out today and future dates, then sort
-        dates = dates.filter { $0 < today }.sorted(by: >)
-        
-        // Log the first few filtered dates
-//        print("  →→→ Date Sample after sorting, filtering:")
-//        for (index, date) in dates.prefix(1).enumerated() {
-//            print("  →→→ [\(index)]: \(date) -> \(date.isoDayString)")
+//
+//        // Log the first few raw dates before processing
+////        print("   → First 3 raw dates:")
+////        for (_, _) in dates.prefix(1).enumerated() {
+////            print("     [\(index)]: \(dates)") // -> \(dates.isoDayString)")
+////        }
+//
+//        // Convert UTC dates to local timezone dates
+//        let localCalendar = Calendar.current
+//        dates = dates.compactMap { utcDate in
+//            // Extract date components from the UTC date
+//            var utcCalendar = Calendar(identifier: .gregorian)
+//            utcCalendar.timeZone = TimeZone(abbreviation: "UTC")!
+//            
+//            let components = utcCalendar.dateComponents([.year, .month, .day], from: utcDate)
+//            
+//            // Create a new date using local timezone
+//            return localCalendar.date(from: components)
 //        }
-        
-        // Cache the results
-        cachedAvailableDates[gameId] = dates
-        print("   → Cached \(dates.count) past dates for \(gameId)")
-    }
-    
-    
-    // Get cached dates for a game (returns empty array if not cached)
-    private func getCachedAvailableDates(for gameId: String) -> [Date] {
-        return cachedAvailableDates[gameId] ?? []
-    }
+//
+//        // Log the converted dates
+//        //print("   → First 5 converted local dates:")
+//        //for (_, _) in dates.prefix(5).enumerated() {
+//            //print("     [\(index)]: \(date) -> \(DateFormatter.debugFormatter.string(from: date))")
+//        //}
+//
+//        // Filter out today and future dates, then sort
+//        dates = dates.filter { $0 < today }.sorted(by: >)
+//        
+//        // Log the first few filtered dates
+////        print("  →→→ Date Sample after sorting, filtering:")
+////        for (index, date) in dates.prefix(1).enumerated() {
+////            print("  →→→ [\(index)]: \(date) -> \(date.isoDayString)")
+////        }
+//        
+//        // Cache the results
+//        cachedAvailableDates[gameId] = dates
+//        print("   → Cached \(dates.count) past dates for \(gameId)")
+//    }
+//    
+//    
+//   
     
     
     
@@ -559,7 +557,7 @@ struct MainMenuView: View {
         let backgroundColor = monthYearId % 2 == 0 ? Color.myAccentColor1 : Color.myAccentColor2
 
         // Show the month label only on the 1st of the month
-        let showMonth = (day == 1)
+        //let showMonth = (day == 1)
         let monthAbbrev = monthAbbrevFormatter.string(from: date).uppercased()
         
         // Check if this game is completed using scoreManager
@@ -579,12 +577,12 @@ struct MainMenuView: View {
                 showArchiveUpsell = true
             }
         }) {
-            VStack(spacing: showMonth ? 2 : 0) {
+            VStack(spacing: 2) {
                 Text("\(day)")
                     .font(.custom("LuloOne-Bold", size: 16))
                     .foregroundColor(canAccess ? .white : .white.opacity(0.4))
 
-                if showMonth {
+                if canAccess {
                     Text(monthAbbrev)
                         .font(.custom("LuloOne-Bold", size: 8))
                         .foregroundColor(canAccess ? .white.opacity(0.85) : .white.opacity(0.3))
@@ -593,7 +591,7 @@ struct MainMenuView: View {
                 }
             }
             .frame(width: 50, height: 50)
-            .background(canAccess ? backgroundColor : backgroundColor.opacity(0.3))
+            .background(canAccess ? backgroundColor : backgroundColor.opacity(0.4))
             .cornerRadius(8)
             .overlay(
                 // Checkmark overlay for completed games (only if accessible)
@@ -612,7 +610,7 @@ struct MainMenuView: View {
                     if !canAccess {
                         Image(systemName: "lock.fill")
                             .font(.system(size: 18))
-                            .foregroundColor(.white.opacity(0.8))
+                            .foregroundColor(.white.opacity(0.9))
                     }
                 }
             )
@@ -627,12 +625,15 @@ struct MainMenuView: View {
                 Text("\(monthAbbrevFormatter.string(from: date)) \(day), \(year)\(isCompleted ? ", completed" : "")\(canAccess ? "" : ", requires subscription")")
             )
         }
-        // Remove this line: .disabled(!canAccess)
     }
 
     private func launchArchivedGame(gameId: String, date: Date) {
         print("🏁 launchArchivedGame(): Launch \(gameId) for date: \(date)")
-        navigateToArchivedGame = (gameId: gameId, date: date)
+        navigateToArchivedGame = nil
+        // Set new navigation after a brief delay
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                navigateToArchivedGame = (gameId: gameId, date: date)
+            }
     }
     
     
@@ -642,7 +643,7 @@ struct MainMenuView: View {
         HStack(spacing: 15) {
             Image(systemName: icon)
                 .font(.system(size: 20))
-                .foregroundColor(Color.myAccentColor2)
+                .foregroundColor(Color.myAccentColor1)
                 .frame(width: 30)
             
             VStack(alignment: .leading, spacing: 2) {
@@ -687,6 +688,7 @@ struct MainMenuView: View {
                     Text(gameName)
                         .font(.custom("LuloOne-Bold", size: 12))
                         .foregroundColor(.white)
+                        .lineLimit(1)
                     
                     if gamesPlayed > 0 {
                         Text("\(gamesPlayed) game\(gamesPlayed == 1 ? "" : "s")")
@@ -704,7 +706,7 @@ struct MainMenuView: View {
                 // Highest score & date achieved
                 VStack(alignment: .trailing, spacing: 2) {
                     Text(gamesPlayed > 0 ? "\(highScore)" : "—")
-                        .font(.custom("LuloOne-Bold", size: 18))
+                        .font(.custom("LuloOne-Bold", size: 16))
                         .foregroundColor(gamesPlayed > 0 ? .white : .white.opacity(0.4))
                     
                     if gamesPlayed > 0, let score = highestScore {
@@ -987,6 +989,8 @@ struct MainMenuView: View {
     
     @ViewBuilder
     private func archivedGameDestination(for gameId: String, date: Date) -> some View {
+        let _ = print("📍 archivedGameDestination(): \(gameId) - \(date)")
+        
         switch gameId {
         case "flashdance":
             FlashdanceGameView(targetDate: date)
@@ -1001,6 +1005,7 @@ struct MainMenuView: View {
         case "decode":
             DecodeGameView(targetDate: date)
                 .environmentObject(scoreManager)
+                .id("decode-\(date.timeIntervalSince1970)") // ← Add this line
                 .onAppear { gameCoordinator.setActiveGame("decode") }
                 .onDisappear { gameCoordinator.clearActiveGame() }
         default:
@@ -1008,6 +1013,17 @@ struct MainMenuView: View {
             EmptyView()
         }
     }
+    
+    private func getCachedAvailableDates(for gameId: String) -> [Date] {
+        return gameCoordinator.getAvailableDates(for: gameId)
+    }
+    
+    //OLD
+//    // Get cached dates for a game (returns empty array if not cached)
+//    private func getCachedAvailableDates(for gameId: String) -> [Date] {
+//        return cachedAvailableDates[gameId] ?? []
+//    }
+    
     
 }
 

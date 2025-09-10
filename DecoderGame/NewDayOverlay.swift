@@ -31,7 +31,7 @@ struct NewDayOverlay: View {
                         .font(.custom("LuloOne-Bold", size: 28))
                         .foregroundColor(.white)
                     
-                    Text("A new batch of daily games awaits.")
+                    Text("Fresh daily games await.")
                         .font(.custom("LuloOne", size: 16))
                         .foregroundColor(.white.opacity(0.8))
                         .multilineTextAlignment(.center)

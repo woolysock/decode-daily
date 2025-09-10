@@ -53,9 +53,11 @@ struct ContentView: View {
 struct LoadingView: View {
     var body: some View {
         ZStack {
-            Color.black.ignoresSafeArea()
+            //Color.black.ignoresSafeArea()
+            LinearGradient.mainmenuViewGradient.ignoresSafeArea()
+            
             ZStack {
-                Color.black.ignoresSafeArea()
+                //Color.black.ignoresSafeArea()
                 Image("TitleLoader-w")
                     .resizable()
                     .scaledToFit()

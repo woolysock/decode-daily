@@ -43,7 +43,7 @@ struct AlreadyPlayedOverlay: View {
                     
                     Spacer().frame(height:2)
                     
-                    Text("You've already seen\nthe code for")
+                    Text("You've played\nthe code for")
                         .font(.custom("LuloOne", size: 16))
                         .foregroundColor(.white.opacity(0.8))
                         .multilineTextAlignment(.center)
@@ -64,7 +64,7 @@ struct AlreadyPlayedOverlay: View {
                 // Options
                 VStack(spacing: 15) {
                     
-                    Text("Replay the same code?\n(Only first scores are saved)")
+                    Text("Replay the code?\n(Future scores aren't saved)")
                         .font(.custom("LuloOne", size: 12))
                         .foregroundColor(.white)
                         .multilineTextAlignment(.center)
@@ -82,36 +82,36 @@ struct AlreadyPlayedOverlay: View {
                     }
                     .padding(5)
                     
-                    Button(action: {
-                        onPlayRandom()
-                        isVisible = false
-                    }) {
-                        Text("Pratice!")
-                            .font(.custom("LuloOne-Bold", size: 16))
-                            .foregroundColor(.white)
-                            .frame(width: 250, height: 40)
-                            .background(Color.mySunColor.opacity(0.9))
-                            .contentShape(Rectangle())
-                            .cornerRadius(8)
-                    }
-                    
-                    Text("Practice rounds generate random color codes and\nare not scored.")
-                        .font(.custom("LuloOne", size: 12))
-                        .foregroundColor(.white)
-                        .multilineTextAlignment(.center)
-                    
+//                    Button(action: {
+//                        onPlayRandom()
+//                        isVisible = false
+//                    }) {
+//                        Text("Pratice!")
+//                            .font(.custom("LuloOne-Bold", size: 16))
+//                            .foregroundColor(.white)
+//                            .frame(width: 250, height: 40)
+//                            .background(Color.mySunColor.opacity(0.9))
+//                            .contentShape(Rectangle())
+//                            .cornerRadius(8)
+//                    }
+//                    
+//                    Text("Practice rounds generate random color codes and\nare not scored.")
+//                        .font(.custom("LuloOne", size: 12))
+//                        .foregroundColor(.white)
+//                        .multilineTextAlignment(.center)
+//                    
                     
                     Divider()
                         .background(.white)
                         .padding(.horizontal, 30)
                     
-                    Text("You can also play codes from the Archive & keep earning high scores!")
+                    Text("★ Or you can play past daily codes from the Archive to keep earning high scores! ★")
                         .font(.custom("LuloOne", size: 12))
                         .foregroundColor(.white)
                         .multilineTextAlignment(.center)
                     
                     NavigationLink(destination: MainMenuView(initialPage: 1, selectedGame: "decode")) {
-                        Text("EXIT & PICK NEW DATE")
+                        Text("PICK NEW DATE")
                             .font(.custom("LuloOne-Bold", size: 14))
                             .foregroundColor(.white)
                             .frame(width: 250, height: 40)
@@ -123,7 +123,7 @@ struct AlreadyPlayedOverlay: View {
                 }
             }
             .padding(30)
-            .background(Color.myOverlaysColor)
+            .background(Color.myNavy)
             .cornerRadius(15)
             .overlay(
                 RoundedRectangle(cornerRadius: 15)

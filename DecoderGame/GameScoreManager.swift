@@ -179,8 +179,18 @@ class GameScoreManager: ObservableObject {
             self.allScores.append(score)
             self.saveToUserDefaults()
 
-            // Use archiveDate if available, else fallback to score.date
+            
+            
+            print("saveScore(): score.date = \(score.date)")
+            print("saveScore(): score.archiveDate = \(String(describing: score.archiveDate))")
+            print("saveScore(): Date() = \(Date())")
+            print("saveScore(): Date() formatted = \(DateFormatter.scorePlayedDisplayFormatter.string(from: Date()))")
+            
+            //let markDate = score.archiveDate ?? score.date
             let markDate = score.archiveDate ?? score.date
+            
+            print("saveScore(): markDate = \(markDate)")
+            
             self.markGameCompleted(gameId: score.gameId, date: markDate)
 
             print("✅ Score saved on main thread! score.date = \(score.date)")

@@ -27,6 +27,9 @@ struct SettingsView: View {
     
     var body: some View {
         ZStack {
+            
+            Color.white.ignoresSafeArea()
+            
             // Main content
             mainContent
             
@@ -121,7 +124,7 @@ struct SettingsView: View {
                 }
                 
                 // Data Management Section
-                settingsSection(title: "Data Management") {
+                settingsSection(title: "High Scores Data") {
                     eraseScoresCard
                     clearCompletionSection
                 }
@@ -257,24 +260,24 @@ struct SettingsView: View {
     private var clearCompletionSection: some View {
         VStack(spacing: 8) {
             // Section header
-//            HStack {
-//                Text("Clear Game Completion")
-//                    .font(.custom("LuloOne-Bold", size: 12))
-//                    .foregroundColor(.gray)
-//                Spacer()
-//            }
-//            .padding(.horizontal, 4)
-//            
-//            // Clear all button
-//            clearButton(
-//                title: "Clear All Games",
-//                subtitle: "Reset completion for all games",
-//                icon: "arrow.clockwise.circle",
-//                action: "all"
-//            )
-//            
-//            // Individual game clear buttons
-//            VStack(spacing: 6) {
+            HStack {
+                Text("Clear Game Completion")
+                    .font(.custom("LuloOne-Bold", size: 12))
+                    .foregroundColor(.gray)
+                Spacer()
+            }
+            .padding(.horizontal, 4)
+            
+            // Clear all button
+            clearButton(
+                title: "Clear All Games",
+                subtitle: "Reset completion for all games",
+                icon: "arrow.clockwise.circle",
+                action: "all"
+            )
+            
+            // Individual game clear buttons
+            VStack(spacing: 6) {
 //                clearButton(
 //                    title: "Clear Decode",
 //                    subtitle: "Reset Decode completion status",
@@ -295,14 +298,14 @@ struct SettingsView: View {
 //                    icon: "textformat",
 //                    action: "anagrams"
 //                )
-//                
-//                clearButton(
-//                    title: "Clear Today's Games",
-//                    subtitle: "Reset today's completion status",
-//                    icon: "calendar.circle",
-//                    action: "today"
-//                )
-//            }
+                
+                clearButton(
+                    title: "Clear Today's Games",
+                    subtitle: "Reset today's completion status",
+                    icon: "calendar.circle",
+                    action: "today"
+                )
+            }
         }
     }
     

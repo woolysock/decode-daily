@@ -10,7 +10,7 @@ import Foundation
 
 enum PaidTier: Int, CaseIterable {
     case premiumAccess = 0     // Full access to all archives - PAID
-    case standardAccess = 1      // Last 7 days only - PAID
+    case standardAccess = 1      // Last "n" days only - PAID
     case basicAccess = 2      // No archive access - FREE (fallback)
     
     
@@ -18,14 +18,14 @@ enum PaidTier: Int, CaseIterable {
         switch self {
         case .premiumAccess: return "Premium"
         case .standardAccess: return "Standard"
-        case .basicAccess: return "Free"
+        case .basicAccess: return "Basic"
         }
     }
     
     var archiveDaysAllowed: Int {
         switch self {
         case .premiumAccess: return Int.max
-        case .standardAccess: return 7
+        case .standardAccess: return 14
         case .basicAccess: return 3
         }
     }

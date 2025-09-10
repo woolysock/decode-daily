@@ -39,27 +39,26 @@ struct DecodeGameView: View {
     
     // Initialize with proper dependency injection
     init(targetDate: Date? = nil) {
-        //print("🔍 TRACE: DecodeGameView init() - targetDate: \(String(describing: targetDate))")
+        print("🔍 TRACE: DecodeGameView init() - targetDate: \(String(describing: targetDate))")
         
         self.targetDate = targetDate
         
         //print("🔍 TRACE: About to create StateObject with closure...")
         self._game = StateObject(wrappedValue: {
             //print("🔍 TRACE: Inside StateObject closure, creating DecodeGame...")
-            
             //print("🔍 TRACE: About to access GameScoreManager.shared")
             let scoreManager = GameScoreManager.shared
-            //print("🔍 TRACE: GameScoreManager.shared accessed successfully: \(type(of: scoreManager))")
-            
+            print("🔍 DecodeGameView(): GameScoreManager.shared: \(type(of: scoreManager))")
+
             //print("🔍 TRACE: About to call DecodeGame init")
             let game = DecodeGame(scoreManager: scoreManager, targetDate: targetDate)
-            //print("🔍 TRACE: DecodeGame created in closure successfully")
             
             //self.onNavigateToArchive = onNavigateToArchive
             return game
         }())
         
-        //print("🔍 TRACE: DecodeGameView init completed")
+        print("🔍 DecodeGameView init completed.")
+        
     }
     
     var body: some View {
@@ -73,26 +72,6 @@ struct DecodeGameView: View {
                     Text("Loading...")
                         .foregroundColor(.white)
                         .font(.custom("LuloOne", size: 20))
-                }
-                .onAppear {
-                    //let _ = print("🔍 TRACE: Loading state - triggering game start")
-                    // Inject the real scoreManager into the game
-                    game.scoreManager = scoreManager
-                    
-                    // Check if user has seen How-to-Play before
-                    let key = "hasSeenHowToPlay_decode"
-                    let hasSeenBefore = UserDefaults.standard.bool(forKey: key)
-                    
-                    if !hasSeenBefore && isFirstLaunch {
-                        // Start game without animation, then show how-to-play
-                        game.startGameWithoutAnimation()
-                        showHowToPlay = true
-                        shouldAnimateAfterHowToPlay = true // Flag that we need to animate after dialog
-                    } else {
-                        // Normal start with animation
-                        game.startGame()
-                    }
-                    isFirstLaunch = false
                 }
             } else {
                 // Main game content - only shown when game is properly initialized
@@ -333,10 +312,22 @@ struct DecodeGameView: View {
                     Spacer()
                 }
                 .onChange(of: showHowToPlay, initial: false) { oldValue, newValue in
-                    // Only animate if this was the initial how-to-play for a first-time user
-                    if oldValue && !newValue && shouldAnimateAfterHowToPlay {
-                        game.startCodeAnimation()
-                        shouldAnimateAfterHowToPlay = false // Reset the flag
+                    print("🔍 onChange showHowToPlay: \(oldValue) -> \(newValue)")
+                    print("🔍 shouldAnimateAfterHowToPlay: \(shouldAnimateAfterHowToPlay)")
+                    
+                    if oldValue && !newValue {
+                        print("🔍 How-to-play was dismissed")
+                        
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                            if shouldAnimateAfterHowToPlay {
+                                print("🔍 Starting animation for first-time user")
+                                game.startCodeAnimation() // Just the animation, game already started
+                                shouldAnimateAfterHowToPlay = false
+                            } else {
+                                print("🔍 Starting game for returning user")
+                                game.startGame() // Full start including already-played check
+                            }
+                        }
                     }
                 }
                 .onChange(of: game.gameOver, initial: false) { oldValue, newValue in
@@ -494,8 +485,45 @@ struct DecodeGameView: View {
             game.showAlreadyPlayedOverlay
         )
         .onAppear {
+            print("🔍 DecodeGameView onAppear - targetDate: \(String(describing: targetDate))")
+            
+            // Handle game over state first
             if game.gameOver > 0 {
+                print("🔄 Game was over, resetting...")
                 game.resetGame()
+                return // Exit early, resetGame will trigger the initialization
+            }
+            
+            // Normal initialization for new games
+            if game.theCode.isEmpty {
+                print("🔍 Game not initialized, starting initialization...")
+                game.scoreManager = scoreManager
+                
+                let key = "hasSeenHowToPlay_decode"
+                let hasSeenBefore = UserDefaults.standard.bool(forKey: key)
+                
+                print("🔍 hasSeenBefore: \(hasSeenBefore), isFirstLaunch: \(isFirstLaunch)")
+                
+                if !hasSeenBefore && isFirstLaunch {
+                    print("🔍 Taking first-time user path")
+                    
+                    // Check if already played first
+                    let gameDate = targetDate ?? Calendar.current.startOfDay(for: Date())
+                    if scoreManager.isGameCompleted(gameId: "decode", date: gameDate) {
+                        print("⚠️ Date \(gameDate) already played - showing overlay")
+                        game.showAlreadyPlayedOverlay = true
+                        game.willScoreCount = false
+                    } else {
+                        // Not played yet - proceed with first-time user flow
+                        game.startGameWithoutAnimation()
+                        showHowToPlay = true
+                        shouldAnimateAfterHowToPlay = true
+                    }
+                } else {
+                    print("🔍 Taking returning user path")
+                    game.startGame() // This already has the check
+                }
+                isFirstLaunch = false
             }
         }
         

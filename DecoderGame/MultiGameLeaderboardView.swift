@@ -28,10 +28,7 @@ struct LeaderboardPageView: View {
                             
                             // Add play button at bottom of scores list
                             VStack(spacing: 15) {
-//                                Divider()
-//                                    .background(.black)
-//                                    .padding(.horizontal, 30)
-                                
+                              
                                 Spacer().frame(height:5)
                                 
                                 Button(action: onPlayGame) {
@@ -58,8 +55,6 @@ struct LeaderboardPageView: View {
         .animation(.default, value: scoreManager.allScores)
     }
     
-    // Add computed property to get game display name
-    // Add computed property to get game display name
     private var gameDisplayName: String {
         if let game = GameInfo.availableGames.first(where: { $0.id.lowercased() == gameID.lowercased() }) {
             return game.displayName
@@ -136,15 +131,7 @@ struct ScoreRowView: View {
             VStack(alignment: .leading) {
                 
                 HStack(spacing: 4) {
-                    Text(dateOnlyFormatter.string(from: score.date))
-                        .font(.custom("LuloOne-Bold", size: 12))
-                        .foregroundColor(.black)
-                    
-                    Text(" ⋰ ")
-                        .font(.custom("LuloOne-Bold", size: 10))
-                        .foregroundColor(Color.myAccentColor1)
-                    
-                    Text(timeFormatter.string(from: score.date))
+                    Text("Played: \(DateFormatter.scorePlayedDisplayFormatter.string(from:score.date))")
                         .font(.custom("LuloOne-Bold", size: 12))
                         .foregroundColor(.black)
                 }
