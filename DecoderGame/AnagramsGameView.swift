@@ -25,15 +25,18 @@ struct AnagramsGameView: View {
     @State private var answerFlashColor: Color? = nil
     
     private let instructionsText = """
-    Race against the clock to unscramble as many words as you can!
+    Race against the clock in order to unscramble the most words!
     
-    Tap a letter to spell out the correct word in the boxes above.
+    Tap letters to spell out the correct word in the boxes above.
     
-    O R W D  →  W O R D 
+    O  R  W  D    →    W  O  R  D 
 
     If you make a mistake, tap "clear" to remove the letters and try again. 
     
     If you're stumped, "skip" a word and try it later!
+    
+    You get 1 minute! ⏳
+    
     """
     
     init(targetDate: Date? = nil) {
@@ -369,6 +372,10 @@ struct AnagramsGameView: View {
                                 Text("Skipped: \(game.skippedWordIndices.count)")
                                     .font(.custom("LuloOne", size: 10))
                                     .foregroundColor(.orange)
+                            } else {
+                                Text("Skipped: 0")
+                                    .font(.custom("LuloOne", size: 10))
+                                    .foregroundColor(.white.opacity(0.1))
                             }
                         }
                     }

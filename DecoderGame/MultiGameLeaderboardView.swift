@@ -254,59 +254,66 @@ struct MultiGameLeaderboardView: View {
 
     var body: some View {
         ZStack{
+            Color.black.ignoresSafeArea()
+            LinearGradient.highscoresNavGradient.ignoresSafeArea()
+            
             VStack {
                 // NEW: Header with home button and icon tabs
-                VStack(spacing: 12) {
+                VStack(alignment: .center, spacing: 12) {
                     // Top bar with home button
                     HStack {
-                        Button(action: {
-                            dismiss()
-                        }) {
+                        
+                        Text("High Scores")
+                            .font(.custom("LuloOne-Bold", size: 26))
+                            .foregroundColor(.white)
+                                                
+                        Spacer()
+                            .frame(width:10)
+                        
+                        NavigationLink(destination: MainMenuView(initialPage: 0)) {
                             HStack(spacing: 6) {
                                 Image(systemName: "house.fill")
                                     .font(.system(size: 16))
                                 Text("Home")
                                     .font(.custom("LuloOne-Bold", size: 14))
                             }
-                            .foregroundColor(.black)
+                            .foregroundColor(.white)
                             .padding(.horizontal, 12)
                             .padding(.vertical, 8)
-                            .background(Color.gray.opacity(0.2))
+                            .background(Color.myAccentColor1.opacity(0.3))
                             .cornerRadius(8)
                         }
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(Color.white, lineWidth: 0.5)
+                        )
                         
-                        Spacer()
-                        
-                        Text("Leaderboards")
-                            .font(.custom("LuloOne-Bold", size: 24))
-                            .foregroundColor(.black)
-                        
-                        Spacer()
-                        
-                        // Invisible spacer to balance the home button
-                        Color.clear
-                            .frame(width: 80, height: 32)
+                                                
                     }
+                    .frame(minHeight: 50)
                     .padding(.horizontal, 20)
                     
                     // Game icon tabs
                     HStack(spacing: 30) {
                         ForEach(0..<games.count, id: \.self) { index in
-                            VStack(spacing: 6) {
+                            VStack(spacing: 10) {
                                 // Game icon
                                 games[index].gameIcon
-                                    .font(.system(size: 24))
-                                    .foregroundColor(currentTabIndex == index ? Color.myAccentColor2 : .gray)
+                                    .font(.system(size: 26))
+                                    .foregroundColor(currentTabIndex != index ? Color.myAccentColor1 : .white.opacity(0.8))
+                                    .shadow(color: (currentTabIndex != index ? Color.myNavy : Color.clear), radius:1)
                                 
                                 // Game name
                                 Text(games[index].displayName)
-                                    .font(.custom("LuloOne", size: 10))
-                                    .foregroundColor(currentTabIndex == index ? Color.myAccentColor2 : .gray)
+                                    .font(.custom("LuloOne-Bold", size: 12))
+                                    .foregroundColor(currentTabIndex != index ? Color.myAccentColor1 : Color.white.opacity(0.8))
+                                    .shadow(color: (currentTabIndex != index ? Color.myNavy : Color.clear), radius:1)
                                 
                                 // Active indicator dot
                                 Circle()
-                                    .fill(currentTabIndex == index ? Color.myAccentColor2 : Color.clear)
+                                    .fill(currentTabIndex == index ? Color.white : Color.clear)
                                     .frame(width: 6, height: 6)
+                                    
                             }
                             .onTapGesture {
                                 withAnimation(.easeInOut(duration: 0.3)) {
@@ -316,8 +323,11 @@ struct MultiGameLeaderboardView: View {
                         }
                     }
                     .padding(.horizontal, 20)
+                    .padding(.vertical, 10)
+                   
                 }
-                .padding(.top, 10)
+                .padding(.top, 15)
+                
                 
                 // TabView content
                 TabView(selection: $currentTabIndex) {
@@ -332,6 +342,13 @@ struct MultiGameLeaderboardView: View {
                     }
                 }
                 .tabViewStyle(.page(indexDisplayMode: .never))
+                .background(Color.white)
+                .overlay(
+                    Rectangle()
+                        .frame(height: 0.5)
+                        .foregroundColor(Color.black),
+                    alignment: .top
+                )
             }
             .navigationDestination(isPresented: Binding<Bool>(
                 get: { navigateToGame != nil },
@@ -343,7 +360,7 @@ struct MultiGameLeaderboardView: View {
             }
         }
         .navigationBarBackButtonHidden(true) // Hide the default back button
-        .background(Color.white)
+       
     }
     
     private func gameDestinationView(for gameId: String) -> AnyView {

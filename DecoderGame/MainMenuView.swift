@@ -205,7 +205,7 @@ struct MainMenuView: View {
                         Spacer()
                             .frame(height: 2)
                        // Text("Just Puzzles. No Distractions.")
-                        Text("simple games with new challenges every day")
+                        Text("simple games with\nnew challenges every day")
                             .font(.custom("LuloOne", size: 10))
                             .foregroundColor(.white)
                     }
@@ -992,7 +992,7 @@ struct MainMenuView: View {
     
     @ViewBuilder
     private func archivedGameDestination(for gameId: String, date: Date) -> some View {
-        let _ = print("📍 archivedGameDestination(): \(gameId) - \(date)")
+        //let _ = print("📍 archivedGameDestination(): \(gameId) - \(date)")
         
         switch gameId {
         case "flashdance":

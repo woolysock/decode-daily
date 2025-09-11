@@ -50,23 +50,33 @@ extension LinearGradient {
     
                
     static let mainmenuViewGradient =  LinearGradient(
-        colors: [Color.black, Color.myNavy.opacity(0.6)],
+        colors: [Color.black, Color.myNavy.opacity(0.7)],
         startPoint: .bottomLeading,
         endPoint: .topTrailing
     )
     
     static let archivesViewGradient =  LinearGradient(
-        colors: [Color.black, Color.myPeriwinkle.opacity(0.8)],
-        startPoint: .bottomLeading,
+        colors: [Color.myNavy.opacity(0.1), Color.myPeriwinkle.opacity(0.8)],
+        startPoint: .leading,
         endPoint: .topTrailing
     )
     
     static let statsViewGradient =  LinearGradient(
-        colors: [Color.black, Color.myPeriwinkle.opacity(0.8)],
-        startPoint: .bottomTrailing,
+        colors: [Color.myNavy.opacity(0.1), Color.myPeriwinkle.opacity(0.8)],
+        startPoint: .trailing,
         endPoint: .topLeading
     )
-//    
+    
+    static let highscoresNavGradient =  LinearGradient(
+        colors: [Color.myAccentColor2, Color.black],
+        startPoint: .top,
+        endPoint: .bottom
+    )
+    
+    
+    
+    
+//
 //    static let bottomBarGradientMainMenu = LinearGradient(
 //        colors: [Color.black, Color.myNavy.opacity(0.4)],
 //        startPoint: .top,

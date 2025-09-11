@@ -74,22 +74,22 @@ class DecodeGame: ObservableObject, GameProtocol {
 
     func startGame() {
         print("🚀 DecodeGame.startGame() called")
-        
+        gameOver = 0
         
         let gameDate = targetDate ?? Calendar.current.startOfDay(for: Date())
         
-        print("🎯 startGame(): DATE DEBUG:")
-        print("   - targetDate: \(String(describing: targetDate))")
-        print("   - Calendar.current.startOfDay(for: \(Date())): \(Calendar.current.startOfDay(for: Date()))")
-        print("   - and thus.... ")
-        print("   - gameDate: \(gameDate)")
-        print("   - gameDate with dayStringFormatter: \(DateFormatter.dayStringFormatter.string(from: gameDate))")
-        
-        // Debug: Check what the equation manager thinks about this date
-        print("🔍 Before calling getTodaysEquationSet:")
-        print("   - equationManager.currentEquationSet's date:")
-        print("   - \(String(describing: codeSetManager.currentCodeSet?.date))")
-        
+        //print("🎯 startGame(): DATE DEBUG: is off; uncomment from code if needed")
+//        print("   - targetDate: \(String(describing: targetDate))")
+//        print("   - Calendar.current.startOfDay(for: \(Date())): \(Calendar.current.startOfDay(for: Date()))")
+//        print("   - and thus.... ")
+//        print("   - gameDate: \(gameDate)")
+//        print("   - gameDate with dayStringFormatter: \(DateFormatter.dayStringFormatter.string(from: gameDate))")
+//        
+//        // Debug: Check what the equation manager thinks about this date
+//        print("🔍 Before calling getTodaysEquationSet:")
+//        print("   - equationManager.currentEquationSet's date:")
+//        print("   - \(String(describing: codeSetManager.currentCodeSet?.date))")
+//        
         
         // Check if this date has already been played
         if scoreManager.isGameCompleted(gameId: "decode", date: gameDate) {
@@ -102,7 +102,6 @@ class DecodeGame: ObservableObject, GameProtocol {
         // Continue with normal game start
         willScoreCount = true
         //showAlreadyPlayedOverlay = false
-        gameOver = 0
         startGameInternal()
     }
     
@@ -130,6 +129,7 @@ class DecodeGame: ObservableObject, GameProtocol {
     // Add this method for playing without score
     func startGameWithoutScore() {
         print("🎮 Starting game without score tracking")
+        gameOver = 0
         willScoreCount = false
         startGameInternal()
     }
@@ -138,10 +138,10 @@ class DecodeGame: ObservableObject, GameProtocol {
     func startGameWithRandomCode() {
         print("🎲 Starting game with random code")
         willScoreCount = false
-        
+        gameOver = 0
         pegShades = [myPegColor1, myPegColor2, myPegColor3, myPegColor4, myPegColor5, myPegColor6]
         currentTurn = 0
-        gameOver = 0
+        
         
         // Generate random code instead of daily code
         theCode = (0..<numCols).map { _ in Int.random(in: 1...pegShades.count-1) }
@@ -163,10 +163,10 @@ class DecodeGame: ObservableObject, GameProtocol {
     func startGameWithoutAnimation() {
         isAnimating = false
         gameInteractive = false
-        
+        gameOver = 0
         pegShades = [myPegColor1, myPegColor2, myPegColor3, myPegColor4, myPegColor5, myPegColor6]
         currentTurn = 0
-        gameOver = 0
+        
         
         // Use daily code instead of random
         theCode = getDailyCode()

@@ -38,7 +38,7 @@ struct AlreadyPlayedOverlay: View {
 //                        .foregroundColor(.white)
                     
                     Image(systemName: "rectangle.and.pencil.and.ellipsis")
-                        .foregroundColor(.white)
+                        .foregroundColor(Color.mySunColor)
                         .font(.system(size: 40))
                     
                     Spacer().frame(height:2)
@@ -64,7 +64,7 @@ struct AlreadyPlayedOverlay: View {
                 // Options
                 VStack(spacing: 15) {
                     
-                    Text("This game only saves the first score per day. Replay the code anyway?\n(High score won't be saved)")
+                    Text("This game only saves the first score per day.\n\nReplay the code anyway? (Score won't be saved)")
                         .font(.custom("LuloOne", size: 12))
                         .foregroundColor(.white)
                         .multilineTextAlignment(.center)
@@ -73,7 +73,7 @@ struct AlreadyPlayedOverlay: View {
                         onPlayWithoutScore()
                         isVisible = false
                     }) {
-                        Text("Replay")
+                        Text("Replay ↺")
                             .font(.custom("LuloOne-Bold", size: 16))
                             .foregroundColor(Color.myAccentColor2)
                             .frame(width: 250, height: 45)
@@ -105,16 +105,16 @@ struct AlreadyPlayedOverlay: View {
                         .background(.white)
                         .padding(.horizontal, 30)
                     
-                    Text("★ Or play a past daily code to keep earning high scores! ★")
+                    Text("Or play past daily codes to keep earning high scores!")
                         .font(.custom("LuloOne", size: 12))
                         .foregroundColor(.white)
                         .multilineTextAlignment(.center)
                     
                     NavigationLink(destination: MainMenuView(initialPage: 1, selectedGame: "decode")) {
-                        Text("PICK NEW DATE")
-                            .font(.custom("LuloOne-Bold", size: 14))
+                        Text("PICK NEW DATE ✓")
+                            .font(.custom("LuloOne-Bold", size: 16))
                             .foregroundColor(.white)
-                            .frame(width: 250, height: 40)
+                            .frame(width: 250, height: 45)
                             .background(Color.myAccentColor2)
                             .contentShape(Rectangle())
                             .cornerRadius(8)
@@ -122,7 +122,7 @@ struct AlreadyPlayedOverlay: View {
                     
                 }
             }
-            .padding(30)
+            .padding(40)
             .background(Color.myOverlaysColor)
             .cornerRadius(15)
             .overlay(

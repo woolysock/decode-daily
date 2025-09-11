@@ -39,7 +39,7 @@ struct DecodeGameView: View {
     
     // Initialize with proper dependency injection
     init(targetDate: Date? = nil) {
-        print("🔍 TRACE: DecodeGameView init() - targetDate: \(String(describing: targetDate))")
+        //print("🔍 TRACE: DecodeGameView init() - targetDate: \(String(describing: targetDate))")
         
         self.targetDate = targetDate
         
@@ -48,7 +48,7 @@ struct DecodeGameView: View {
             //print("🔍 TRACE: Inside StateObject closure, creating DecodeGame...")
             //print("🔍 TRACE: About to access GameScoreManager.shared")
             let scoreManager = GameScoreManager.shared
-            print("🔍 DecodeGameView(): GameScoreManager.shared: \(type(of: scoreManager))")
+            //print("🔍 DecodeGameView(): GameScoreManager.shared: \(type(of: scoreManager))")
 
             //print("🔍 TRACE: About to call DecodeGame init")
             let game = DecodeGame(scoreManager: scoreManager, targetDate: targetDate)
@@ -57,7 +57,7 @@ struct DecodeGameView: View {
             return game
         }())
         
-        print("🔍 DecodeGameView init completed.")
+        //print("🔍 DecodeGameView init completed.")
         
     }
     
@@ -412,15 +412,16 @@ struct DecodeGameView: View {
                     instructions: """
                     Crack the secret color code! 
                     
-                    You get 7 tries. Each turn, tap a square to assign a color. Check your pattern by tapping the circle.
+                    Each turn, tap a square in the row to assign a color. Colors can be resused. Check your pattern by tapping the circle.
                     
-                    🟪 🟪 🟦 🟨  ➜   ⃝
+                    🟪 🟨 🟪 🟦 🟧  ➜   ⃝
                                             
-                    Hints will appear to guide you:
-                    🟢 : correct color & spot
-                    🟡 : correct color but wrong spot 
+                    Hints appear to guide you:
                     
-                    Less guesses yield higher scores!
+                    🟢: Correct color & spot
+                    🟡: Correct color, wrong spot:
+                    
+                    You get 7 tries. Solve it in less for higher scores! 
                     """,
                     isVisible: $showHowToPlay
                 )
@@ -471,7 +472,6 @@ struct DecodeGameView: View {
                     withAnimation {
                         showCodeReveal = false
                         showEndGameOverlay = true
-                        let _ = print("DEBUG: showEndGameOverlay = true")
                     }
                 }
                 .transition(.opacity)
@@ -501,10 +501,12 @@ struct DecodeGameView: View {
         )
         .onAppear {
             print("🔍 DecodeGameView onAppear - targetDate: \(String(describing: targetDate))")
+            print("🔍 Back button hidden? gameOver: \(game.gameOver), endGameOverlay: \(showEndGameOverlay), alreadyPlayedOverlay: \(game.showAlreadyPlayedOverlay)")
             
             // Handle game over state first
             if game.gameOver > 0 {
                 print("🔄 Game was over, resetting...")
+                showEndGameOverlay = false
                 game.resetGame()
                 return // Exit early, resetGame will trigger the initialization
             }

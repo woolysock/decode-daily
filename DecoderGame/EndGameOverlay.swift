@@ -141,11 +141,6 @@ struct EndGameOverlay: View {
             Rectangle()
                 .fill(Color.black.opacity(0.8))
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-//                .onTapGesture {
-//                    if buttonsAreActive {
-//                        dismiss()
-//                    }
-//                }
             
             // Celebration animation layer - simplified version
             if showCelebration {
@@ -190,9 +185,16 @@ struct EndGameOverlay: View {
                                 .multilineTextAlignment(.center)
                                 .padding(.top, 6)
                         }
-//                        Text("★ ★ ★")
-//                            .font(.custom("LuloOne", size: 16))
-//                            .foregroundColor(.white.opacity(0.8))
+                        else {
+                            Text("Score not saved\n(code was seen before)")
+                                .font(.custom("LuloOne", size: 12))
+                                .foregroundColor(.white.opacity(0.8))
+                                .multilineTextAlignment(.center)
+                                .padding(.top, 6)
+                        }
+                        //                        Text("★ ★ ★")
+                        //                            .font(.custom("LuloOne", size: 16))
+                        //                            .foregroundColor(.white.opacity(0.8))
                     }
                 }
                 
@@ -203,36 +205,43 @@ struct EndGameOverlay: View {
                 // Action buttons
                 VStack(spacing: 15) {
                     
-                    Button(gameID == "decode" ? "New game?" : "Replay?"){
-                        dismiss(startNewGame: true)
+                    if gameID == "decode" {
+                        NavigationLink(destination: MainMenuView(initialPage: 1, selectedGame: "decode")) {
+                            Text("New Code?")
+                                .font(.custom("LuloOne-Bold", size: 18))
+                                .frame(width: 240, height: 50)
+                                .foregroundColor(buttonsAreActive ? .black : .white.opacity(0.4))
+                                .background(buttonsAreActive ? Color.white : Color.black.opacity(0.4))
+                                .cornerRadius(10)
+                                .disabled(!buttonsAreActive)
+                                .animation(.easeInOut(duration: 0.3), value: buttonsAreActive)
+                                .simultaneousGesture(
+                                    TapGesture()
+                                        .onEnded { _ in
+                                            isVisible = false  // Dismiss the overlay
+                                        }
+                                )
+                        }
+                    } else {
+                        Button("Replay?") {
+                            dismiss(startNewGame: true)
+                        }
+                        .font(.custom("LuloOne-Bold", size: 18))
+                        .foregroundColor(buttonsAreActive ? .black : .gray)
+                        .frame(width: 200, height: 50)
+                        .background(buttonsAreActive ? Color.white : Color.black.opacity(0.4))
+                        .cornerRadius(10)
+                        .disabled(!buttonsAreActive)
+                        .animation(.easeInOut(duration: 0.3), value: buttonsAreActive)
+                        .contentShape(Rectangle())
                     }
-                    .font(.custom("LuloOne-Bold", size: 18))
-                    .foregroundColor(buttonsAreActive ? .black : .gray)
-                    .frame(width: 200, height: 50)
-                    .background(buttonsAreActive ? Color.white : Color.black.opacity(0.4))
-                    .cornerRadius(10)
-                    .disabled(!buttonsAreActive)
-                    .animation(.easeInOut(duration: 0.3), value: buttonsAreActive)
                     
-                    HStack(spacing: 20) {
-//                        Button("High Scores") {
-//                            onHighScores()
-//                            dismiss()
-//                        }
-//                        .font(.custom("LuloOne", size: 14))
-//                        .foregroundColor(buttonsAreActive ? .white : .black)
-//                        .padding(.horizontal, 20)
-//                        .padding(.vertical, 12)
-//                        .background(buttonsAreActive ? Color.myAccentColor2 : Color.black.opacity(0.4))
-//                        .cornerRadius(8)
-//                        .disabled(!buttonsAreActive)
-//                        .animation(.easeInOut(duration: 0.3), value: buttonsAreActive)
-//
+                    HStack(spacing: 10) {
                         NavigationLink(destination: MultiGameLeaderboardView(selectedGameID: gameID)) {
-                            Text("High Scores")
+                            Text("High\nScores")
                                 .font(.custom("LuloOne", size: 14))
                                 .foregroundColor(buttonsAreActive ? .white : .black)
-                                .padding(.horizontal, 20)
+                                .padding(.horizontal, 25)
                                 .padding(.vertical, 12)
                                 .background(buttonsAreActive ? Color.myAccentColor2 : Color.black.opacity(0.4))
                                 .cornerRadius(8)
@@ -247,24 +256,11 @@ struct EndGameOverlay: View {
                         )
                         
                         
-//                        Button("Main Menu") {
-//                            onMenu()
-//                            dismiss()
-//                        }
-//                        .font(.custom("LuloOne", size: 14))
-//                        .foregroundColor(buttonsAreActive ? .white : .black)
-//                        .padding(.horizontal, 20)
-//                        .padding(.vertical, 12)
-//                        .background(buttonsAreActive ? Color.myAccentColor2 : Color.black.opacity(0.4))
-//                        .cornerRadius(8)
-//                        .disabled(!buttonsAreActive)
-//                        .animation(.easeInOut(duration: 0.3), value: buttonsAreActive)
-                        
                         NavigationLink(destination: MainMenuView(initialPage: 0)) {
-                            Text("Main Menu")
+                            Text("Main\nMenu")
                                 .font(.custom("LuloOne", size: 14))
                                 .foregroundColor(buttonsAreActive ? .white : .black)
-                                .padding(.horizontal, 20)
+                                .padding(.horizontal, 30)
                                 .padding(.vertical, 12)
                                 .background(buttonsAreActive ? Color.myAccentColor2 : Color.black.opacity(0.4))
                                 .cornerRadius(8)
@@ -302,6 +298,7 @@ struct EndGameOverlay: View {
             }
         }
     }
+    
     
     private func startCelebrationSequence() {
         print("Starting celebration sequence") // Debug print

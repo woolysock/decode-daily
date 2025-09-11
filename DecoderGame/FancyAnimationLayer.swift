@@ -1,43 +1,41 @@
+//
+//  FancyAnimationLayer.swift
+//  Decode! Daily iOS
+//
+//  Created by Megan Donahue on 9/10/25.
+//
+
 import SwiftUI
+import CoreMotion
 
 struct FancyAnimationLayer: View {
     @State private var funTextItems: [FunTextItem] = []
-    @State private var isUserTouching = false
+    @State private var motionManager = CMMotionManager()
+    @State private var tiltForce = CGVector(dx: 0, dy: 0)
     
     // Configuration
     private let itemCount = 30
     private let baseSpeed: Double = 0.04
-    private let touchSpeedMultiplier: Double = 2.0
+    private let tiltSensitivity: Double = 20.0 // Reduced for more subtle influence
+    private let maxTiltForce: Double = 5.0    // Much lower max force
     
     var body: some View {
         GeometryReader { geometry in
             ZStack {
-                // Transparent background that detects touches
-                Color.clear
-                    .contentShape(Rectangle())
-//                    .gesture(
-//                        DragGesture(minimumDistance: 0)
-//                            .onChanged { _ in
-//                                if !isUserTouching {
-//                                    isUserTouching = true
-//                                }
-//                            }
-//                            .onEnded { _ in
-//                                isUserTouching = false
-//                            }
-//                    )
-//                
                 // Floating text items
                 ForEach(funTextItems) { item in
                     FunTextView(item: item)
                         .position(item.position)
-                        //.opacity(0.6)
                 }
             }
         }
         .onAppear {
             setupFunTextItems()
+            startMotionUpdates()
             startAnimation()
+        }
+        .onDisappear {
+            stopMotionUpdates()
         }
         .allowsHitTesting(false) // Allow touches to pass through to buttons below
     }
@@ -53,11 +51,41 @@ struct FancyAnimationLayer: View {
                     y: Double.random(in: 0...screenBounds.height)
                 ),
                 velocity: CGVector(
-                    dx: Double.random(in: -20...20),
-                    dy: Double.random(in: -20...20)
+                    dx: Double.random(in: -40...40), // Increased base velocity range
+                    dy: Double.random(in: -40...40)  // for more active movement
                 )
             )
         }
+    }
+    
+    private func startMotionUpdates() {
+        guard motionManager.isDeviceMotionAvailable else { return }
+        
+        motionManager.deviceMotionUpdateInterval = 1/60
+        motionManager.startDeviceMotionUpdates(to: .main) { [self] motion, error in
+            guard let motion = motion else { return }
+            
+            // Get device gravity vector
+            let gravity = motion.gravity
+            
+            // Debug: Print gravity values to understand the coordinate system
+            //print("Gravity - X: \(String(format: "%.3f", gravity.x)), Y: \(String(format: "%.3f", gravity.y)), Z: \(String(format: "%.3f", gravity.z))")
+            
+            // For portrait orientation, map gravity correctly:
+            // Don't invert Y - use gravity values directly
+            let forceX = gravity.x * tiltSensitivity
+            let forceY = gravity.y * tiltSensitivity  // No inversion needed
+            
+            // Clamp the forces
+            let clampedForceX = min(max(forceX, -maxTiltForce), maxTiltForce)
+            let clampedForceY = min(max(forceY, -maxTiltForce), maxTiltForce)
+            
+            tiltForce = CGVector(dx: clampedForceX, dy: clampedForceY)
+        }
+    }
+    
+    private func stopMotionUpdates() {
+        motionManager.stopDeviceMotionUpdates()
     }
     
     private func startAnimation() {
@@ -68,23 +96,53 @@ struct FancyAnimationLayer: View {
     
     private func updatePositions() {
         let screenBounds = UIScreen.main.bounds
-        let currentSpeed = isUserTouching ? baseSpeed * touchSpeedMultiplier : baseSpeed
+        //let screenCenter = CGPoint(x: screenBounds.width / 2, y: screenBounds.height / 2)
+        let screenCenter = CGPoint(x: screenBounds.width / 2, y: (screenBounds.height / 2)-100)
         
         for i in 0..<funTextItems.count {
             var item = funTextItems[i]
             
-            // Update position
-            item.position.x += item.velocity.dx * currentSpeed
-            item.position.y += item.velocity.dy * currentSpeed
+            // Calculate gentle center-seeking force
+            let distanceFromCenterX = screenCenter.x - item.position.x
+            let distanceFromCenterY = screenCenter.y - item.position.y
+            let centerForceStrength = 0.0005 // Very gentle pull toward center
             
-            // Bounce off edges
+            // Add random variation to each item's response to tilt (comet tail effect)
+            let randomVariationX = Double.random(in: -2...2)
+            let randomVariationY = Double.random(in: -2...2)
+            let personalTiltResponse = Double.random(in: 0.1...0.9)
+            
+            // Apply very gentle tilt influence (just a subtle bias)
+            let appliedForceX = (tiltForce.dx + randomVariationX) * personalTiltResponse
+            let appliedForceY = (tiltForce.dy + randomVariationY) * personalTiltResponse
+            
+            item.velocity.dx += appliedForceX * 0.01 // Tilt influence
+            item.velocity.dy += appliedForceY * 0.01
+            
+            // Apply gentle center-seeking force
+            item.velocity.dx += distanceFromCenterX * centerForceStrength
+            item.velocity.dy += distanceFromCenterY * centerForceStrength
+            
+            // Add random movement to keep them active across the whole screen
+            item.velocity.dx += Double.random(in: -1.5...1.5)
+            item.velocity.dy += Double.random(in: -1.5...1.5)
+            
+            // Light velocity damping to maintain energy
+            item.velocity.dx *= 0.995
+            item.velocity.dy *= 0.995
+            
+            // Update position
+            item.position.x += item.velocity.dx * baseSpeed
+            item.position.y += item.velocity.dy * baseSpeed
+            
+            // Bounce off edges with good energy retention
             if item.position.x <= 0 || item.position.x >= screenBounds.width {
-                item.velocity.dx *= -1
+                item.velocity.dx *= -Double.random(in: 0.7...0.95)
                 item.position.x = max(0, min(screenBounds.width, item.position.x))
             }
             
             if item.position.y <= 0 || item.position.y >= screenBounds.height {
-                item.velocity.dy *= -1
+                item.velocity.dy *= -Double.random(in: 0.7...0.95)
                 item.position.y = max(0, min(screenBounds.height, item.position.y))
             }
             
@@ -99,7 +157,7 @@ struct FunTextItem: Identifiable {
     let id = UUID()
     let content: FunTextContent
     let fontSize: CGFloat
-    let isBold: Bool        // ← This line
+    let isBold: Bool
     var position: CGPoint
     var velocity: CGVector
     
@@ -117,7 +175,7 @@ struct FunTextItem: Identifiable {
         case .icon:
             self.fontSize = CGFloat.random(in: 18...36)
         }
-        self.isBold = Bool.random()  // ← This sets the random value
+        self.isBold = Bool.random()
     }
 }
 
@@ -208,15 +266,3 @@ struct FunTextView: View {
         }
     }
 }
-
-//// MARK: - Usage Example for MainMenuView
-//
-//extension View {
-//    func withFancyAnimationLayer() -> some View {
-//        ZStack {
-//            self
-//            FancyAnimationLayer()
-//                .allowsHitTesting(false)
-//        }
-//    }
-//}
