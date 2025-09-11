@@ -100,7 +100,7 @@ struct MainMenuView: View {
                     .overlay(
                         Rectangle()
                             .frame(height: 0.5)
-                            .foregroundColor(.white),
+                            .foregroundColor(.white.opacity(0.8)),
                         alignment: .bottom
                     )
                                         
@@ -186,6 +186,8 @@ struct MainMenuView: View {
             //Color.black.ignoresSafeArea()
             LinearGradient.mainmenuViewGradient.ignoresSafeArea()
             
+            FancyAnimationLayer()
+            
             GeometryReader { geo in
                 VStack(spacing: 20) {
                     
@@ -202,7 +204,8 @@ struct MainMenuView: View {
                             .foregroundColor(.white)
                         Spacer()
                             .frame(height: 2)
-                        Text("Just Puzzles. No Distractions.")
+                       // Text("Just Puzzles. No Distractions.")
+                        Text("simple games with new challenges every day")
                             .font(.custom("LuloOne", size: 10))
                             .foregroundColor(.white)
                     }

@@ -233,7 +233,7 @@ final class DailyWordsetManager: ObservableObject {
     /// Loads a wordset for the date. Checks UserDefaults (overrides) first, then bundled JSON array.
     private func loadWordset(for date: Date) -> DailyWordset? {
         let dateKey = Self.dateFormatter.string(from: date)
-        print("🔍 Looking for wordset with dateKey: \(dateKey)")
+        //print("🔍 Looking for wordset with dateKey: \(dateKey)")
 
         // Skip UserDefaults - go directly to bundled JSON
         

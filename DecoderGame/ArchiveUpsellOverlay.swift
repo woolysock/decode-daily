@@ -31,22 +31,22 @@ struct ArchiveUpsellOverlay: View {
                         .padding(3)
                     
                     Text("Unlock More Dailies")
-                        .font(.custom("LuloOne-Bold", size: 18))
+                        .font(.custom("LuloOne-Bold", size: 14))
                         .foregroundColor(.white)
                         .multilineTextAlignment(.center)
                     
                     Text("from the")
-                        .font(.custom("LuloOne-Bold", size: 10))
+                        .font(.custom("LuloOne-Bold", size: 8))
                         .foregroundColor(.white)
                         .multilineTextAlignment(.center)
                     
                     Text("Archive")
-                        .font(.custom("LuloOne-Bold", size: 28))
+                        .font(.custom("LuloOne-Bold", size: 30))
                         .foregroundColor(.white)
                         .multilineTextAlignment(.center)
                     
                     // Dynamic free tier description
-                    Text("Always play today's daily games plus the past \(PaidTier.basicAccess.archiveDaysAllowed) days free.\n ★ \nOr, Upgrade for more!")
+                    Text("Play today's daily games plus the past \(PaidTier.basicAccess.archiveDaysAllowed) days free.\n\n★ Or Upgrade for more! ★")
                         .font(.custom("LuloOne", size: 10))
                         .foregroundColor(.white.opacity(0.9))
                         .multilineTextAlignment(.center)
@@ -131,8 +131,12 @@ struct ArchiveUpsellOverlay: View {
                 .padding(.top, 10)
             }
             .padding(30)
-            .background(Color.myNavy)
+            .background(Color.myOverlaysColor)
             .cornerRadius(20)
+            .overlay(
+                RoundedRectangle(cornerRadius: 15)
+                    .stroke(Color.white, lineWidth: 0.5)
+            )
             .padding(.horizontal, 40)
         }
         .onAppear {

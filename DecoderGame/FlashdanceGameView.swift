@@ -160,7 +160,7 @@ struct FlashdanceGameView: View {
                                 let pillWidth: CGFloat = 120
                                 let pillHeight: CGFloat = 50
                                 let spacing: CGFloat = 10
-                                                                
+                                
                                 VStack {
                                     // === Answer Pills Row ===
                                     if game.isGameActive {
@@ -286,15 +286,15 @@ struct FlashdanceGameView: View {
                         }
                     }
                 }
-                .navigationDestination(isPresented: $navigateToSpecificLeaderboard) {
-                    MultiGameLeaderboardView(selectedGameID: game.gameInfo.id)
-                }
-                .navigationBarBackButtonHidden(
-                    showEndGameOverlay ||
-                    showHowToPlay
-                )
             }
-            
+            .navigationDestination(isPresented: $navigateToSpecificLeaderboard) {
+                MultiGameLeaderboardView(selectedGameID: game.gameInfo.id)
+            }
+            .navigationBarBackButtonHidden(
+                game.gameOver > 0 ||
+                showEndGameOverlay ||
+                showHowToPlay
+            )
             
             // === Overlays ===
             if showHowToPlay {
@@ -350,11 +350,6 @@ struct FlashdanceGameView: View {
                 }
             }
         }
-        .navigationBarBackButtonHidden(
-            game.gameOver > 0 ||
-            showEndGameOverlay ||
-            showHowToPlay
-        )
         .onAppear {
             if game.gameOver > 0 {
                 game.resetGame()

@@ -110,7 +110,7 @@ final class DailyCodeSetManager: ObservableObject {
     
     // Private methods similar to DailyWordsetManager...
     private func loadAllCodeSets() {
-        print("🔍 Looking for DailyCodes.json in bundle...")
+        //print("🔍 Looking for DailyCodes.json in bundle...")
         
         guard let url = Bundle.main.url(forResource: dailyCodesResource, withExtension: "json") else {
             print("❌ DailyCodeManager - no DailyCode.json found in bundle")
@@ -145,7 +145,7 @@ final class DailyCodeSetManager: ObservableObject {
     
     private func loadCodeSet(for date: Date) -> DailyCodeSet? {
         let dateKey = Self.dateFormatter.string(from: date)
-        print("🔍 Looking for Code set with dateKey: \(dateKey)")
+        //print("🔍 Looking for Code set with dateKey: \(dateKey)")
         
         // Search in bundled JSON using the dateKey as ID
         print("🔍 Searching in \(allCodeSets.count) bundled code sets...")

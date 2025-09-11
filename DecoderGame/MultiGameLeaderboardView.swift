@@ -238,6 +238,7 @@ struct ScoreRowView: View {
 // MARK: - MultiGameLeaderboardView
 struct MultiGameLeaderboardView: View {
     @EnvironmentObject var scoreManager: GameScoreManager
+    @Environment(\.dismiss) private var dismiss
     @State private var currentTabIndex: Int = 0
     @State private var navigateToGame: String? = nil
 
@@ -254,40 +255,71 @@ struct MultiGameLeaderboardView: View {
     var body: some View {
         ZStack{
             VStack {
-                // Top arrows
-                HStack {
-                    Button(action: {
-                        withAnimation {
-                            currentTabIndex = (currentTabIndex - 1 + games.count) % games.count
-                        }
-                    }) {
-                        Image(systemName: "arrowshape.backward.circle.fill")
+                // NEW: Header with home button and icon tabs
+                VStack(spacing: 12) {
+                    // Top bar with home button
+                    HStack {
+                        Button(action: {
+                            dismiss()
+                        }) {
+                            HStack(spacing: 6) {
+                                Image(systemName: "house.fill")
+                                    .font(.system(size: 16))
+                                Text("Home")
+                                    .font(.custom("LuloOne-Bold", size: 14))
+                            }
                             .foregroundColor(.black)
-                            .font(.system(size: 22))
-                    }
-                    
-                    Spacer()
-                    
-                    Text("\(games[currentTabIndex].displayName) Leaderboard")
-                        .font(.custom("LuloOne-Bold", size: 22))
-                        .foregroundColor(.black)  // Added explicit color
-                    
-                    Spacer()
-                    
-                    Button(action: {
-                        withAnimation {
-                            currentTabIndex = (currentTabIndex + 1) % games.count
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 8)
+                            .background(Color.gray.opacity(0.2))
+                            .cornerRadius(8)
                         }
-                    }) {
-                        Image(systemName: "arrowshape.forward.circle.fill")
+                        
+                        Spacer()
+                        
+                        Text("Leaderboards")
+                            .font(.custom("LuloOne-Bold", size: 24))
                             .foregroundColor(.black)
-                            .font(.system(size: 22))
+                        
+                        Spacer()
+                        
+                        // Invisible spacer to balance the home button
+                        Color.clear
+                            .frame(width: 80, height: 32)
                     }
+                    .padding(.horizontal, 20)
+                    
+                    // Game icon tabs
+                    HStack(spacing: 30) {
+                        ForEach(0..<games.count, id: \.self) { index in
+                            VStack(spacing: 6) {
+                                // Game icon
+                                games[index].gameIcon
+                                    .font(.system(size: 24))
+                                    .foregroundColor(currentTabIndex == index ? Color.myAccentColor2 : .gray)
+                                
+                                // Game name
+                                Text(games[index].displayName)
+                                    .font(.custom("LuloOne", size: 10))
+                                    .foregroundColor(currentTabIndex == index ? Color.myAccentColor2 : .gray)
+                                
+                                // Active indicator dot
+                                Circle()
+                                    .fill(currentTabIndex == index ? Color.myAccentColor2 : Color.clear)
+                                    .frame(width: 6, height: 6)
+                            }
+                            .onTapGesture {
+                                withAnimation(.easeInOut(duration: 0.3)) {
+                                    currentTabIndex = index
+                                }
+                            }
+                        }
+                    }
+                    .padding(.horizontal, 20)
                 }
-                .padding(.horizontal, 20)
                 .padding(.top, 10)
                 
-                // Page TabView
+                // TabView content
                 TabView(selection: $currentTabIndex) {
                     ForEach(0..<games.count, id: \.self) { index in
                         LeaderboardPageView(
@@ -310,23 +342,22 @@ struct MultiGameLeaderboardView: View {
                 }
             }
         }
+        .navigationBarBackButtonHidden(true) // Hide the default back button
         .background(Color.white)
     }
     
-    // Add this helper method to create game destinations
-    
     private func gameDestinationView(for gameId: String) -> AnyView {
-            switch gameId {
-            case "decode":
-                return AnyView(DecodeGameView().environmentObject(scoreManager))
-            case "flashdance":
-                return AnyView(FlashdanceGameView().environmentObject(scoreManager))
-            case "anagrams":
-                return AnyView(AnagramsGameView().environmentObject(scoreManager))
-            default:
-                return AnyView(EmptyView())
-            }
+        switch gameId {
+        case "decode":
+            return AnyView(DecodeGameView().environmentObject(scoreManager))
+        case "flashdance":
+            return AnyView(FlashdanceGameView().environmentObject(scoreManager))
+        case "anagrams":
+            return AnyView(AnagramsGameView().environmentObject(scoreManager))
+        default:
+            return AnyView(EmptyView())
         }
+    }
 }
 
 

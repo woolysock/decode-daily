@@ -156,7 +156,7 @@ struct DecodeGameView: View {
                     HStack(spacing: 10) {
                         ForEach(0..<game.numCols, id: \.self) { col in
                             Rectangle()
-                                .frame(width: 40, height: 40)
+                                .frame(width: 45, height: 45)
                                 .foregroundColor(
                                     game.isAnimating
                                     ? game.pegShades[game.animatedCode[col]]
@@ -168,6 +168,10 @@ struct DecodeGameView: View {
                                         .foregroundColor(
                                             game.isAnimating || game.gameOver != 0 ? .clear : .white
                                         )
+                                )
+                                .overlay(
+                                    Rectangle()
+                                        .stroke(Color.white, lineWidth: 0.5)
                                 )
                                 .animation(.easeInOut(duration: 0.1), value: game.animatedCode)
                         }
@@ -318,14 +322,22 @@ struct DecodeGameView: View {
                     if oldValue && !newValue {
                         print("🔍 How-to-play was dismissed")
                         
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                            if shouldAnimateAfterHowToPlay {
-                                print("🔍 Starting animation for first-time user")
-                                game.startCodeAnimation() // Just the animation, game already started
-                                shouldAnimateAfterHowToPlay = false
-                            } else {
+                        if shouldAnimateAfterHowToPlay {
+                            print("🔍 Starting animation for first-time user")
+                            game.startCodeAnimation()
+                            shouldAnimateAfterHowToPlay = false
+                        } else {
+                            // Check if game is already in progress
+                            if game.theCode.isEmpty {
+                                // Game hasn't started yet - start it
                                 print("🔍 Starting game for returning user")
-                                game.startGame() // Full start including already-played check
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                                    game.startGame()
+                                }
+                            } else {
+                                // Game is already in progress - just resume
+                                print("🔍 Resuming existing game")
+                                // No action needed - game should continue where it left off
                             }
                         }
                     }
@@ -425,10 +437,12 @@ struct DecodeGameView: View {
                     isVisible: .constant(true),
                     onPlayAgain: {
                         game.startGame()  // This will check for replay again
+                        dismiss()
                     },
                     onHighScores: {
                         // Navigate to specific game leaderboard
                         navigateToSpecificLeaderboard = true
+                        dismiss()
                     },
                     onMenu: {
                         dismiss()
@@ -442,10 +456,10 @@ struct DecodeGameView: View {
             
             // Code Reveal Overlay
             if showCodeReveal {
-                let _ = print("game.currentTurn: \(game.currentTurn) vs game.numRows: \(game.numRows)")
-                let _ = print("game.gameOver: \(game.gameOver)")
-                let _ = print("game.currentTurn + 1: \(game.currentTurn+1)")
-                let _ = print("game.numRows: \(game.numRows)")
+//                let _ = print("game.currentTurn: \(game.currentTurn) vs game.numRows: \(game.numRows)")
+//                let _ = print("game.gameOver: \(game.gameOver)")
+//                let _ = print("game.currentTurn + 1: \(game.currentTurn+1)")
+//                let _ = print("game.numRows: \(game.numRows)")
                 
                 CodeRevealOverlay(
                     theCode: game.theCode,
@@ -457,6 +471,7 @@ struct DecodeGameView: View {
                     withAnimation {
                         showCodeReveal = false
                         showEndGameOverlay = true
+                        let _ = print("DEBUG: showEndGameOverlay = true")
                     }
                 }
                 .transition(.opacity)

@@ -90,7 +90,7 @@ final class DailyEquationManager: ObservableObject {
     
     // Private methods similar to DailyWordsetManager...
     private func loadAllEquationSets() {
-        print("🔍 Looking for DailyEquations.json in bundle...")
+        //print("🔍 Looking for DailyEquations.json in bundle...")
         
         guard let url = Bundle.main.url(forResource: dailyEquationsResource, withExtension: "json") else {
             print("❌ DailyEquationManager - no DailyEquations.json found in bundle")

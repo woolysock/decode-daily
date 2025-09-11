@@ -202,6 +202,7 @@ struct EndGameOverlay: View {
                 
                 // Action buttons
                 VStack(spacing: 15) {
+                    
                     Button(gameID == "decode" ? "New game?" : "Replay?"){
                         dismiss(startNewGame: true)
                     }
@@ -214,18 +215,37 @@ struct EndGameOverlay: View {
                     .animation(.easeInOut(duration: 0.3), value: buttonsAreActive)
                     
                     HStack(spacing: 20) {
-                        Button("High Scores") {
-                            onHighScores()
-                            dismiss()
+//                        Button("High Scores") {
+//                            onHighScores()
+//                            dismiss()
+//                        }
+//                        .font(.custom("LuloOne", size: 14))
+//                        .foregroundColor(buttonsAreActive ? .white : .black)
+//                        .padding(.horizontal, 20)
+//                        .padding(.vertical, 12)
+//                        .background(buttonsAreActive ? Color.myAccentColor2 : Color.black.opacity(0.4))
+//                        .cornerRadius(8)
+//                        .disabled(!buttonsAreActive)
+//                        .animation(.easeInOut(duration: 0.3), value: buttonsAreActive)
+//
+                        NavigationLink(destination: MultiGameLeaderboardView(selectedGameID: gameID)) {
+                            Text("High Scores")
+                                .font(.custom("LuloOne", size: 14))
+                                .foregroundColor(buttonsAreActive ? .white : .black)
+                                .padding(.horizontal, 20)
+                                .padding(.vertical, 12)
+                                .background(buttonsAreActive ? Color.myAccentColor2 : Color.black.opacity(0.4))
+                                .cornerRadius(8)
                         }
-                        .font(.custom("LuloOne", size: 14))
-                        .foregroundColor(buttonsAreActive ? .white : .black)
-                        .padding(.horizontal, 20)
-                        .padding(.vertical, 12)
-                        .background(buttonsAreActive ? Color.myAccentColor2 : Color.black.opacity(0.4))
-                        .cornerRadius(8)
                         .disabled(!buttonsAreActive)
                         .animation(.easeInOut(duration: 0.3), value: buttonsAreActive)
+                        .simultaneousGesture(
+                            TapGesture()
+                                .onEnded { _ in
+                                    isVisible = false  // Dismiss the overlay
+                                }
+                        )
+                        
                         
 //                        Button("Main Menu") {
 //                            onMenu()

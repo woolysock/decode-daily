@@ -53,7 +53,7 @@ struct ContentView: View {
 struct LoadingView: View {
     var body: some View {
         ZStack {
-            //Color.black.ignoresSafeArea()
+            Color.black.ignoresSafeArea()
             LinearGradient.mainmenuViewGradient.ignoresSafeArea()
             
             ZStack {
@@ -62,7 +62,7 @@ struct LoadingView: View {
                     .resizable()
                     .scaledToFit()
             }
-            .padding(30)
+            .padding(40)
         }
     }
 }

@@ -64,7 +64,7 @@ struct AlreadyPlayedOverlay: View {
                 // Options
                 VStack(spacing: 15) {
                     
-                    Text("Replay the code?\n(Future scores aren't saved)")
+                    Text("This game only saves the first score per day. Replay the code anyway?\n(High score won't be saved)")
                         .font(.custom("LuloOne", size: 12))
                         .foregroundColor(.white)
                         .multilineTextAlignment(.center)
@@ -105,7 +105,7 @@ struct AlreadyPlayedOverlay: View {
                         .background(.white)
                         .padding(.horizontal, 30)
                     
-                    Text("★ Or you can play past daily codes from the Archive to keep earning high scores! ★")
+                    Text("★ Or play a past daily code to keep earning high scores! ★")
                         .font(.custom("LuloOne", size: 12))
                         .foregroundColor(.white)
                         .multilineTextAlignment(.center)
@@ -123,11 +123,11 @@ struct AlreadyPlayedOverlay: View {
                 }
             }
             .padding(30)
-            .background(Color.myNavy)
+            .background(Color.myOverlaysColor)
             .cornerRadius(15)
             .overlay(
                 RoundedRectangle(cornerRadius: 15)
-                    .stroke(Color.white, lineWidth: 1)
+                    .stroke(Color.white, lineWidth: 0.5)
             )
             .padding(.horizontal, 40)
         }

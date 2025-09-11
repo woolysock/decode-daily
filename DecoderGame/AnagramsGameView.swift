@@ -515,7 +515,7 @@ struct AnagramsGameView: View {
     }
     
     private func tryToStartGame() {
-        print("🚥 tryToStartGame()...")
+        print("🚥 AnagramsGameView(): tryToStartGame()...")
         guard !hasStartedRound,
               wordsetManager.currentWordset != nil,
               !wordsetManager.isGeneratingWordsets else {

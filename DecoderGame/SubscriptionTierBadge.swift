@@ -54,7 +54,7 @@ struct SubscriptionTierBadge: View {
     private var tierBackgroundView: some View {
         switch tier {
         case .basicAccess:
-            return AnyView(Color.myAccentColor2.opacity(0.2))
+            return AnyView(Color.myAccentColor1.opacity(0.2))
         case .standardAccess:
             return AnyView(
                 LinearGradient(

@@ -40,7 +40,7 @@ class DecodeGame: ObservableObject, GameProtocol {
     private var animationStartTime: Date?
 
     // Colors
-    let myPegColor1 = Color(red:49/255,green:52/255,blue:66/255) //HIDES THE CODE GRAY
+    let myPegColor1 = Color.myOverlaysColor //Color(red:49/255,green:52/255,blue:66/255) //HIDES THE CODE GRAY
     let myPegColor2 = Color(red:137/255,green:99/255,blue:145/255)
     let myPegColor3 = Color(red:143/255,green:159/255,blue:219/255)
     let myPegColor4 = Color(red:99/255,green:133/255,blue:145/255)
@@ -260,7 +260,7 @@ class DecodeGame: ObservableObject, GameProtocol {
                 self.gameInteractive = true
                 // Only set status text if it's still the default or empty
                 if self.statusText.isEmpty || self.statusText == "Learn how to play, then start cracking the code!" {
-                    self.statusText = "Tap each square to assign a color."
+                    self.statusText = "Tap each square below to assign a color."
                 }
             }
         }

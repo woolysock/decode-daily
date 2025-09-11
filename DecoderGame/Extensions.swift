@@ -23,7 +23,8 @@ extension Color {
 
     
     static let mySunColor = Color(red:246/255,green:211/255,blue:71/255)
-    static let myOverlaysColor = Color(red:61/255,green:81/255,blue:116/255)
+    //static let myOverlaysColor = Color(red:61/255,green:81/255,blue:116/255)
+    static let myOverlaysColor = Color(red:14/255,green:30/255,blue:69/255)
     
     static let myNavy = Color(red:19/255,green:42/255,blue:98/255)
     static let myGreen = Color(red:99/255,green:249/255,blue:113/255)
@@ -49,13 +50,13 @@ extension LinearGradient {
     
                
     static let mainmenuViewGradient =  LinearGradient(
-        colors: [Color.black, Color.myNavy],
+        colors: [Color.black, Color.myNavy.opacity(0.6)],
         startPoint: .bottomLeading,
         endPoint: .topTrailing
     )
     
     static let archivesViewGradient =  LinearGradient(
-        colors: [Color.black, Color.myPeriwinkle],
+        colors: [Color.black, Color.myPeriwinkle.opacity(0.8)],
         startPoint: .bottomLeading,
         endPoint: .topTrailing
     )
