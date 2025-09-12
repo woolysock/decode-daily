@@ -5,10 +5,10 @@
 //  Created by Megan Donahue on 9/8/25.
 //
 
-
 // MARK: - Product Configuration
 import StoreKit
 import Foundation
+import Mixpanel
 
 // Only define PAID tiers - Basic is free
 enum ProductID: String, CaseIterable {
@@ -23,6 +23,12 @@ enum ProductID: String, CaseIterable {
         case .basic: return .basicAccess // should we hide this?
         }
     }
+}
+
+struct SubscriptionEntitlement {
+    let productID: String
+    let purchaseDate: Date
+    let willRenew: Bool
 }
 
 @MainActor
@@ -49,19 +55,17 @@ class StoreManager: ObservableObject {
     }
     
     func requestProducts() async {
-        print("🔍 Requesting products for IDs: \(ProductID.allCases.map(\.rawValue))")
+        //print("🔍 Requesting products for IDs: \(ProductID.allCases.map(\.rawValue))")
         
         do {
             let storeProducts = try await Product.products(for: ProductID.allCases.map(\.rawValue))
-            print("📦 Found \(storeProducts.count) products: \(storeProducts.map(\.id))")
-            
             let sortedProducts = storeProducts.sorted { $0.price < $1.price }
             
             DispatchQueue.main.async {
                 self.products = sortedProducts
             }
             
-            print("✅ Loaded \(storeProducts.count) products")
+            print("✅ Loaded Product Options: \(storeProducts.count) products")
         } catch {
             print("❌ Failed to load products: \(error)")
             DispatchQueue.main.async {
@@ -124,7 +128,7 @@ class StoreManager: ObservableObject {
             self.errorMessage = nil
         }
         
-        try? await AppStore.sync()
+        // Just check current entitlements - no sync needed to avoid hanging
         await updateCustomerProductStatus()
         
         DispatchQueue.main.async {
@@ -142,21 +146,76 @@ class StoreManager: ObservableObject {
     }
     
     func updateCustomerProductStatus() async {
-        var purchasedProductIDs: Set<String> = []
+        var activeEntitlements: [SubscriptionEntitlement] = []
         
+        // Get current active entitlements WITH their purchase dates and renewal status
         for await result in Transaction.currentEntitlements {
             do {
                 let transaction = try checkVerified(result)
                 
                 if transaction.revocationDate == nil {
-                    purchasedProductIDs.insert(transaction.productID)
+                    // Check if subscription will renew
+                    let willRenew: Bool
+                    let daysUntilExpiration: Int
                     
+                    if let expiration = transaction.expirationDate {
+                        daysUntilExpiration = Calendar.current.dateComponents([.day], from: Date(), to: expiration).day ?? 0
+                        // Wait until expiration approach (industry standard)
+                        // Most apps let users keep premium until billing period ends
+                        willRenew = daysUntilExpiration > 1
+                    } else {
+                        daysUntilExpiration = Int.max
+                        willRenew = true
+                    }
+                    
+                    activeEntitlements.append(SubscriptionEntitlement(
+                        productID: transaction.productID,
+                        purchaseDate: transaction.purchaseDate,
+                        willRenew: willRenew
+                    ))
+                    
+                    print("📋 Active entitlement: \(transaction.productID)")
+                    print("   Purchase: \(transaction.purchaseDate)")
+                    print("   Will renew: \(willRenew)")
+                    if daysUntilExpiration != Int.max {
+                        print("   Days until expiration: \(daysUntilExpiration)")
+                    }
                 }
             } catch {
                 print("❌ Failed to verify transaction: \(error)")
             }
-            print("🛒 UpdateCustomerProductStatus(): purchasedProductIDs: \(purchasedProductIDs)")
         }
+        
+        // Determine effective subscription
+        let effectiveSubscription: String?
+        
+        if activeEntitlements.isEmpty {
+            effectiveSubscription = nil
+            print("🛒 No active subscriptions found")
+        } else if activeEntitlements.count == 1 {
+            effectiveSubscription = activeEntitlements.first?.productID
+            print("🛒 Single active subscription: \(effectiveSubscription ?? "none")")
+        } else {
+            // Multiple subscriptions - use most recent purchase
+            let mostRecent = activeEntitlements.max { $0.purchaseDate < $1.purchaseDate }
+            effectiveSubscription = mostRecent?.productID
+            
+            print("🛒 Multiple active subscriptions detected:")
+            for entitlement in activeEntitlements.sorted(by: { $0.purchaseDate > $1.purchaseDate }) {
+                let status = entitlement.willRenew ? "active" : "expiring soon"
+                print("   - \(entitlement.productID): \(entitlement.purchaseDate) (\(status))")
+            }
+            print("🎯 Using most recent: \(effectiveSubscription ?? "none")")
+        }
+        
+        let purchasedProductIDs: Set<String>
+        if let subscription = effectiveSubscription {
+            purchasedProductIDs = [subscription]
+        } else {
+            purchasedProductIDs = []
+        }
+        
+        print("🛒 UpdateCustomerProductStatus(): effectivePurchasedIDs: \(purchasedProductIDs)")
         
         DispatchQueue.main.async {
             self.purchasedProductIDs = purchasedProductIDs
@@ -164,9 +223,26 @@ class StoreManager: ObservableObject {
         }
     }
     
+    private func listenForTransactions() -> Task<Void, Error> {
+        return Task.detached {
+            for await result in Transaction.updates {
+                do {
+                    let transaction = try await self.checkVerified(result)
+                    print("🔔 New transaction detected: \(transaction.productID)")
+                    await self.updateCustomerProductStatus()
+                    await transaction.finish()
+                } catch {
+                    print("❌ Transaction verification failed: \(error)")
+                }
+            }
+        }
+    }
+    
     private func updateSubscriptionManager() {
-        // Determine the highest tier the user has purchased
-        let highestTier: PaidTier = {
+        let oldTier = SubscriptionManager.shared.currentTier
+        
+        // Your existing tier determination logic...
+        let newTier: PaidTier = {
             if purchasedProductIDs.contains(ProductID.premium.rawValue) {
                 return .premiumAccess
             } else if purchasedProductIDs.contains(ProductID.standard.rawValue) {
@@ -176,22 +252,30 @@ class StoreManager: ObservableObject {
             }
         }()
         
-        print("🔄 Updating subscription tier to: \(highestTier.displayName)")
-        SubscriptionManager.shared.updateTier(to: highestTier)
-    }
-    
-    private func listenForTransactions() -> Task<Void, Error> {
-        return Task.detached {
-            for await result in Transaction.updates {
-                do {
-                    let transaction = try await self.checkVerified(result)  // Add await here
-                    await self.updateCustomerProductStatus()
-                    await transaction.finish()
-                } catch {
-                    print("❌ Transaction verification failed: \(error)")
-                }
-            }
+        // Track subscription change if tier actually changed
+        if oldTier != newTier {
+            // MIXPANEL ANALYTICS CAPTURE
+            Mixpanel.mainInstance().track(event: "User Subscription Changed", properties: [
+                "app": "Decode! Daily iOS",
+                "build_version": Bundle.main.infoDictionary?["CFBundleShortVersionString"],
+                "previous_tier": oldTier.displayName,
+                "new_tier": newTier.displayName,
+                "change_type": determineChangeType(from: oldTier, to: newTier),
+                "date": Date().formatted()
+            ])
+            print("📈 🪵 MIXPANEL DATA LOG EVENT: User Subscription Changed")
+            print("📈 🪵 date: \(Date().formatted())")
+            print("📈 🪵 old tier: \(oldTier.displayName)")
+            print("📈 🪵 new tier: \(newTier.displayName)")
         }
+        
+        SubscriptionManager.shared.updateTier(to: newTier)
+    }
+
+    private func determineChangeType(from oldTier: PaidTier, to newTier: PaidTier) -> String {
+        if newTier.rawValue < oldTier.rawValue { return "upgrade" }
+        else if newTier.rawValue > oldTier.rawValue { return "downgrade" }
+        else { return "no_change" }
     }
     
     func isPurchased(_ product: Product) -> Bool {
@@ -202,4 +286,3 @@ class StoreManager: ObservableObject {
 enum StoreError: Error {
     case failedVerification
 }
-

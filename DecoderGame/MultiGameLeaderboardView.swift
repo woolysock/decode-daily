@@ -3,6 +3,7 @@
 //
 
 import SwiftUI
+import Mixpanel
 
 // MARK: - Single Leaderboard Page
 struct LeaderboardPageView: View {
@@ -360,6 +361,18 @@ struct MultiGameLeaderboardView: View {
             }
         }
         .navigationBarBackButtonHidden(true) // Hide the default back button
+        .onAppear {
+            // MIXPANEL ANALYTICS CAPTURE
+            Mixpanel.mainInstance().track(event: "High Scores Page View", properties: [
+                "app": "Decode! Daily iOS",
+                "build_version": Bundle.main.infoDictionary?["CFBundleShortVersionString"],
+                "date": Date().formatted(),
+                "subscription_tier": SubscriptionManager.shared.currentTier.displayName
+            ])
+            print("📈 🪵 MIXPANEL DATA LOG EVENT: High Scores Page View")
+            print("📈 🪵 date: \(Date().formatted())")
+            print("📈 🪵 sub tier: \(SubscriptionManager.shared.currentTier.displayName)")
+        }
        
     }
     

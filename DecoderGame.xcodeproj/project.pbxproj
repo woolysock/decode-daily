@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		44791D742E73B027002C93C3 /* Mixpanel in Frameworks */ = {isa = PBXBuildFile; productRef = 44791D732E73B027002C93C3 /* Mixpanel */; };
 		44BCE7FE2DA87D78005DDD84 /* Launch Screen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 44BCE7FD2DA87D78005DDD84 /* Launch Screen.storyboard */; };
 /* End PBXBuildFile section */
 
@@ -41,6 +42,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				44791D742E73B027002C93C3 /* Mixpanel in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -84,6 +86,7 @@
 			);
 			name = "Decode! Daily iOS";
 			packageProductDependencies = (
+				44791D732E73B027002C93C3 /* Mixpanel */,
 			);
 			productName = DecoderGame;
 			productReference = 442B9E372CF3BAD1008DD043 /* Decode! Daily iOS.app */;
@@ -113,6 +116,9 @@
 			);
 			mainGroup = 442B9E2E2CF3BAD1008DD043;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				44791D722E73B027002C93C3 /* XCRemoteSwiftPackageReference "mixpanel-swift" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 442B9E382CF3BAD1008DD043 /* Products */;
 			projectDirPath = "";
@@ -181,7 +187,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 0.1.4;
+				MARKETING_VERSION = 0.2.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.megandonahue.DecoderGame;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -231,7 +237,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 0.1.4;
+				MARKETING_VERSION = 0.2.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.megandonahue.DecoderGame;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -383,6 +389,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		44791D722E73B027002C93C3 /* XCRemoteSwiftPackageReference "mixpanel-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/mixpanel/mixpanel-swift";
+			requirement = {
+				branch = master;
+				kind = branch;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		44791D732E73B027002C93C3 /* Mixpanel */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 44791D722E73B027002C93C3 /* XCRemoteSwiftPackageReference "mixpanel-swift" */;
+			productName = Mixpanel;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 442B9E2F2CF3BAD1008DD043 /* Project object */;
 }

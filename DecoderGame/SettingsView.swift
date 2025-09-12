@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Mixpanel
 
 struct SettingsView: View {
     @Environment(\.presentationMode) var presentationMode
@@ -72,7 +73,20 @@ struct SettingsView: View {
         }
         .onAppear {
             // Enable developer mode for testing - you can remove this or add a tap sequence
-            isDeveloperMode = true
+            //isDeveloperMode = true
+            
+            // MIXPANEL ANALYTICS CAPTURE
+            Mixpanel.mainInstance().track(event: "Settings Page View", properties: [
+                "app": "Decode! Daily iOS",
+                "build_version": Bundle.main.infoDictionary?["CFBundleShortVersionString"],
+                "date": Date().formatted(),
+                "subscription_tier": SubscriptionManager.shared.currentTier.displayName,
+                "isDeveloperMode": isDeveloperMode
+            ])
+            print("📈 🪵 MIXPANEL DATA LOG EVENT: Settings Page View")
+            print("📈 🪵 date: \(Date().formatted())")
+            print("📈 🪵 sub tier: \(SubscriptionManager.shared.currentTier.displayName)")
+            print("📈 🪵 dev mode? : \(isDeveloperMode)")
         }
     }
     
@@ -122,6 +136,10 @@ struct SettingsView: View {
                 settingsSection(title: "App Info") {
                     appInfoCard
                 }
+                .onTapGesture(count: 7) {
+                    isDeveloperMode.toggle()
+                    print("🔧 Developer mode: \(isDeveloperMode ? "ON" : "OFF")")
+                }
                 
                 // Data Management Section
                 settingsSection(title: "High Scores Data") {
@@ -129,29 +147,29 @@ struct SettingsView: View {
                     clearCompletionSection
                 }
                 
-                
-                // Developer Section (only if in developer mode)
                 if isDeveloperMode {
+                    // Developer Section (only if in developer mode)
                     settingsSection(title: "Developer Testing") {
+                        
                         paidTierTestingCard
-                    }
-                    
-                    Button("Print All Scores") {
-                        print("=== ALL GAME SCORES ===")
-                        print("Total scores: \(scoreManager.allScores.count)")
-                        for (index, score) in scoreManager.allScores.enumerated() {
-                            print("[\(index)] \(score.gameId): \(score.finalScore) points on \(score.date)")
+                        // NOTE: un/commment ^^ line to show the sub tiers for testing, if needed
+                        
+                        Button("Print All Scores") {
+                            print("=== ALL GAME SCORES ===")
+                            print("Total scores: \(scoreManager.allScores.count)")
+                            for (index, score) in scoreManager.allScores.enumerated() {
+                                print("[\(index)] \(score.gameId): \(score.finalScore) points on \(score.date)")
+                            }
+                            print("=== END SCORES ===")
                         }
-                        print("=== END SCORES ===")
+                        .font(.custom("LuloOne", size: 12))
+                        .foregroundColor(.blue)
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 8)
+                        .background(Color.blue.opacity(0.2))
+                        .cornerRadius(8)
+                        
                     }
-                    .font(.custom("LuloOne", size: 12))
-                    .foregroundColor(.blue)
-                    .padding(.horizontal, 20)
-                    .padding(.vertical, 8)
-                    .background(Color.blue.opacity(0.2))
-                    .cornerRadius(8)
-                    
-                    
                 }
                 
                 Spacer()
@@ -466,12 +484,12 @@ struct SettingsView: View {
                 .font(.custom("LuloOne-Bold", size: 20))
                 .foregroundColor(.black)
             
-            Text("For support,\nplease reach out to the team.\n\nClick to visit our website:")
+            Text("For support,\nplease reach out to the team by visiting our website:")
                 .font(.custom("LuloOne", size: 14))
                 .foregroundColor(.black)
                 .multilineTextAlignment(.center)
             
-            Link("www.meganddesign.com", destination: URL(string: "http://www.meganddesign.com/")!)
+            Link("www.meganddesign.com", destination: URL(string: "http://www.meganddesign.com/decodedaily")!)
                 .font(.custom("LuloOne", size: 14))
                 .foregroundColor(.blue)
         }

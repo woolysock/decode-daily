@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Mixpanel
 
 struct MainMenuView: View {
     
@@ -88,9 +89,8 @@ struct MainMenuView: View {
                         //SubscriptionTierSeal(tier: subscriptionManager.currentTier)
                         
                         Button(action: {
-                            //if subscriptionManager.currentTier != .premium {
-                                showArchiveUpsell = true//}
-                            let _ = print("🛒 subscriptionManager.currentTier: \(subscriptionManager.currentTier)")
+                            showArchiveUpsell = true//}
+                            let _ = print("🛒 SubTierBadge: currentTier: \(subscriptionManager.currentTier)")
                         }) {
                             SubscriptionTierBadge(tier: subscriptionManager.currentTier)
                         }
@@ -205,9 +205,10 @@ struct MainMenuView: View {
                         Spacer()
                             .frame(height: 2)
                        // Text("Just Puzzles. No Distractions.")
-                        Text("simple games with\nnew challenges every day")
+                        Text("fun games, clean & simple\n+ new challenges every day")
                             .font(.custom("LuloOne", size: 10))
                             .foregroundColor(.white)
+                            .multilineTextAlignment(.center)
                     }
                     .fixedSize()
                     .frame(width: (screenWidth))
@@ -233,7 +234,7 @@ struct MainMenuView: View {
                         Image(systemName: "hand.draw")
                             .font(.system(size: 16))
                             .foregroundColor(.white)
-                        Text("Swipe left to view archive & settings")
+                        Text("Swipe to view archive & settings")
                             .font(.custom("LuloOne", size: 9))
                             .foregroundColor(.white)
                             .multilineTextAlignment(.center)
@@ -244,6 +245,66 @@ struct MainMenuView: View {
                                         
                     Spacer()
                 }
+            }
+        }
+        .onChange(of: currentPage) { oldValue, newValue in
+            print("DEBUG: CURRENTPAGE CHANGE: old: \(oldValue), new: \(newValue)")
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                if currentPage == newValue {
+                    switch newValue {
+                    case 0:
+                        // MIXPANEL ANALYTICS CAPTURE: Main Menu Page View
+                        Mixpanel.mainInstance().track(event: "Main Menu Page View", properties: [
+                            "app": "Decode! Daily iOS",
+                            "build_version": Bundle.main.infoDictionary?["CFBundleShortVersionString"],
+                            "date": Date().formatted(),
+                            "subscription_tier": SubscriptionManager.shared.currentTier.displayName
+                        ])
+                        print("📈 🪵 MIXPANEL DATA LOG EVENT: Main Menu Page View (oC)")
+                        print("📈 🪵 date: \(Date().formatted())")
+                        print("📈 🪵 sub tier: \(SubscriptionManager.shared.currentTier.displayName)")
+                    case 1:
+                        print("📈 🪵 case 1: will capture an archive view")
+                        // MIXPANEL ANALYTICS CAPTURE: Archives Main Page View
+                        Mixpanel.mainInstance().track(event: "Archives Main Page View", properties: [
+                            "app": "Decode! Daily iOS",
+                            "build_version": Bundle.main.infoDictionary?["CFBundleShortVersionString"],
+                            "date": Date().formatted(),
+                            "subscription_tier": SubscriptionManager.shared.currentTier.displayName
+                        ])
+                        print("📈 🪵 MIXPANEL DATA LOG EVENT: Archives Main Page View")
+                        print("📈 🪵 date: \(Date().formatted())")
+                        print("📈 🪵 sub tier: \(SubscriptionManager.shared.currentTier.displayName)")
+                    case 2:
+                        // MIXPANEL ANALYTICS CAPTURE: Stats Main Page View
+                        Mixpanel.mainInstance().track(event: "Stats Main Page View", properties: [
+                            "app": "Decode! Daily iOS",
+                            "build_version": Bundle.main.infoDictionary?["CFBundleShortVersionString"],
+                            "date": Date().formatted(),
+                            "subscription_tier": SubscriptionManager.shared.currentTier.displayName
+                        ])
+                        print("📈 🪵 MIXPANEL DATA LOG EVENT: Stats Main Page View")
+                        print("📈 🪵 date: \(Date().formatted())")
+                        print("📈 🪵 sub tier: \(SubscriptionManager.shared.currentTier.displayName)")
+                    default:
+                        break
+                    }
+                }
+            }
+        }
+        .onAppear{
+            print("DEBUG onAppear for Main Menu.... currentPage: \(currentPage)")
+            if currentPage == 0 {
+                // MIXPANEL ANALYTICS CAPTURE for Main Menu Page View
+                Mixpanel.mainInstance().track(event: "Main Menu Page View:", properties: [
+                    "app": "Decode! Daily iOS",
+                    "build_version": Bundle.main.infoDictionary?["CFBundleShortVersionString"],
+                    "date": Date().formatted(),
+                    "subscription_tier": SubscriptionManager.shared.currentTier.displayName
+                ])
+                print("📈 🪵 MIXPANEL DATA LOG EVENT: Main Menu Page View (oA)")
+                print("📈 🪵 date: \(Date().formatted())")
+                print("📈 🪵 sub tier: \(SubscriptionManager.shared.currentTier.displayName)")
             }
         }
     }
@@ -446,10 +507,6 @@ struct MainMenuView: View {
                 }
                 
             }
-        }
-        .onAppear {
-            // Load dates for the current selection when archives page appears
-          //  loadAvailableDatesIfNeeded(for: selectedArchiveGame)
         }
     }
 

@@ -116,7 +116,7 @@ struct FancyAnimationLayer: View {
             let appliedForceX = (tiltForce.dx + randomVariationX) * personalTiltResponse
             let appliedForceY = (tiltForce.dy + randomVariationY) * personalTiltResponse
             
-            item.velocity.dx += appliedForceX * 0.01 // Tilt influence
+            item.velocity.dx += appliedForceX * 0.02 // Tilt influence
             item.velocity.dy += appliedForceY * 0.01
             
             // Apply gentle center-seeking force

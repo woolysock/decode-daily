@@ -7,6 +7,7 @@
 
 import SwiftUI
 import Combine
+import Mixpanel
 
 struct AnagramsGameView: View {
     let targetDate: Date?
@@ -53,6 +54,17 @@ struct AnagramsGameView: View {
                 }
                 .onAppear {
                     initializeGame()
+                    
+                    // MIXPANEL ANALYTICS CAPTURE
+                    Mixpanel.mainInstance().track(event: "Anagrams Game Page View", properties: [
+                        "app": "Decode! Daily iOS",
+                        "build_version": Bundle.main.infoDictionary?["CFBundleShortVersionString"],
+                        "date": Date().formatted(),
+                        "subscription_tier": SubscriptionManager.shared.currentTier.displayName
+                    ])
+                    print("📈 🪵 MIXPANEL DATA LOG EVENT: Anagrams Game Page View")
+                    print("📈 🪵 date: \(Date().formatted())")
+                    print("📈 🪵 sub tier: \(SubscriptionManager.shared.currentTier.displayName)")
                 }
             }
             .navigationDestination(isPresented: $navigateToSpecificLeaderboard) {
@@ -375,7 +387,7 @@ struct AnagramsGameView: View {
                             } else {
                                 Text("Skipped: 0")
                                     .font(.custom("LuloOne", size: 10))
-                                    .foregroundColor(.white.opacity(0.1))
+                                    .foregroundColor(.white.opacity(0.3))
                             }
                         }
                     }

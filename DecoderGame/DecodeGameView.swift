@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Mixpanel
 
 struct DecodeGameView: View {
     let targetDate: Date?
@@ -500,8 +501,8 @@ struct DecodeGameView: View {
             game.showAlreadyPlayedOverlay
         )
         .onAppear {
-            print("🔍 DecodeGameView onAppear - targetDate: \(String(describing: targetDate))")
-            print("🔍 Back button hidden? gameOver: \(game.gameOver), endGameOverlay: \(showEndGameOverlay), alreadyPlayedOverlay: \(game.showAlreadyPlayedOverlay)")
+            //print("🔍 DecodeGameView onAppear - targetDate: \(String(describing: targetDate))")
+            //print("🔍 Back button hidden? gameOver: \(game.gameOver), endGameOverlay: \(showEndGameOverlay), alreadyPlayedOverlay: \(game.showAlreadyPlayedOverlay)")
             
             // Handle game over state first
             if game.gameOver > 0 {
@@ -542,6 +543,17 @@ struct DecodeGameView: View {
                 }
                 isFirstLaunch = false
             }
+            
+            // MIXPANEL ANALYTICS CAPTURE
+            Mixpanel.mainInstance().track(event: "Decode Game Page View", properties: [
+                "app": "Decode! Daily iOS",
+                "build_version": Bundle.main.infoDictionary?["CFBundleShortVersionString"],
+                "date": Date().formatted(),
+                "subscription_tier": SubscriptionManager.shared.currentTier.displayName
+            ])
+            print("📈 🪵 MIXPANEL DATA LOG EVENT: Decode Game Page View")
+            print("📈 🪵 date: \(Date().formatted())")
+            print("📈 🪵 sub tier: \(SubscriptionManager.shared.currentTier.displayName)")
         }
         
     }

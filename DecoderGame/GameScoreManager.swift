@@ -7,6 +7,7 @@
 
 import Foundation
 import SwiftUI
+import Mixpanel
 
 // MARK: - Game-specific additional properties structures
 struct FlashdanceAdditionalProperties: Codable {
@@ -196,6 +197,24 @@ class GameScoreManager: ObservableObject {
             print("✅ Score saved on main thread! score.date = \(score.date)")
             print("✅ Scores for \(score.gameId): \(self.allScores.filter { $0.gameId == score.gameId }.count)")
 
+            
+            // MIXPANEL ANALYTICS CAPTURE
+            Mixpanel.mainInstance().track(event: "Game Score Saved", properties: [
+                "app": "Decode! Daily iOS",
+                "build_version": Bundle.main.infoDictionary?["CFBundleShortVersionString"],
+                "date": Date().formatted(),
+                "subscription_tier": SubscriptionManager.shared.currentTier.displayName,
+                "game": score.gameId,
+                "game_archive_date": markDate,
+                "final_score": score.finalScore
+            ])
+            print("📈 🪵 MIXPANEL DATA LOG EVENT: Game Score Saved")
+            print("📈 🪵 date: \(Date().formatted())")
+            print("📈 🪵 sub tier: \(SubscriptionManager.shared.currentTier.displayName)")
+            print("📈 🪵 game: \(score.gameId)")
+            print("📈 🪵 game_archive_date: \(markDate)")
+            print("📈 🪵 final_score: \(score.finalScore)")
+            
             self.objectWillChange.send()
         }
     }

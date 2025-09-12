@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Mixpanel
 
 struct FlashdanceGameView: View {
     let targetDate: Date?
@@ -369,7 +370,18 @@ struct FlashdanceGameView: View {
             if game.gameOver > 0 {
                 game.resetGame()
             }
-            //startNewGame()
+            
+            // MIXPANEL ANALYTICS CAPTURE
+            Mixpanel.mainInstance().track(event: "Flashdance Game Page View", properties: [
+                "app": "Decode! Daily iOS",
+                "build_version": Bundle.main.infoDictionary?["CFBundleShortVersionString"],
+                "date": Date().formatted(),
+                "subscription_tier": SubscriptionManager.shared.currentTier.displayName
+            ])
+            print("📈 🪵 MIXPANEL DATA LOG EVENT: Flashdance Game Page View")
+            print("📈 🪵 date: \(Date().formatted())")
+            print("📈 🪵 sub tier: \(SubscriptionManager.shared.currentTier.displayName)")
+
         }
     }
     

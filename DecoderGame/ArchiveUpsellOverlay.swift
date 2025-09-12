@@ -8,6 +8,7 @@
 // MARK: - ArchiveUpsellOverlay.swift
 import SwiftUI
 import StoreKit
+import Mixpanel
 
 struct ArchiveUpsellOverlay: View {
     @Binding var isPresented: Bool
@@ -32,6 +33,21 @@ struct ArchiveUpsellOverlay: View {
             Task {
                 await storeManager.requestProducts()
             }
+            // MIXPANEL ANALYTICS CAPTURE
+            Mixpanel.mainInstance().track(event: "Archive Upsell View", properties: [
+                "app": "Decode! Daily iOS",
+                "build_version": Bundle.main.infoDictionary?["CFBundleShortVersionString"],
+                "date": Date().formatted(),
+                "subscription_tier": SubscriptionManager.shared.currentTier.displayName
+            ])
+            print("📈 🪵 MIXPANEL DATA LOG EVENT: Archive Upsell View")
+            print("📈 🪵 date: \(Date().formatted())")
+            print("📈 🪵 sub tier: \(SubscriptionManager.shared.currentTier.displayName)")
+        }
+        .onChange(of: subscriptionManager.currentTier) {
+            let _ = print("AM I ON TO SOMETHING??????")
+            let _ = print("subscriptionManager.currentTier: \(subscriptionManager.currentTier)")
+            
         }
     }
     
@@ -79,10 +95,10 @@ struct ArchiveUpsellOverlay: View {
                     .padding(.horizontal, 20)
                     .padding(.vertical, 8)
                     .background(Color.clear)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 8)
-                            .stroke(Color.white.opacity(0.8), lineWidth: 1)
-                    )
+//                    .overlay(
+//                        RoundedRectangle(cornerRadius: 8)
+//                            .stroke(Color.white.opacity(0.8), lineWidth: 1)
+//                    )
             }
             .padding(.top, 10)
             
