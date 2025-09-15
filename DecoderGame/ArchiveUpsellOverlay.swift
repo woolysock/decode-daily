@@ -14,6 +14,8 @@ struct ArchiveUpsellOverlay: View {
     @Binding var isPresented: Bool
     @EnvironmentObject var subscriptionManager: SubscriptionManager
     @StateObject private var storeManager = StoreManager.shared
+    @Environment(\.horizontalSizeClass) var horizontalSizeClass
+    @Environment(\.sizeCategory) var sizeCategory
     
     var body: some View {
         ZStack {
@@ -54,7 +56,7 @@ struct ArchiveUpsellOverlay: View {
     // MARK: - Premium Benefits View
     @ViewBuilder
     private var premiumBenefitsView: some View {
-        VStack(spacing: 20) {
+        VStack(spacing: adaptiveSpacing) {
             // Header
             VStack(spacing: 8) {
                 Image(systemName: "crown.fill")
@@ -66,11 +68,17 @@ struct ArchiveUpsellOverlay: View {
                     .font(.custom("LuloOne-Bold", size: 18))
                     .foregroundColor(.white)
                     .multilineTextAlignment(.center)
+                    .lineLimit(2)
+                    .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                    .allowsTightening(true)
                 
                 Text("Enjoy all the benefits")
                     .font(.custom("LuloOne", size: 12))
                     .foregroundColor(.white.opacity(0.9))
                     .multilineTextAlignment(.center)
+                    .lineLimit(2)
+                    .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                    .allowsTightening(true)
             }
             
             // Benefits List
@@ -94,11 +102,9 @@ struct ArchiveUpsellOverlay: View {
                     .foregroundColor(.white.opacity(0.9))
                     .padding(.horizontal, 20)
                     .padding(.vertical, 8)
-                    .background(Color.clear)
-//                    .overlay(
-//                        RoundedRectangle(cornerRadius: 8)
-//                            .stroke(Color.white.opacity(0.8), lineWidth: 1)
-//                    )
+                    .lineLimit(1)
+                    .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                    .allowsTightening(true)
             }
             .padding(.top, 10)
             
@@ -114,9 +120,13 @@ struct ArchiveUpsellOverlay: View {
                     .padding(.vertical, 12)
                     .background(Color.myAccentColor2)
                     .cornerRadius(10)
+                    .lineLimit(2)
+                    .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                    .allowsTightening(true)
             }
             .padding(.top, 10)
         }
+        .frame(maxWidth: adaptiveMaxWidth)
         .padding(30)
         .background(Color.myOverlaysColor)
         .cornerRadius(20)
@@ -139,11 +149,16 @@ struct ArchiveUpsellOverlay: View {
                 Text(title)
                     .font(.custom("LuloOne-Bold", size: 12))
                     .foregroundColor(.white)
+                    .lineLimit(2)
+                    .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                    .allowsTightening(true)
                 
                 Text(description)
                     .font(.custom("LuloOne", size: 10))
                     .foregroundColor(.white.opacity(0.8))
                     .multilineTextAlignment(.leading)
+                    .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                    .allowsTightening(true)
             }
             
             Spacer()
@@ -159,17 +174,18 @@ struct ArchiveUpsellOverlay: View {
     private var upsellView: some View {
         VStack(spacing: 20) {
             // Header
-            VStack(spacing: 8) {
+            VStack(alignment: .center, spacing: 8) {
                 Image(systemName: "key.2.on.ring.fill")
                     .font(.system(size: 50))
                     .foregroundColor(Color.mySunColor)
                     .padding(3)
                 
                 Text("Unlock More Dailies")
-                    .font(.custom("LuloOne-Bold", size: 14))
+                    .font(.custom("LuloOne-Bold", size: adaptiveFontSize14))
                     .foregroundColor(.white)
-                    .multilineTextAlignment(.center)
-                
+                    .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                    .lineLimit(1)
+                    .allowsTightening(true)
                 Text("from the")
                     .font(.custom("LuloOne-Bold", size: 8))
                     .foregroundColor(.white)
@@ -179,13 +195,18 @@ struct ArchiveUpsellOverlay: View {
                     .font(.custom("LuloOne-Bold", size: 30))
                     .foregroundColor(.white)
                     .multilineTextAlignment(.center)
+                    .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                    .lineLimit(1)
+                    .allowsTightening(true)
                 
                 // Dynamic free tier description
-                Text("Play today's daily games plus the past \(PaidTier.basicAccess.archiveDaysAllowed) days free.\n\n★ Or Upgrade for more! ★")
+                Text("Play today's daily games and the last \(PaidTier.basicAccess.archiveDaysAllowed) days free. ★ Or Upgrade for more! ★")
                     .font(.custom("LuloOne", size: 10))
                     .foregroundColor(.white.opacity(0.9))
                     .multilineTextAlignment(.center)
                     .padding(5)
+                    .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                    .allowsTightening(true)
                
             }
             
@@ -201,6 +222,9 @@ struct ArchiveUpsellOverlay: View {
                 Text("Processing...")
                     .font(.custom("LuloOne", size: 12))
                     .foregroundColor(.white)
+                    .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                    .lineLimit(1)
+                    .allowsTightening(true)
             }
             // Paid product options
             else if !storeManager.products.isEmpty {
@@ -216,11 +240,16 @@ struct ArchiveUpsellOverlay: View {
                     Text("Unable to load products")
                         .font(.custom("LuloOne-Bold", size: 16))
                         .foregroundColor(.red)
+                        .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                        .lineLimit(1)
+                        .allowsTightening(true)
                     
                     Text(errorMessage)
                         .font(.custom("LuloOne", size: 12))
                         .foregroundColor(.white.opacity(0.8))
                         .multilineTextAlignment(.center)
+                        .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                        .allowsTightening(true)
                     
                     Button("Retry") {
                         Task {
@@ -233,6 +262,9 @@ struct ArchiveUpsellOverlay: View {
                     .padding(.vertical, 8)
                     .background(Color.blue)
                     .cornerRadius(8)
+                    .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                    .lineLimit(1)
+                    .allowsTightening(true)
                 }
             }
             
@@ -246,6 +278,9 @@ struct ArchiveUpsellOverlay: View {
                 .font(.custom("LuloOne", size: 10))
                 .foregroundColor(.white.opacity(0.6))
                 .padding(.top, 10)
+                .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                .lineLimit(1)
+                .allowsTightening(true)
             }
             
             // Close button
@@ -258,6 +293,9 @@ struct ArchiveUpsellOverlay: View {
                     .padding(.horizontal, 20)
                     .padding(.vertical, 8)
                     .background(Color.clear)
+                    .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                    .lineLimit(1)
+                    .allowsTightening(true)
                     .overlay(
                         RoundedRectangle(cornerRadius: 8)
                             .stroke(Color.white.opacity(0.8), lineWidth: 1)
@@ -265,14 +303,14 @@ struct ArchiveUpsellOverlay: View {
             }
             .padding(.top, 10)
         }
-        .padding(30)
+        .padding(adaptivePadding30)
         .background(Color.myOverlaysColor)
         .cornerRadius(20)
         .overlay(
             RoundedRectangle(cornerRadius: 15)
                 .stroke(Color.white, lineWidth: 0.5)
         )
-        .padding(.horizontal, 40)
+        .padding(.horizontal, sizeCategory > .large ? 20 : 40)
     }
     
     @ViewBuilder
@@ -282,16 +320,25 @@ struct ArchiveUpsellOverlay: View {
                 Text("Basic")
                     .font(.custom("LuloOne-Bold", size: 14))
                     .foregroundColor(.white)
+                    .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                    .lineLimit(1)
+                    .allowsTightening(true)
                 
                 if subscriptionManager.currentTier == .basicAccess {
                     Text("Current Plan")
                         .font(.custom("LuloOne-Bold", size: 10))
                         .foregroundColor(Color.mySunColor)
+                        .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                        .lineLimit(1)
+                        .allowsTightening(true)
                 }
                 // Dynamic description for basic tier
                 Text("Last \(PaidTier.basicAccess.archiveDaysAllowed) days of games")
                     .font(.custom("LuloOne", size: 11))
                     .foregroundColor(.white.opacity(0.8))
+                    .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                    .lineLimit(2)
+                    .allowsTightening(true)
             }
             
             Spacer()
@@ -299,6 +346,9 @@ struct ArchiveUpsellOverlay: View {
             Text("FREE")
                 .font(.custom("LuloOne-Bold", size: 14))
                 .foregroundColor(.green)
+                .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                .lineLimit(1)
+                .allowsTightening(true)
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
@@ -327,15 +377,23 @@ struct ArchiveUpsellOverlay: View {
                     Text(product.displayName)
                         .font(.custom("LuloOne-Bold", size: 14))
                         .foregroundColor(.white)
+                        .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                        .lineLimit(1)
+                        .allowsTightening(true)
              
                     if subscriptionManager.currentTier == productTier {
                         Text("Current Plan")
                             .font(.custom("LuloOne-Bold", size: 10))
                             .foregroundColor(Color.mySunColor)
+                            .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                            .lineLimit(1)
+                            .allowsTightening(true)
                     }
                     Text(description)
                         .font(.custom("LuloOne", size: 11))
                         .foregroundColor(.white.opacity(0.8))
+                        .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                        .allowsTightening(true)
                 }
                 
                 Spacer()
@@ -345,13 +403,22 @@ struct ArchiveUpsellOverlay: View {
                         Text("✔︎")
                             .font(.custom("LuloOne-Bold", size: 26))
                             .foregroundColor(.green)
+                            .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                            .lineLimit(1)
+                            .allowsTightening(true)
                     } else {
                         Text(product.displayPrice)
                             .font(.custom("LuloOne-Bold", size: 14))
                             .foregroundColor(.white)
+                            .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                            .lineLimit(1)
+                            .allowsTightening(true)
                         Text("/yr")
                             .font(.custom("LuloOne", size: 6))
                             .foregroundColor(.white)
+                            .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                            .lineLimit(1)
+                            .allowsTightening(true)
                     }
                 }
             }
@@ -393,4 +460,32 @@ struct ArchiveUpsellOverlay: View {
             }
         }
     }
+    
+    private var adaptiveSpacing: CGFloat {
+        horizontalSizeClass == .compact ? 12 : 20
+    }
+    
+    private var adaptiveTitleSize: CGFloat {
+        horizontalSizeClass == .compact ? 20 : 24
+    }
+    
+    private var adaptivePadding40: CGFloat {
+        horizontalSizeClass == .compact ? 20 : 40
+    }
+    
+    private var adaptivePadding30: CGFloat {
+        horizontalSizeClass == .compact ? 15 : 30
+    }
+    
+    private var adaptiveMaxWidth: CGFloat {
+        horizontalSizeClass == .compact ? UIScreen.main.bounds.width - 32 : 400
+    }
+    
+    private var adaptiveFontSize14: CGFloat {
+        horizontalSizeClass == .compact ? 12 : 14
+    }
+    
+    
 }
+    
+

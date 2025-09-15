@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct NewDayOverlay: View {
+    @Environment(\.sizeCategory) var sizeCategory
     @Binding var isVisible: Bool
     let onLetsPlay: () -> Void
     
@@ -30,11 +31,18 @@ struct NewDayOverlay: View {
                     Text("It's a new day!")
                         .font(.custom("LuloOne-Bold", size: 28))
                         .foregroundColor(.white)
+                        .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                        .lineLimit(2)
+                        .allowsTightening(true)
+                        .multilineTextAlignment(.center)
                     
-                    Text("Fresh daily games await.")
+                    Text("Fresh dailies await")
                         .font(.custom("LuloOne", size: 16))
                         .foregroundColor(.white.opacity(0.8))
                         .multilineTextAlignment(.center)
+                        .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                        .lineLimit(1)
+                        .allowsTightening(true)
                 }
                 
                 Divider()
@@ -48,10 +56,13 @@ struct NewDayOverlay: View {
                         .foregroundColor(Color.mySunColor)
                         .symbolRenderingMode(.hierarchical)
                     
-                    Text("Play fresh challenges for \(DateFormatter.day2Formatter.string(from: Date()))!")
+                    Text("Play the challenges for \(DateFormatter.day2Formatter.string(from: Date()))!")
                         .font(.custom("LuloOne", size: 14))
                         .foregroundColor(.white.opacity(0.8))
                         .multilineTextAlignment(.center)
+                        .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                        .lineLimit(2)
+                        .allowsTightening(true)
                 }
                 
                 Divider()
@@ -64,9 +75,13 @@ struct NewDayOverlay: View {
                 }
                 .font(.custom("LuloOne-Bold", size: 18))
                 .foregroundColor(buttonsAreActive ? .black : .gray)
-                .frame(width: 200, height: 50)
+                .frame(width: sizeCategory > .large ? 240 : 200, height: 50)
+                .padding(.horizontal, 5)
                 .background(buttonsAreActive ? Color.white : Color.gray.opacity(0.4))
                 .cornerRadius(10)
+                .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                .lineLimit(1)
+                .allowsTightening(true)
                 .disabled(!buttonsAreActive)
                 .animation(.easeInOut(duration: 0.3), value: buttonsAreActive)
             }

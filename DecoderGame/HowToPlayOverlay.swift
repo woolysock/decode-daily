@@ -6,6 +6,7 @@ struct HowToPlayOverlay: View {
     @Binding var isVisible: Bool
     
     @State private var dontShowAgain: Bool = false
+    @Environment(\.sizeCategory) var sizeCategory
     
     var body: some View {
         ZStack {
@@ -23,14 +24,23 @@ struct HowToPlayOverlay: View {
                     .font(.custom("LuloOne-Bold", size: 26))
                     .bold()
                     .foregroundColor(.white)
+                    .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                    .lineLimit(2)
+                    .multilineTextAlignment(.center)
+                    .allowsTightening(true)
                 
-                ScrollView {
+                ScrollView(.vertical, showsIndicators: true) {
                     Text(instructions)
-                        .font(.custom("SoleilLt", size: gameID != "decode" ? 20 : 19))
+                        .font(.custom("SoleilLt", size: gameID != "decode" ? 20 : 18))
                         .foregroundColor(.white)
                         .multilineTextAlignment(.leading)
+                        .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                        .allowsTightening(true)
+                        .padding(10)
                 }
-                .frame(maxHeight: gameID != "decode" ? 330 : 350)
+               // .frame(maxHeight: gameID != "decode" ? 340 : 360)
+                .background(Color.myAccentColor1.opacity(0.2))
+                .scrollIndicators(.visible)
                 
                 Button(action: {
                     dismissOverlay()
@@ -42,19 +52,25 @@ struct HowToPlayOverlay: View {
                         .frame(maxWidth: .infinity)
                         .background(Color.white)
                         .cornerRadius(8)
+                        .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                        .lineLimit(1)
+                        .allowsTightening(true)
                 }
                 
                 Toggle("do not show again", isOn: $dontShowAgain)
                     .foregroundColor(.myAccentColor1)
                     //.background(.white.opacity(0.1))
                     .font(.custom("LuloOne-Bold", size: 14))
+                    .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                    .lineLimit(1)
+                    .allowsTightening(true)
                     .shadow(radius: 3)
                     .onChange(of: dontShowAgain) {
                         UserDefaults.standard.set(dontShowAgain, forKey: "hasSeenHowToPlay_\(gameID)")
                     }
                 
             }
-            .padding(.horizontal, 30)
+            .padding(.horizontal, 20)
             .padding(.vertical, 40)
             .overlay(
                 RoundedRectangle(cornerRadius: 16)
@@ -70,6 +86,7 @@ struct HowToPlayOverlay: View {
                 // Sync toggle state with saved setting on appear
                 let savedValue = UserDefaults.standard.bool(forKey: "hasSeenHowToPlay_\(gameID)")
                 dontShowAgain = savedValue
+                let _ = print("📲 sizeCategory: \(sizeCategory)")
             }
             .padding(30)
         }

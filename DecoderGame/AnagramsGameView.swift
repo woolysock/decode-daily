@@ -12,6 +12,7 @@ import Mixpanel
 struct AnagramsGameView: View {
     let targetDate: Date?
     
+    @Environment(\.sizeCategory) var sizeCategory
     @ObservedObject private var wordsetManager = DailyWordsetManager.shared
     @EnvironmentObject var scoreManager: GameScoreManager
     @Environment(\.dismiss) private var dismiss
@@ -218,6 +219,9 @@ struct AnagramsGameView: View {
                     Text(game.gameInfo.displayName)
                         .foregroundColor(.white)
                         .font(.custom("LuloOne-Bold", size: 20))
+                        .lineLimit(1)
+                        .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                        .allowsTightening(true)
                         .onTapGesture { tryToStartGame() }
                     
                     // Archive indicator
@@ -229,6 +233,9 @@ struct AnagramsGameView: View {
                             .padding(.vertical, 2)
                             .background(Color.orange.opacity(0.2))
                             .cornerRadius(4)
+                            .lineLimit(1)
+                            .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                            .allowsTightening(true)
                     }
                 }
                 
@@ -237,10 +244,16 @@ struct AnagramsGameView: View {
                     Text(DateFormatter.dayStringFormatter.string(from: targetDate.localStartOfDay))
                         .font(.custom("LuloOne", size: 12))
                         .foregroundColor(.gray)
+                        .lineLimit(1)
+                        .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                        .allowsTightening(true)
                 } else if let wordset = wordsetManager.currentWordset {
                     Text(DateFormatter.dayStringFormatter.string(from: wordset.date))
                         .font(.custom("LuloOne", size: 12))
                         .foregroundColor(.gray)
+                        .lineLimit(1)
+                        .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                        .allowsTightening(true)
                 }
             }
 
@@ -255,11 +268,17 @@ struct AnagramsGameView: View {
                         .monospacedDigit()
                         .frame(minWidth: 54, alignment: .center)
                         .transition(.opacity)
+                        .lineLimit(1)
+                        .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                        .allowsTightening(true)
                 } else {
                     Text(" ")
                         .font(.custom("LuloOne-Bold", size: 20))
                         .frame(minWidth: 54)
                         .opacity(0)
+                        .lineLimit(1)
+                        .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                        .allowsTightening(true)
                 }
             }
 
@@ -287,6 +306,9 @@ struct AnagramsGameView: View {
                     Text("Loading today's words...")
                         .foregroundColor(.white)
                         .font(.custom("LuloOne", size: 12))
+                        .lineLimit(3)
+                        .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                        .allowsTightening(true)
                 }
             } else {
                 Text(game.statusText)
@@ -295,6 +317,9 @@ struct AnagramsGameView: View {
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 20)
                     .padding(.vertical, 4)
+                    .lineLimit(2)
+                    .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                    .allowsTightening(true)
             }
 
             if game.statusText.contains("Wrong") {
@@ -379,15 +404,24 @@ struct AnagramsGameView: View {
                             Text("Word \(game.currentWordIndex + 1) of \(wordset.words.count)")
                                 .font(.custom("LuloOne", size: 12))
                                 .foregroundColor(.white)
+                                .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                                .lineLimit(1)
+                                .allowsTightening(true)
                             
                             if !game.skippedWordIndices.isEmpty {
                                 Text("Skipped: \(game.skippedWordIndices.count)")
                                     .font(.custom("LuloOne", size: 10))
                                     .foregroundColor(.orange)
+                                    .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                                    .lineLimit(1)
+                                    .allowsTightening(true)
                             } else {
                                 Text("Skipped: 0")
                                     .font(.custom("LuloOne", size: 10))
                                     .foregroundColor(.white.opacity(0.3))
+                                    .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                                    .lineLimit(1)
+                                    .allowsTightening(true)
                             }
                         }
                     }

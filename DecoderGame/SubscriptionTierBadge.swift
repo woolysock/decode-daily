@@ -9,6 +9,8 @@ import SwiftUI
 
 // Subscription tier badge component that works with your PaidTier enum
 struct SubscriptionTierBadge: View {
+    
+    @Environment(\.sizeCategory) var sizeCategory
     let tier: PaidTier
     
     var body: some View {
@@ -22,6 +24,9 @@ struct SubscriptionTierBadge: View {
             Text(tierDisplayName)
                 .font(.custom("LuloOne-Bold", size: 11))
                 .foregroundColor(tierTextColor)
+                .lineLimit(1)
+                .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                .allowsTightening(true)
         }
         .padding(.horizontal, 15)
         .padding(.vertical, 10)

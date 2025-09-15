@@ -13,6 +13,7 @@ struct FlashdanceGameView: View {
     
     //@EnvironmentObject var scoreManager: GameScoreManager
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.sizeCategory) var sizeCategory
     
     @ObservedObject private var equationManager = DailyEquationManager.shared
     
@@ -42,8 +43,7 @@ struct FlashdanceGameView: View {
     let scoreManager = GameScoreManager.shared
     
     private let instructionsText = """
-    Race against the clock to solve the
-    most math problems!  ×  +  −  ÷
+    Race against the clock to solve the most math problems!  ×  +  −  ÷
     
     When a flashcard appears in the center of the screen, swipe it towards the correct answer.
     
@@ -86,6 +86,9 @@ struct FlashdanceGameView: View {
                                     Text("\(game.gameInfo.displayName)")
                                         .foregroundColor(.white)
                                         .font(.custom("LuloOne-Bold", size: 20))
+                                        .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                                        .lineLimit(1)
+                                        .allowsTightening(true)
                                         .onTapGesture { startRound() }
                                     
                                     // Archive indicator
@@ -96,6 +99,9 @@ struct FlashdanceGameView: View {
                                             .padding(.horizontal, 6)
                                             .padding(.vertical, 2)
                                             .background(Color.orange.opacity(0.2))
+                                            .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                                            .lineLimit(1)
+                                            .allowsTightening(true)
                                             .cornerRadius(4)
                                     }
                                 }
@@ -105,12 +111,18 @@ struct FlashdanceGameView: View {
                                     Text(DateFormatter.dayFormatter.string(from: targetDate))
                                         .font(.custom("LuloOne", size: 12))
                                         .foregroundColor(.gray)
+                                        .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                                        .lineLimit(1)
+                                        .allowsTightening(true)
                                 } else if let mathset = equationManager.currentEquationSet {
                                     // Show the equation set date when in normal mode
                                     
                                     Text(DateFormatter.dayStringFormatter.string(from: mathset.date))
                                         .font(.custom("LuloOne", size: 12))
                                         .foregroundColor(.gray)
+                                        .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                                        .lineLimit(1)
+                                        .allowsTightening(true)
                                 }
                             }
                             
@@ -125,11 +137,17 @@ struct FlashdanceGameView: View {
                                         .monospacedDigit()
                                         .frame(minWidth: 54)
                                         .transition(.opacity)
+                                        .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                                        .lineLimit(1)
+                                        .allowsTightening(true)
                                 } else {
                                     Text(" ")
                                         .font(.custom("LuloOne-Bold", size: 20))
                                         .frame(minWidth: 54)
                                         .opacity(0)
+                                        .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                                        .lineLimit(1)
+                                        .allowsTightening(true)
                                 }
                             }
                             
@@ -709,6 +727,8 @@ private struct Scoreboard: View {
     let incorrect: Int
     let streak: Int
     
+    @Environment(\.sizeCategory) var sizeCategory
+    
     var body: some View {
         VStack(spacing: 10) {
             HStack(spacing: 12) {
@@ -745,6 +765,8 @@ private struct StatPill: View {
     let value: String
     var emphasize: Emphasis? = nil
     
+    @Environment(\.sizeCategory) var sizeCategory
+    
     var body: some View {
         VStack(spacing: 4) {
             Text(title.uppercased())
@@ -756,7 +778,7 @@ private struct StatPill: View {
                 .font(.system(size: 22, weight: .heavy, design: .rounded))
                 .foregroundColor(.white)
                 .monospacedDigit()
-                .minimumScaleFactor(0.7)
+                .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
         }
         .frame(maxWidth: .infinity, minHeight: 56)
         .padding(.vertical, 8)

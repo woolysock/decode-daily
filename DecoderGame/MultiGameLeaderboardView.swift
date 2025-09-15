@@ -12,6 +12,7 @@ struct LeaderboardPageView: View {
     let onPlayGame: () -> Void
 
     @EnvironmentObject var scoreManager: GameScoreManager
+    @Environment(\.sizeCategory) var sizeCategory
 
     var body: some View {
         VStack {
@@ -36,8 +37,14 @@ struct LeaderboardPageView: View {
                                     VStack(spacing: 5) {
                                         Text("play")
                                             .font(.custom("LuloOne-Bold", size: 16))
+                                            .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                                            .lineLimit(1)
+                                            .allowsTightening(true)
                                         Text(gameDisplayName.lowercased())
                                             .font(.custom("LuloOne-Bold", size: 16))
+                                            .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                                            .lineLimit(1)
+                                            .allowsTightening(true)
                                     }
                                     .padding()
                                     .frame(height: 60)
@@ -77,6 +84,9 @@ struct LeaderboardPageView: View {
 
 // MARK: - Subviews
 struct NoScoresView: View {
+    
+    @Environment(\.sizeCategory) var sizeCategory
+    
     let onPlayGame: () -> Void
     
     var body: some View {
@@ -84,7 +94,9 @@ struct NoScoresView: View {
         VStack(spacing: 10) {
             Text("No scores yet!")
                 .font(.custom("LuloOne-Bold", size: 12))
-                .foregroundColor(.black)  // Changed from .secondary
+                .foregroundColor(.black)
+                .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                .allowsTightening(true)
             
             Spacer().frame(height:10)
             
@@ -92,8 +104,14 @@ struct NoScoresView: View {
                 VStack(spacing: 5) {
                     Text("play")
                         .font(.custom("LuloOne-Bold", size: 16))
+                        .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                        .lineLimit(1)
+                        .allowsTightening(true)
                     Text("now")
                         .font(.custom("LuloOne-Bold", size: 16))
+                        .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                        .lineLimit(1)
+                        .allowsTightening(true)
                 }
                 .padding()
                 .frame(height: 60)
@@ -109,6 +127,7 @@ struct NoScoresView: View {
 
 struct LeaderboardHeaderText: View {
     let count: Int
+    @Environment(\.sizeCategory) var sizeCategory
 
     var body: some View {
         Text(
@@ -117,12 +136,17 @@ struct LeaderboardHeaderText: View {
                 : "You have \(count) high score\(count == 1 ? "" : "s")"
         )
         .font(.custom("LuloOne", size: 12))
-        .foregroundColor(.black)  // Changed from .secondary
+        .foregroundColor(.black)
         .padding(.bottom, 5)
+        .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+        .lineLimit(1)
+        .allowsTightening(true)
     }
 }
 
 struct ScoreRowView: View {
+    
+    @Environment(\.sizeCategory) var sizeCategory
     let score: GameScore
 
     var body: some View {
@@ -135,6 +159,9 @@ struct ScoreRowView: View {
                     Text("Played: \(DateFormatter.scorePlayedDisplayFormatter.string(from:score.date))")
                         .font(.custom("LuloOne-Bold", size: 12))
                         .foregroundColor(.black)
+                        .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                        .lineLimit(1)
+                        .allowsTightening(true)
                 }
                 
                 // CUSTOM SCORE EXTRAS
@@ -144,23 +171,38 @@ struct ScoreRowView: View {
                         Text("Game ID: \(DateFormatter.dayFormatter.string(from: the_date))\n")
                             .font(.custom("LuloOne", size: 10))
                             .foregroundColor(.black)
+                            .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                            .lineLimit(1)
+                            .allowsTightening(true)
                     } else {
                         Text("Game ID: Not Found\n")
                             .font(.custom("LuloOne", size: 10))
                             .foregroundColor(.black)
+                            .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                            .lineLimit(2)
+                            .allowsTightening(true)
                     }
                     
                     Text(" ☆ Equations solved: \(flashdanceProps.correctAnswers)")
                         .font(.custom("LuloOne", size: 10))
                         .foregroundColor(.black)
-                        
+                        .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                        .lineLimit(2)
+                        .allowsTightening(true)
+                    
                     Text(" ☆ Wrong Answers: \(flashdanceProps.incorrectAnswers)")
                         .font(.custom("LuloOne", size: 10))
                         .foregroundColor(.black)
+                        .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                        .lineLimit(2)
+                        .allowsTightening(true)
                     
                     Text(" ☆ Longest Streak: \(flashdanceProps.longestStreak) in a row")
                         .font(.custom("LuloOne", size: 10))
                         .foregroundColor(.black)
+                        .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                        .lineLimit(2)
+                        .allowsTightening(true)
                 }
                 
                 if let decodeProps = score.decodeProperties {
@@ -168,14 +210,23 @@ struct ScoreRowView: View {
                         Text("Game ID: \(DateFormatter.dayFormatter.string(from: the_date))\n")
                             .font(.custom("LuloOne", size: 10))
                             .foregroundColor(.black)
+                            .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                            .lineLimit(2)
+                            .allowsTightening(true)
                     } else {
                         Text("Game ID: Not Found\n")
                             .font(.custom("LuloOne", size: 10))
                             .foregroundColor(.black)
+                            .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                            .lineLimit(2)
+                            .allowsTightening(true)
                     }
                     Text(" ☆ Guesses: \(decodeProps.turnsToSolve)")
                         .font(.custom("LuloOne", size: 10))
                         .foregroundColor(.black)
+                        .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                        .lineLimit(1)
+                        .allowsTightening(true)
                     
                     let duration = Int(decodeProps.gameDuration)
                     let timeText = duration < 60 ? "\(duration) sec" : String(format: "%d:%02d", duration / 60, duration % 60)
@@ -183,6 +234,9 @@ struct ScoreRowView: View {
                     Text(" ☆ Time to Solve: \(timeText)")
                         .font(.custom("LuloOne", size: 10))
                         .foregroundColor(.black)
+                        .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                        .lineLimit(2)
+                        .allowsTightening(true)
                 }
                 
                 if let anagramsProps = score.anagramsProperties {
@@ -190,27 +244,45 @@ struct ScoreRowView: View {
                         Text("Game ID: \(DateFormatter.dayFormatter.string(from: the_date))\n")
                             .font(.custom("LuloOne", size: 10))
                             .foregroundColor(.black)
+                            .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                            .lineLimit(2)
+                            .allowsTightening(true)
                     } else {
                         Text("Game ID: Not Found\n")
                             .font(.custom("LuloOne", size: 10))
                             .foregroundColor(.black)
+                            .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                            .lineLimit(2)
+                            .allowsTightening(true)
                     }
                     Text(" ☆ Solved: \(Int(anagramsProps.wordsCompleted)) words (of \(anagramsProps.totalWordsInSet))")
                         .font(.custom("LuloOne", size: 10))
                         .foregroundColor(.black)
+                        .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                        .lineLimit(2)
+                        .allowsTightening(true)
                     Text(" ☆ Skipped: \(Int(anagramsProps.skippedWords)) words")
                         .font(.custom("LuloOne", size: 10))
                         .foregroundColor(.black)
+                        .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                        .lineLimit(2)
+                        .allowsTightening(true)
                     Text(" ☆ Longest word solved: \(anagramsProps.longestWord) letters")
                         .font(.custom("LuloOne", size: 10))
                         .foregroundColor(.black)
+                        .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                        .lineLimit(2)
+                        .allowsTightening(true)
                 }
             
             }
             Spacer()
             Text("\(score.finalScore)")
                 .font(.custom("LuloOne-Bold", size: 22))
-                .foregroundColor(.black)  // Added explicit color
+                .foregroundColor(.black)
+                .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                .lineLimit(1)
+                .allowsTightening(true)
             Spacer()
                 .frame(width: 20)
         }
@@ -238,8 +310,11 @@ struct ScoreRowView: View {
 
 // MARK: - MultiGameLeaderboardView
 struct MultiGameLeaderboardView: View {
+
+    @Environment(\.sizeCategory) var sizeCategory
     @EnvironmentObject var scoreManager: GameScoreManager
     @Environment(\.dismiss) private var dismiss
+    
     @State private var currentTabIndex: Int = 0
     @State private var navigateToGame: String? = nil
 
@@ -267,16 +342,23 @@ struct MultiGameLeaderboardView: View {
                         Text("High Scores")
                             .font(.custom("LuloOne-Bold", size: 26))
                             .foregroundColor(.white)
+                            .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                            .lineLimit(2)
+                            .allowsTightening(true)
+                            .multilineTextAlignment(.center)
                                                 
                         Spacer()
                             .frame(width:10)
                         
                         NavigationLink(destination: MainMenuView(initialPage: 0)) {
-                            HStack(spacing: 6) {
+                            HStack(alignment: .lastTextBaseline, spacing: 6) {
                                 Image(systemName: "house.fill")
-                                    .font(.system(size: 16))
+                                    .font(.system(size: 14))
                                 Text("Home")
-                                    .font(.custom("LuloOne-Bold", size: 14))
+                                    .font(.custom("LuloOne-Bold", size: sizeCategory > .large ? 12 : 14))
+                                    .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                                    .lineLimit(1)
+                                    .allowsTightening(true)
                             }
                             .foregroundColor(.white)
                             .padding(.horizontal, 12)
@@ -306,9 +388,12 @@ struct MultiGameLeaderboardView: View {
                                 
                                 // Game name
                                 Text(games[index].displayName)
-                                    .font(.custom("LuloOne-Bold", size: 12))
+                                    .font(.custom("LuloOne-Bold", size: sizeCategory > .large ? 10 : 12))
                                     .foregroundColor(currentTabIndex != index ? Color.myAccentColor1 : Color.white.opacity(0.8))
                                     .shadow(color: (currentTabIndex != index ? Color.myNavy : Color.clear), radius:1)
+                                    .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                                    .lineLimit(1)
+                                    .allowsTightening(true)
                                 
                                 // Active indicator dot
                                 Circle()

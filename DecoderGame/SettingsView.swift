@@ -10,6 +10,7 @@ import Mixpanel
 
 struct SettingsView: View {
     @Environment(\.presentationMode) var presentationMode
+    @Environment(\.sizeCategory) var sizeCategory
     @EnvironmentObject var scoreManager: GameScoreManager
     @StateObject private var subscriptionManager = SubscriptionManager.shared
     
@@ -19,6 +20,7 @@ struct SettingsView: View {
     @State private var showingClearConfirmation: String? = nil
     @State private var showingClearSuccess = false
     @State private var isDeveloperMode = false
+    
     
     var appVersion: String {
         let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "Unknown"
@@ -108,6 +110,9 @@ struct SettingsView: View {
             Text("Settings")
                 .font(.custom("LuloOne-Bold", size: 20))
                 .foregroundColor(.black)
+                .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                .lineLimit(1)
+                .allowsTightening(true)
             
             Spacer()
             
@@ -144,12 +149,13 @@ struct SettingsView: View {
                 // Data Management Section
                 settingsSection(title: "High Scores Data") {
                     eraseScoresCard
-                    clearCompletionSection
                 }
                 
                 if isDeveloperMode {
                     // Developer Section (only if in developer mode)
                     settingsSection(title: "Developer Testing") {
+                        
+                        clearCompletionSection
                         
                         paidTierTestingCard
                         // NOTE: un/commment ^^ line to show the sub tiers for testing, if needed
@@ -188,6 +194,9 @@ struct SettingsView: View {
                 .font(.custom("LuloOne-Bold", size: 14))
                 .foregroundColor(.gray)
                 .padding(.horizontal, 4)
+                .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                .lineLimit(1)
+                .allowsTightening(true)
             
             content()
         }
@@ -205,10 +214,16 @@ struct SettingsView: View {
                     Text("Version")
                         .font(.custom("LuloOne-Bold", size: 14))
                         .foregroundColor(.black)
+                        .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                        .lineLimit(1)
+                        .allowsTightening(true)
                     
                     Text(appVersion)
                         .font(.custom("LuloOne", size: 12))
                         .foregroundColor(.gray)
+                        .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                        .lineLimit(1)
+                        .allowsTightening(true)
                 }
                 
                 Spacer()
@@ -241,6 +256,9 @@ struct SettingsView: View {
                     Text("Erase All High Scores")
                         .font(.custom("LuloOne-Bold", size: 14))
                         .foregroundColor(hasScores ? .red : .gray)
+                        .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                        .lineLimit(4)
+                        .allowsTightening(true)
                     
                     if hasScores {
                         Text("\(totalScores) score\(totalScores == 1 ? "" : "s") across \(uniqueGames) game\(uniqueGames == 1 ? "" : "s")")
@@ -467,7 +485,7 @@ struct SettingsView: View {
                     }) {
                         Image(systemName: "xmark.circle.fill")
                             .font(.title2)
-                            .foregroundColor(.gray)
+                            .foregroundColor(Color.myAccentColor2)
                     }
                 }
                 
@@ -483,15 +501,23 @@ struct SettingsView: View {
             Text("Help & Support")
                 .font(.custom("LuloOne-Bold", size: 20))
                 .foregroundColor(.black)
+                .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                .lineLimit(2)
+                .allowsTightening(true)
             
             Text("For support,\nplease reach out to the team by visiting our website:")
                 .font(.custom("LuloOne", size: 14))
                 .foregroundColor(.black)
                 .multilineTextAlignment(.center)
+                .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                .allowsTightening(true)
             
             Link("www.meganddesign.com", destination: URL(string: "http://www.meganddesign.com/decodedaily")!)
                 .font(.custom("LuloOne", size: 14))
-                .foregroundColor(.blue)
+                .foregroundColor(Color.myAccentColor2)
+                .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                .lineLimit(3)
+                .allowsTightening(true)
         }
         .padding(30)
         .background(Color.white)

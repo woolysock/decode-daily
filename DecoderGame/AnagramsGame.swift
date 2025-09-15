@@ -59,7 +59,7 @@ class AnagramsGame: GameProtocol, ObservableObject {
     let gameInfo = GameInfo(
         id: "anagrams",
         displayName: "'Grams",
-        description: "rearrange letters into words",
+        description: "unscramble the letters",
         isAvailable: true,
         //gameLocation: AnyView(EmptyView()), // replace with real view if needed
         gameIcon: Image(systemName: "60.arrow.trianglehead.clockwise")

@@ -15,7 +15,9 @@ struct AlreadyPlayedOverlay: View {
     let onPlayWithoutScore: () -> Void
     let onPlayRandom: () -> Void
     let onNavigateToArchive: () -> Void
-    
+    @Environment(\.sizeCategory) var sizeCategory
+    @Environment(\.horizontalSizeClass) var horizontalSizeClass
+        
     private var formattedDate: String {
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
@@ -47,10 +49,16 @@ struct AlreadyPlayedOverlay: View {
                         .font(.custom("LuloOne", size: 16))
                         .foregroundColor(.white.opacity(0.8))
                         .multilineTextAlignment(.center)
+                        .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                        .lineLimit(2)
+                        .allowsTightening(true)
                     
                     Text(formattedDate)
                         .font(.custom("LuloOne-Bold", size: 20))
                         .foregroundColor(.white)
+                        .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                        .lineLimit(1)
+                        .allowsTightening(true)
                     
 //                    Text("code")
 //                        .font(.custom("LuloOne-Bold", size: 14))
@@ -68,6 +76,9 @@ struct AlreadyPlayedOverlay: View {
                         .font(.custom("LuloOne", size: 12))
                         .foregroundColor(.white)
                         .multilineTextAlignment(.center)
+                        .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                        .lineLimit(6)
+                        .allowsTightening(true)
                     
                     Button(action: {
                         onPlayWithoutScore()
@@ -79,6 +90,9 @@ struct AlreadyPlayedOverlay: View {
                             .frame(width: 250, height: 45)
                             .background(Color.white)
                             .cornerRadius(10)
+                            .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                            .lineLimit(1)
+                            .allowsTightening(true)
                     }
                     .padding(5)
                     
@@ -109,27 +123,34 @@ struct AlreadyPlayedOverlay: View {
                         .font(.custom("LuloOne", size: 12))
                         .foregroundColor(.white)
                         .multilineTextAlignment(.center)
+                        .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                        .lineLimit(3)
+                        .allowsTightening(true)
                     
                     NavigationLink(destination: MainMenuView(initialPage: 1, selectedGame: "decode")) {
                         Text("PICK NEW DATE ✓")
-                            .font(.custom("LuloOne-Bold", size: 16))
+                            .font(.custom("LuloOne-Bold", size: sizeCategory > .large ? 14 : 16))
                             .foregroundColor(.white)
                             .frame(width: 250, height: 45)
                             .background(Color.myAccentColor2)
                             .contentShape(Rectangle())
                             .cornerRadius(8)
+                            .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                            .lineLimit(1)
+                            .allowsTightening(true)
                     }
+                    .padding(5)
                     
                 }
             }
-            .padding(40)
+            .padding(horizontalSizeClass == .compact ? 30 : 40)
             .background(Color.myOverlaysColor)
             .cornerRadius(15)
             .overlay(
                 RoundedRectangle(cornerRadius: 15)
                     .stroke(Color.white, lineWidth: 0.5)
             )
-            .padding(.horizontal, 40)
+            .padding(.horizontal, horizontalSizeClass == .compact ? 30 : 40)
         }
     }
         

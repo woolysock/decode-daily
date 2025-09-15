@@ -8,6 +8,9 @@
 import SwiftUI
 
 struct EndGameOverlay: View {
+    
+    @Environment(\.sizeCategory) var sizeCategory
+    
     let gameID: String
     let finalScore: Int
     let displayName: String
@@ -112,11 +115,11 @@ struct EndGameOverlay: View {
                 return nil
             }
             let formattedTime = formatDuration(decodeProps.gameDuration)
-            return "Turns: \(decodeProps.turnsToSolve)/7 • Time: \(formattedTime)"
+            return "Turns: \(decodeProps.turnsToSolve)/7\nTime: \(formattedTime)"
             
         case "flashdance":
             guard let flashProps = gameScore.flashdanceProperties else { return nil }
-            return "Correct: \(flashProps.correctAnswers) • Wrong: \(flashProps.incorrectAnswers)\nBest Streak: \(flashProps.longestStreak)"
+            return "Correct: \(flashProps.correctAnswers)\nWrong: \(flashProps.incorrectAnswers)\nBest Streak: \(flashProps.longestStreak)"
             
         case "anagrams":
             guard let theseProps = gameScore.anagramsProperties else { return nil }
@@ -155,10 +158,16 @@ struct EndGameOverlay: View {
                     Text("Game Over!")
                         .font(.custom("LuloOne-Bold", size: 28))
                         .foregroundColor(.white)
+                        .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                        .lineLimit(1)
+                        .allowsTightening(true)
                     
                     Text(displayName)
                         .font(.custom("LuloOne", size: 18))
                         .foregroundColor(.white.opacity(0.8))
+                        .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                        .lineLimit(1)
+                        .allowsTightening(true)
                 }
                 
                 Divider()
@@ -171,19 +180,27 @@ struct EndGameOverlay: View {
                         Text(scoreText)
                             .font(.custom("LuloOne", size: 16))
                             .foregroundColor(.white.opacity(0.8))
+                            .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                            .lineLimit(4)
+                            .allowsTightening(true)
                         
                         Text("\(finalScore)")
                             .font(.custom("LuloOne-Bold", size: 48))
                             .foregroundColor(.white)
                             .monospacedDigit()
+                            .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                            .lineLimit(1)
+                            .allowsTightening(true)
                         
                         // NEW: Additional score details
                         if let details = additionalScoreDetails {
                             Text(details)
-                                .font(.custom("LuloOne", size: 12))
+                                .font(.custom("LuloOne", size: 14))
                                 .foregroundColor(.white.opacity(0.8))
                                 .multilineTextAlignment(.center)
                                 .padding(.top, 6)
+                                .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                                .allowsTightening(true)
                         }
                         else {
                             Text("Score not saved\n(code was seen before)")
@@ -191,6 +208,8 @@ struct EndGameOverlay: View {
                                 .foregroundColor(.white.opacity(0.8))
                                 .multilineTextAlignment(.center)
                                 .padding(.top, 6)
+                                .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                                .allowsTightening(true)
                         }
                         //                        Text("★ ★ ★")
                         //                            .font(.custom("LuloOne", size: 16))
@@ -214,6 +233,9 @@ struct EndGameOverlay: View {
                                 .background(buttonsAreActive ? Color.white : Color.black.opacity(0.4))
                                 .cornerRadius(10)
                                 .disabled(!buttonsAreActive)
+                                .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                                .lineLimit(1)
+                                .allowsTightening(true)
                                 .animation(.easeInOut(duration: 0.3), value: buttonsAreActive)
                                 .simultaneousGesture(
                                     TapGesture()
@@ -234,6 +256,9 @@ struct EndGameOverlay: View {
                         .disabled(!buttonsAreActive)
                         .animation(.easeInOut(duration: 0.3), value: buttonsAreActive)
                         .contentShape(Rectangle())
+                        .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                        .lineLimit(1)
+                        .allowsTightening(true)
                     }
                     
                     HStack(spacing: 10) {
@@ -241,10 +266,14 @@ struct EndGameOverlay: View {
                             Text("High\nScores")
                                 .font(.custom("LuloOne", size: 14))
                                 .foregroundColor(buttonsAreActive ? .white : .black)
-                                .padding(.horizontal, 25)
+                                .padding(.horizontal, 20)
                                 .padding(.vertical, 12)
                                 .background(buttonsAreActive ? Color.myAccentColor2 : Color.black.opacity(0.4))
                                 .cornerRadius(8)
+                                .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                                .lineLimit(2)
+                                .allowsTightening(true)
+                                
                         }
                         .disabled(!buttonsAreActive)
                         .animation(.easeInOut(duration: 0.3), value: buttonsAreActive)
@@ -260,10 +289,13 @@ struct EndGameOverlay: View {
                             Text("Main\nMenu")
                                 .font(.custom("LuloOne", size: 14))
                                 .foregroundColor(buttonsAreActive ? .white : .black)
-                                .padding(.horizontal, 30)
+                                .padding(.horizontal, 26)
                                 .padding(.vertical, 12)
                                 .background(buttonsAreActive ? Color.myAccentColor2 : Color.black.opacity(0.4))
                                 .cornerRadius(8)
+                                .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                                .lineLimit(2)
+                                .allowsTightening(true)
                         }
                         .disabled(!buttonsAreActive)
                         .animation(.easeInOut(duration: 0.3), value: buttonsAreActive)

@@ -93,7 +93,6 @@ class DecodeGame: ObservableObject, GameProtocol {
         
         // Check if this date has already been played
         if scoreManager.isGameCompleted(gameId: "decode", date: gameDate) {
-            print("⚠️ Date \(gameDate) already played - showing overlay")
             showAlreadyPlayedOverlay = true
             willScoreCount = false
             return  // Don't start the game yet

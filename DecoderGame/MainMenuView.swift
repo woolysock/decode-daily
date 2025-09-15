@@ -10,6 +10,7 @@ import Mixpanel
 
 struct MainMenuView: View {
     
+    @Environment(\.sizeCategory) var sizeCategory
     @EnvironmentObject var scoreManager: GameScoreManager
     @EnvironmentObject var gameCoordinator: GameCoordinator
     @StateObject private var subscriptionManager = SubscriptionManager.shared
@@ -37,34 +38,49 @@ struct MainMenuView: View {
     @State private var selectedArchiveDate: Date?
     @State private var selectedArchiveGame: String = "decode"
     @State private var navigateToArchivedGame: (gameId: String, date: Date)? = nil
-
+    
+    //for screen size responsiveness
+    @Environment(\.horizontalSizeClass) var horizontalSizeClass
+    
+    private var adaptiveFontSize52: CGFloat { horizontalSizeClass == .compact ? 48 : 52 }
+    private var adaptiveFontSize22: CGFloat { horizontalSizeClass == .compact ? 18 : 22 }
+    private var adaptivePadding40: CGFloat { horizontalSizeClass == .compact ? 30 : 40 }
+    private var adaptivePadding50: CGFloat { horizontalSizeClass == .compact ? 30 : 50 }
+    private var adaptiveSpacer10: CGFloat { horizontalSizeClass == .compact ? 8 : 10 }
+    private var adaptiveSpacer15: CGFloat { horizontalSizeClass == .compact ? 13 : 15 }
+    private var adaptiveSpacer18: CGFloat { horizontalSizeClass == .compact ? 16 : 18 }
+    private var adaptiveSpacer20: CGFloat { horizontalSizeClass == .compact ? 15 : 20 }
+    private var adaptiveSpacer50: CGFloat { horizontalSizeClass == .compact ? 30 : 50 }
+    private var adaptiveButtonHeight: CGFloat { horizontalSizeClass == .compact ? 50 : 60 }
+    
+    
     init(initialPage: Int = 0, selectedGame: String = "decode") {
-            _currentPage = State(initialValue: initialPage)
-            _selectedArchiveGame = State(initialValue: selectedGame)
+        _currentPage = State(initialValue: initialPage)
+        _selectedArchiveGame = State(initialValue: selectedGame)
         
         // Print all UserDefaults keys and values
-//        print("=== GAME USER DEFAULTS ===")
-//        let userDefaults = UserDefaults.standard
-//        let allKeys = userDefaults.dictionaryRepresentation()
-//
-//        // Filter for keys that might be related to your game
-//        let gameKeys = allKeys.filter { key, _ in
-//            key.contains("game") ||
-//            key.contains("score") ||
-//            key.contains("completion") ||
-//            key.contains("userPaidTier") ||
-//            key.contains("hasSeenSwipeInstruction") ||
-//            key.contains("decode") ||
-//            key.contains("flashdance") ||
-//            key.contains("anagrams")
-//        }
-//
-//        for (key, value) in gameKeys.sorted(by: { $0.key < $1.key }) {
-//            print("\(key): \(value)")
-//        }
-//        print("=== END GAME USER DEFAULTS ===")
+        //        print("=== GAME USER DEFAULTS ===")
+        //        let userDefaults = UserDefaults.standard
+        //        let allKeys = userDefaults.dictionaryRepresentation()
+        //
+        //        // Filter for keys that might be related to your game
+        //        let gameKeys = allKeys.filter { key, _ in
+        //            key.contains("game") ||
+        //            key.contains("score") ||
+        //            key.contains("completion") ||
+        //            key.contains("userPaidTier") ||
+        //            key.contains("hasSeenSwipeInstruction") ||
+        //            key.contains("decode") ||
+        //            key.contains("flashdance") ||
+        //            key.contains("anagrams")
+        //        }
+        //
+        //        for (key, value) in gameKeys.sorted(by: { $0.key < $1.key }) {
+        //            print("\(key): \(value)")
+        //        }
+        //        print("=== END GAME USER DEFAULTS ===")
         
-        }
+    }
     
     var body: some View {
         NavigationStack {
@@ -77,13 +93,16 @@ struct MainMenuView: View {
                     
                     Spacer().frame(height: 5)
                     
-                    // Subscription tier badge - positioned above date
+                    // Subscription tier badge & date
                     HStack {
                         // Today's Date
                         Text(DateFormatter.day2Formatter.string(from: today))
                             .font(.custom("LuloOne-Bold", size: 12))
                             .foregroundColor(Color.myAccentColor1)
-                            .padding(20)
+                            .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                            .lineLimit(1)
+                            .allowsTightening(true)
+                            .padding(adaptiveSpacer20)
                         
                         Spacer()
                         //SubscriptionTierSeal(tier: subscriptionManager.currentTier)
@@ -95,15 +114,15 @@ struct MainMenuView: View {
                             SubscriptionTierBadge(tier: subscriptionManager.currentTier)
                         }
                     }
-                    .padding(.bottom, 10)
-                    .padding(.horizontal, 50)
+                    .padding(.bottom, adaptiveSpacer10)
+                    .padding(.horizontal, adaptiveSpacer50)
                     .overlay(
                         Rectangle()
                             .frame(height: 0.5)
                             .foregroundColor(.white.opacity(0.8)),
                         alignment: .bottom
                     )
-                                        
+                    
                     TabView(selection: $currentPage) {
                         mainMenuPage.tag(0)
                         archivesPage.tag(1)
@@ -139,7 +158,7 @@ struct MainMenuView: View {
                     
                     // Bottom swipe nav bar
                     HStack(alignment: .center) {
-                                                
+                        
                         Spacer()
                         ForEach([0, 1, 2], id: \.self) { pageIndex in
                             Image(systemName: currentPage == pageIndex ? "smallcircle.filled.circle.fill" : "smallcircle.filled.circle")
@@ -182,219 +201,228 @@ struct MainMenuView: View {
     // MARK: - Main Menu Page
     @ViewBuilder
     private var mainMenuPage: some View {
+        GeometryReader { geo in
         ZStack {
-            //Color.black.ignoresSafeArea()
             LinearGradient.mainmenuViewGradient.ignoresSafeArea()
-            
             FancyAnimationLayer()
             
-            GeometryReader { geo in
-                VStack(spacing: 20) {
-                    
-                    Spacer()
-                        .frame(height: 50)
-                    
-                    //game title header
-                    VStack (spacing: 5){
-                        Text(" DECODE!")
-                            .font(.custom("LuloOne-Bold", size: 52))
-                            .foregroundColor(.white)
-                        Text("DAILY")
-                            .font(.custom("LuloOne-Bold", size: 24))
-                            .foregroundColor(.white)
+           
+                ScrollView(.vertical) {
+                    VStack(spacing: adaptiveSpacer20) {
+                        
                         Spacer()
-                            .frame(height: 2)
-                       // Text("Just Puzzles. No Distractions.")
-                        Text("fun games, clean & simple\n+ new challenges every day")
-                            .font(.custom("LuloOne", size: 10))
-                            .foregroundColor(.white)
-                            .multilineTextAlignment(.center)
-                    }
-                    .fixedSize()
-                    .frame(width: (screenWidth))
-                    
-                    Spacer()
-                        .frame(height: 7)
-                    
-                    // Dynamic game buttons from GameInfo array with tilt effect
-                    ForEach(GameInfo.availableGames.filter { $0.isAvailable }, id: \.id) { gameInfo in
-                        tiltableGameButton(for: gameInfo)
-                    }
-                    
-                    Spacer()
-                        .frame(height: 5)
-                    
-                    // High Scores button with tilt effect
-                    tiltableHighScoreButton
-                    
-                    Spacer()
-                        .frame(height: 1)
-                                        
-                    HStack{
-                        Image(systemName: "hand.draw")
-                            .font(.system(size: 16))
-                            .foregroundColor(.white)
-                        Text("Swipe to view archive & settings")
-                            .font(.custom("LuloOne", size: 9))
-                            .foregroundColor(.white)
-                            .multilineTextAlignment(.center)
-                    }
-                    .padding(.horizontal,50)
-                    .opacity(hasUserSwiped ? 0 : 1)
-                    .animation(.easeOut(duration: 0.5), value: hasUserSwiped)
-                                        
-                    Spacer()
-                }
-            }
-        }
-        .onChange(of: currentPage) { oldValue, newValue in
-            print("DEBUG: CURRENTPAGE CHANGE: old: \(oldValue), new: \(newValue)")
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                if currentPage == newValue {
-                    switch newValue {
-                    case 0:
-                        // MIXPANEL ANALYTICS CAPTURE: Main Menu Page View
-                        Mixpanel.mainInstance().track(event: "Main Menu Page View", properties: [
-                            "app": "Decode! Daily iOS",
-                            "build_version": Bundle.main.infoDictionary?["CFBundleShortVersionString"],
-                            "date": Date().formatted(),
-                            "subscription_tier": SubscriptionManager.shared.currentTier.displayName
-                        ])
-                        print("📈 🪵 MIXPANEL DATA LOG EVENT: Main Menu Page View (oC)")
-                        print("📈 🪵 date: \(Date().formatted())")
-                        print("📈 🪵 sub tier: \(SubscriptionManager.shared.currentTier.displayName)")
-                    case 1:
-                        print("📈 🪵 case 1: will capture an archive view")
-                        // MIXPANEL ANALYTICS CAPTURE: Archives Main Page View
-                        Mixpanel.mainInstance().track(event: "Archives Main Page View", properties: [
-                            "app": "Decode! Daily iOS",
-                            "build_version": Bundle.main.infoDictionary?["CFBundleShortVersionString"],
-                            "date": Date().formatted(),
-                            "subscription_tier": SubscriptionManager.shared.currentTier.displayName
-                        ])
-                        print("📈 🪵 MIXPANEL DATA LOG EVENT: Archives Main Page View")
-                        print("📈 🪵 date: \(Date().formatted())")
-                        print("📈 🪵 sub tier: \(SubscriptionManager.shared.currentTier.displayName)")
-                    case 2:
-                        // MIXPANEL ANALYTICS CAPTURE: Stats Main Page View
-                        Mixpanel.mainInstance().track(event: "Stats Main Page View", properties: [
-                            "app": "Decode! Daily iOS",
-                            "build_version": Bundle.main.infoDictionary?["CFBundleShortVersionString"],
-                            "date": Date().formatted(),
-                            "subscription_tier": SubscriptionManager.shared.currentTier.displayName
-                        ])
-                        print("📈 🪵 MIXPANEL DATA LOG EVENT: Stats Main Page View")
-                        print("📈 🪵 date: \(Date().formatted())")
-                        print("📈 🪵 sub tier: \(SubscriptionManager.shared.currentTier.displayName)")
-                    default:
-                        break
+                            .frame(height: adaptiveSpacer50)
+                        
+                        //game title header
+                        VStack (spacing: 5){
+                            Text(" DECODE!")
+                                .font(.custom("LuloOne-Bold", size: adaptiveFontSize52))
+                                .foregroundColor(.white)
+                                .lineLimit(1)
+                                .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                                .allowsTightening(true)
+                            Text("DAILY")
+                                .font(.custom("LuloOne-Bold", size: 24))
+                                .foregroundColor(.white)
+                                .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                                .lineLimit(1)
+                                .allowsTightening(true)
+                            Spacer()
+                                .frame(height: 3)
+                            // Text("Just Puzzles. No Distractions.")
+                            Text("fun games, clean & simple\n(new challenges every day!)")
+                                .font(.custom("LuloOne", size: 10))
+                                .foregroundColor(.white)
+                                .multilineTextAlignment(.center)
+                                .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                                .allowsTightening(true)
+                        }
+                       
+                        Spacer()
+                            .frame(height: 6)
+                        
+                        ForEach(GameInfo.availableGames.filter { $0.isAvailable }, id: \.id) { gameInfo in
+                            tiltableGameButton(for: gameInfo)
+                        }
+                        
+                        Spacer()
+                            .frame(height: 5)
+                        
+                        // High Scores button with tilt effect
+                        tiltableHighScoreButton
+                        
+                        Spacer()
+                            .frame(height: 1)
+                        
+                        HStack{
+                            Image(systemName: "hand.draw")
+                                .font(.system(size: 16))
+                                .foregroundColor(.white)
+                            Text("Swipe to view archive & settings")
+                                .font(.custom("LuloOne", size: 9))
+                                .foregroundColor(.white)
+                                .multilineTextAlignment(.center)
+                                .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                                .lineLimit(1)
+                                .allowsTightening(true)
+                        }
+                        .padding(.horizontal,50)
+                        .opacity(hasUserSwiped ? 0 : 1)
+                        .animation(.easeOut(duration: 0.5), value: hasUserSwiped)
+                        
+                        Spacer()
                     }
                 }
+                .frame(alignment: .center)
             }
-        }
-        .onAppear{
-            print("DEBUG onAppear for Main Menu.... currentPage: \(currentPage)")
-            if currentPage == 0 {
-                // MIXPANEL ANALYTICS CAPTURE for Main Menu Page View
-                Mixpanel.mainInstance().track(event: "Main Menu Page View:", properties: [
-                    "app": "Decode! Daily iOS",
-                    "build_version": Bundle.main.infoDictionary?["CFBundleShortVersionString"],
-                    "date": Date().formatted(),
-                    "subscription_tier": SubscriptionManager.shared.currentTier.displayName
-                ])
-                print("📈 🪵 MIXPANEL DATA LOG EVENT: Main Menu Page View (oA)")
-                print("📈 🪵 date: \(Date().formatted())")
-                print("📈 🪵 sub tier: \(SubscriptionManager.shared.currentTier.displayName)")
+            .onChange(of: currentPage) { oldValue, newValue in
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    if currentPage == newValue {
+                        switch newValue {
+                        case 0:
+                            // MIXPANEL ANALYTICS CAPTURE: Main Menu Page View
+                            Mixpanel.mainInstance().track(event: "Main Menu Page View", properties: [
+                                "app": "Decode! Daily iOS",
+                                "build_version": Bundle.main.infoDictionary?["CFBundleShortVersionString"],
+                                "date": Date().formatted(),
+                                "subscription_tier": SubscriptionManager.shared.currentTier.displayName
+                            ])
+                            print("📈 🪵 MIXPANEL DATA LOG EVENT: Main Menu Page View (oC)")
+                            print("📈 🪵 date: \(Date().formatted())")
+                            print("📈 🪵 sub tier: \(SubscriptionManager.shared.currentTier.displayName)")
+                        case 1:
+                            print("📈 🪵 case 1: will capture an archive view")
+                            // MIXPANEL ANALYTICS CAPTURE: Archives Main Page View
+                            Mixpanel.mainInstance().track(event: "Archives Main Page View", properties: [
+                                "app": "Decode! Daily iOS",
+                                "build_version": Bundle.main.infoDictionary?["CFBundleShortVersionString"],
+                                "date": Date().formatted(),
+                                "subscription_tier": SubscriptionManager.shared.currentTier.displayName
+                            ])
+                            print("📈 🪵 MIXPANEL DATA LOG EVENT: Archives Main Page View")
+                            print("📈 🪵 date: \(Date().formatted())")
+                            print("📈 🪵 sub tier: \(SubscriptionManager.shared.currentTier.displayName)")
+                        case 2:
+                            // MIXPANEL ANALYTICS CAPTURE: Stats Main Page View
+                            Mixpanel.mainInstance().track(event: "Stats Main Page View", properties: [
+                                "app": "Decode! Daily iOS",
+                                "build_version": Bundle.main.infoDictionary?["CFBundleShortVersionString"],
+                                "date": Date().formatted(),
+                                "subscription_tier": SubscriptionManager.shared.currentTier.displayName
+                            ])
+                            print("📈 🪵 MIXPANEL DATA LOG EVENT: Stats Main Page View")
+                            print("📈 🪵 date: \(Date().formatted())")
+                            print("📈 🪵 sub tier: \(SubscriptionManager.shared.currentTier.displayName)")
+                        default:
+                            break
+                        }
+                    }
+                }
+            }
+            .onAppear{
+                //print("DEBUG onAppear for Main Menu.... currentPage: \(currentPage)")
+                if currentPage == 0 {
+                    // MIXPANEL ANALYTICS CAPTURE for Main Menu Page View
+                    Mixpanel.mainInstance().track(event: "Main Menu Page View:", properties: [
+                        "app": "Decode! Daily iOS",
+                        "build_version": Bundle.main.infoDictionary?["CFBundleShortVersionString"],
+                        "date": Date().formatted(),
+                        "subscription_tier": SubscriptionManager.shared.currentTier.displayName
+                    ])
+                    print("📈 🪵 MIXPANEL DATA LOG EVENT: Main Menu Page View (oA)")
+                    print("📈 🪵 date: \(Date().formatted())")
+                    print("📈 🪵 sub tier: \(SubscriptionManager.shared.currentTier.displayName)")
+                }
             }
         }
     }
     
+    
     // Account Page
     @ViewBuilder
     private var accountPage: some View {
-        ZStack {
-            //Color.black.ignoresSafeArea()
-            LinearGradient.statsViewGradient.ignoresSafeArea()
-            
-            VStack(spacing: 20) {
-                Spacer()
-                    .frame(height: 30)
+        ScrollView {
+            ZStack {
+                //Color.black.ignoresSafeArea()
+                LinearGradient.statsViewGradient.ignoresSafeArea()
                 
-                // Title for the second page
-                VStack(spacing: 10) {
-                    Text("Stats &\nAccount")
-                        .font(.custom("LuloOne-Bold", size: 40))
-                        .foregroundColor(.white)
-                        .lineLimit(2, reservesSpace: true)
+                VStack(spacing: 20) {
+                    Spacer()
+                        .frame(height: 30)
                     
-//                    Text("Your gaming overview")
-//                        .font(.custom("LuloOne", size: 12))
-//                        .foregroundColor(.white.opacity(0.8))
-                }
-                
-//                Spacer()
-//                    .frame(height: 10)
-                
-                // Stats go here
-                VStack(spacing: 18) {
-                    // Total games played
-                    statCard(
-                        title: "Games Played",
-                        value: "\(scoreManager.allScores.count)",
-                        icon: "gamecontroller"
-                    )
+                    // Title for the second page
+                    VStack(spacing: 10) {
+                        Text("Stats &\nAccount")
+                            .font(.custom("LuloOne-Bold", size: 40))
+                            .foregroundColor(.white)
+                            .lineLimit(2)
+                            .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                            .allowsTightening(true)
+                        
+                        // Stats go here
+                        VStack(spacing: sizeCategory > .large ? 14 : 18) {
+                            // Total games played
+                            statCard(
+                                title: "Games Played",
+                                value: "\(scoreManager.allScores.count)",
+                                icon: "gamecontroller"
+                            )
+                            
+                            // Recent activity
+                            statCard(
+                                title: "Recent Games",
+                                value:  "\(scoreManager.getScoresFromLastWeek().count)",
+                                subtitle: "this week",
+                                icon: "calendar"
+                            )
+                            
+                            Spacer()
+                                .frame(height:sizeCategory > .large ? 1 : 5)
+                            
+                            Text("High Scores")
+                                .font(.custom("LuloOne", size: 12))
+                                .foregroundColor(.white.opacity(0.8))
+                                .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                                .lineLimit(1)
+                                .allowsTightening(true)
+                            
+                            // Game-specific high scores
+                            VStack(spacing: 10) {
+                                // Decode high score
+                                gameStatCard(
+                                    gameId: "decode",
+                                    gameName: "Decode",
+                                    icon: "circle.hexagonpath"
+                                )
+                                
+                                // Flashdance high score
+                                gameStatCard(
+                                    gameId: "flashdance",
+                                    gameName: "Flashdance",
+                                    icon: "bolt.circle"
+                                )
+                                
+                                // Anagrams high score
+                                gameStatCard(
+                                    gameId: "anagrams",
+                                    gameName: "'Grams",
+                                    icon: "60.arrow.trianglehead.clockwise"
+                                )
+                            }
+                            .padding(.horizontal, adaptiveSpacer20)
+                        }
+                    }
                     
-                    // Recent activity
-                    statCard(
-                        title: "Recent Games",
-                        value:  "\(scoreManager.getScoresFromLastWeek().count)",
-                        subtitle: "this week",
-                        icon: "calendar"
-                    )
+                    Divider().background(.white)
+                    
+                    // Settings button with tilt effect
+                    tiltableSettingsButton
                     
                     Spacer()
-                        .frame(height:5)
-                    
-                    Text("High Scores")
-                        .font(.custom("LuloOne", size: 12))
-                        .foregroundColor(.white.opacity(0.8))
-                    
-                    // Game-specific high scores
-                    VStack(spacing: 10) {
-                        // Decode high score
-                        gameStatCard(
-                            gameId: "decode",
-                            gameName: "Decode",
-                            icon: "circle.hexagonpath"
-                        )
-                        
-                        // Flashdance high score
-                        gameStatCard(
-                            gameId: "flashdance",
-                            gameName: "Flashdance",
-                            icon: "bolt.circle"
-                        )
-                        
-                        // Anagrams high score
-                        gameStatCard(
-                            gameId: "anagrams",
-                            gameName: "'Grams",
-                            icon: "60.arrow.trianglehead.clockwise"
-                        )
-                    }
-                    .padding(.horizontal, 20)
                     
                 }
-                
-                Divider().background(.white)
-                
-                // Settings button with tilt effect
-                tiltableSettingsButton
-
-                Spacer()
-
+                .padding(.horizontal, adaptivePadding40)
             }
-            .padding(.horizontal, 40)
         }
     }
     
@@ -409,22 +437,31 @@ struct MainMenuView: View {
                 
                 Spacer()
                     .frame(height: 50)
-                        
+                
                 // Title for Archives page
                 VStack(alignment: .leading, spacing: 8) {
                     Text("DAILY ARCHIVE")
                         .font(.custom("LuloOne-Bold", size: 40))
                         .foregroundColor(.white)
                         .multilineTextAlignment(.leading)
+                        .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                        .lineLimit(2)
+                        .allowsTightening(true)
                     Text("Blast to the past! 🚀")
                         .font(.custom("LuloOne", size: 16))
                         .foregroundColor(.white)
                         .multilineTextAlignment(.leading)
+                        .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                        .lineLimit(1)
+                        .allowsTightening(true)
                     //Spacer().frame(height:1)
                     Text("Can you play them all?")
                         .font(.custom("LuloOne", size: 10))
                         .foregroundColor(.white)
                         .multilineTextAlignment(.leading)
+                        .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                        .lineLimit(1)
+                        .allowsTightening(true)
                 }
                 .padding(.horizontal, 40)
                 
@@ -432,20 +469,23 @@ struct MainMenuView: View {
                     .frame(height:25)
                 
                 //Divider().background(.white)
-                                
+                
                 // Game Selector
                 HStack(spacing: 10) {
                     Button(action: {
                         selectedArchiveGame = "decode"
                         // Load dates for new selection if not cached
-                       // loadAvailableDatesIfNeeded(for: "decode")
+                        // loadAvailableDatesIfNeeded(for: "decode")
                     }) {
                         Text("Decode")
                             .font(.custom("LuloOne-Bold", size: 11))
                             .foregroundColor(selectedArchiveGame == "decode" ? .black : .white)
-                            .padding(.horizontal, 18)
-                            .padding(.vertical, 15)
+                            .padding(.horizontal, adaptiveSpacer18)
+                            .padding(.vertical, adaptiveSpacer15)
                             .background(selectedArchiveGame == "decode" ? Color.white : Color.clear)
+                            .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                            .lineLimit(2)
+                            .allowsTightening(true)
                             .overlay(
                                 RoundedRectangle(cornerRadius: 8)
                                     .stroke(Color.white, lineWidth: 1)
@@ -456,14 +496,17 @@ struct MainMenuView: View {
                     Button(action: {
                         selectedArchiveGame = "flashdance"
                         // Load dates for new selection if not cached
-                      //  loadAvailableDatesIfNeeded(for: "flashdance")
+                        //  loadAvailableDatesIfNeeded(for: "flashdance")
                     }) {
                         Text("Flash\ndance")
                             .font(.custom("LuloOne-Bold", size: 11))
                             .foregroundColor(selectedArchiveGame == "flashdance" ? .black : .white)
-                            .padding(.horizontal, 18)
-                            .padding(.vertical, 10)
+                            .padding(.horizontal, adaptiveSpacer18)
+                            .padding(.vertical, adaptiveSpacer10)
                             .background(selectedArchiveGame == "flashdance" ? Color.white : Color.clear)
+                            .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                            .lineLimit(2)
+                            .allowsTightening(true)
                             .overlay(
                                 RoundedRectangle(cornerRadius: 8)
                                     .stroke(Color.white, lineWidth: 1)
@@ -474,14 +517,17 @@ struct MainMenuView: View {
                     Button(action: {
                         selectedArchiveGame = "anagrams"
                         // Load dates for new selection if not cached
-                      //  loadAvailableDatesIfNeeded(for: "anagrams")
+                        //  loadAvailableDatesIfNeeded(for: "anagrams")
                     }) {
                         Text("'Grams")
                             .font(.custom("LuloOne-Bold", size: 11))
                             .foregroundColor(selectedArchiveGame == "anagrams" ? .black : .white)
-                            .padding(.horizontal, 18)
-                            .padding(.vertical, 15)
+                            .padding(.horizontal, adaptiveSpacer18)
+                            .padding(.vertical, adaptiveSpacer15)
                             .background(selectedArchiveGame == "anagrams" ? Color.white : Color.clear)
+                            .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                            .lineLimit(2)
+                            .allowsTightening(true)
                             .overlay(
                                 RoundedRectangle(cornerRadius: 8)
                                     .stroke(Color.white, lineWidth: 1)
@@ -502,106 +548,13 @@ struct MainMenuView: View {
                             dateButton(for: date)
                         }
                     }
-                    .padding(.horizontal, 40)
+                    .padding(.horizontal, adaptivePadding40)
                     .padding(.vertical, 3)
                 }
                 
             }
         }
     }
-
-    // MARK: - Date Loading Functions
-    
-//    // Load all available dates once when the app starts
-//    private func loadAllAvailableDates() {
-//        guard !hasLoadedInitialDates else { return }
-//        
-//        print("... 🗘 MainMenuView: loadAllAvailableDates():")
-//        // Load dates for all available games
-//        loadAvailableDatesForGame("decode")
-//        loadAvailableDatesForGame("flashdance")
-//        loadAvailableDatesForGame("anagrams")
-//        
-//        
-//        hasLoadedInitialDates = true
-//        print("✅ Finished loading, sorting & filtering all available dates.")
-//    }
-    
-////    // Load dates for a specific game only if not already cached
-////    private func loadAvailableDatesIfNeeded(for gameId: String) {
-////        guard cachedAvailableDates[gameId] == nil else {
-////            //print("📋 Using cached dates for \(gameId) (\(cachedAvailableDates[gameId]?.count ?? 0) dates)")
-////            return
-////        }
-////        
-////        loadAvailableDatesForGame(gameId)
-////    }
-////    
-//    // Actually load the dates for a game and cache them
-//    private func loadAvailableDatesForGame(_ gameId: String) {
-//        //print("🔍 Loading available dates for gameId: \(gameId)")
-//        let today = Calendar.current.startOfDay(for: Date())
-//        print("   → Today (startOfDay): \(today)")
-//        
-//        var dates: [Date] = []
-//
-//        switch gameId {
-//        case "decode":
-//            dates = gameCoordinator.dailyCodeSetManager.getAvailableDates()
-//            print("   → Loaded \(dates.count) days of data for decode")
-//        case "flashdance":
-//            dates = gameCoordinator.dailyEquationManager.getAvailableDates()
-//            print("   → Loaded \(dates.count)  days of data for flashdance")
-//        case "anagrams":
-//            dates = gameCoordinator.dailyWordsetManager.getAvailableDates()
-//            print("   → Loaded \(dates.count)  days of data for anagrams")
-//        default:
-//            print("   → Unknown gameId: \(gameId)")
-//            break
-//        }
-//
-//        // Log the first few raw dates before processing
-////        print("   → First 3 raw dates:")
-////        for (_, _) in dates.prefix(1).enumerated() {
-////            print("     [\(index)]: \(dates)") // -> \(dates.isoDayString)")
-////        }
-//
-//        // Convert UTC dates to local timezone dates
-//        let localCalendar = Calendar.current
-//        dates = dates.compactMap { utcDate in
-//            // Extract date components from the UTC date
-//            var utcCalendar = Calendar(identifier: .gregorian)
-//            utcCalendar.timeZone = TimeZone(abbreviation: "UTC")!
-//            
-//            let components = utcCalendar.dateComponents([.year, .month, .day], from: utcDate)
-//            
-//            // Create a new date using local timezone
-//            return localCalendar.date(from: components)
-//        }
-//
-//        // Log the converted dates
-//        //print("   → First 5 converted local dates:")
-//        //for (_, _) in dates.prefix(5).enumerated() {
-//            //print("     [\(index)]: \(date) -> \(DateFormatter.debugFormatter.string(from: date))")
-//        //}
-//
-//        // Filter out today and future dates, then sort
-//        dates = dates.filter { $0 < today }.sorted(by: >)
-//        
-//        // Log the first few filtered dates
-////        print("  →→→ Date Sample after sorting, filtering:")
-////        for (index, date) in dates.prefix(1).enumerated() {
-////            print("  →→→ [\(index)]: \(date) -> \(date.isoDayString)")
-////        }
-//        
-//        // Cache the results
-//        cachedAvailableDates[gameId] = dates
-//        print("   → Cached \(dates.count) past dates for \(gameId)")
-//    }
-//    
-//    
-//   
-    
     
     
     // Helper function to create date buttons
@@ -611,11 +564,11 @@ struct MainMenuView: View {
         let day   = calendar.component(.day, from: date)
         let month = calendar.component(.month, from: date)
         let year  = calendar.component(.year, from: date)
-
+        
         // Alternate colors between months
         let monthYearId = (year * 12) + month
         let backgroundColor = monthYearId % 2 == 0 ? Color.myAccentColor1 : Color.myAccentColor2
-
+        
         // Show the month label only on the 1st of the month
         //let showMonth = (day == 1)
         let monthAbbrev = monthAbbrevFormatter.string(from: date).uppercased()
@@ -625,7 +578,9 @@ struct MainMenuView: View {
         
         // Check if this date is accessible based on subscription tier
         let canAccess = subscriptionManager.canAccessArchiveDate(date)
-
+        
+        let badgeColor = Color.myCheckmarks
+        
         Button(action: {
             if canAccess {
                 //let _ = print("🔓 UNLOCKED: Date tapped: \(date), canAccess: \(canAccess), tier: \(subscriptionManager.currentTier)")
@@ -639,15 +594,21 @@ struct MainMenuView: View {
         }) {
             VStack(spacing: 2) {
                 Text("\(day)")
-                    .font(.custom("LuloOne-Bold", size: 16))
+                    .font(.custom("LuloOne-Bold", size: 14)) //sizeCategory > .large ? 14 : 16))
                     .foregroundColor(canAccess ? .white : .white.opacity(0.4))
-
+                    .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                    .lineLimit(1)
+                    .allowsTightening(true)
+                    .multilineTextAlignment(.center)
+                
                 if canAccess {
                     Text(monthAbbrev)
-                        .font(.custom("LuloOne-Bold", size: 8))
+                        .font(.custom("LuloOne-Bold", size: sizeCategory > .large ? 7 : 10))
                         .foregroundColor(canAccess ? .white.opacity(0.85) : .white.opacity(0.3))
-                        .minimumScaleFactor(0.7)
+                        .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
                         .lineLimit(1)
+                        .allowsTightening(true)
+                        .multilineTextAlignment(.center)
                 }
             }
             .frame(width: 50, height: 50)
@@ -659,8 +620,9 @@ struct MainMenuView: View {
                     if isCompleted && canAccess {
                         Image(systemName: "checkmark.seal.fill")
                             .font(.system(size: 20, weight: .bold))
-                            .foregroundColor(.yellow)
-                           .offset(x: 10, y: 10)
+                            .foregroundColor(badgeColor)
+                            .offset(x: 10, y: 10)
+                            .shadow(color: .black, radius: 1)
                     }
                 }
             )
@@ -686,14 +648,14 @@ struct MainMenuView: View {
             )
         }
     }
-
+    
     private func launchArchivedGame(gameId: String, date: Date) {
         print("🏁 launchArchivedGame(): Launch \(gameId) for date: \(date)")
         navigateToArchivedGame = nil
         // Set new navigation after a brief delay
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                navigateToArchivedGame = (gameId: gameId, date: date)
-            }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            navigateToArchivedGame = (gameId: gameId, date: date)
+        }
     }
     
     
@@ -710,11 +672,17 @@ struct MainMenuView: View {
                 Text(title)
                     .font(.custom("LuloOne", size: 12))
                     .foregroundColor(.white)
+                    .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                    .lineLimit(2)
+                    .allowsTightening(true)
                 
                 if let subtitle = subtitle {
                     Text(subtitle)
                         .font(.custom("LuloOne", size: 8))
                         .foregroundColor(.white.opacity(0.8))
+                        .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                        .lineLimit(1)
+                        .allowsTightening(true)
                 }
             }
             
@@ -723,6 +691,9 @@ struct MainMenuView: View {
             Text(value)
                 .font(.custom("LuloOne-Bold", size: 18))
                 .foregroundColor(.white)
+                .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                .lineLimit(1)
+                .allowsTightening(true)
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 8)
@@ -748,16 +719,24 @@ struct MainMenuView: View {
                     Text(gameName)
                         .font(.custom("LuloOne-Bold", size: 12))
                         .foregroundColor(.white)
-                        .lineLimit(1)
+                        .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                        .lineLimit(2)
+                        .allowsTightening(true)
                     
                     if gamesPlayed > 0 {
                         Text("\(gamesPlayed) game\(gamesPlayed == 1 ? "" : "s")")
                             .font(.custom("LuloOne", size: 10))
                             .foregroundColor(.white.opacity(0.8))
+                            .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                            .lineLimit(1)
+                            .allowsTightening(true)
                     } else {
                         Text("Not played")
                             .font(.custom("LuloOne", size: 10))
                             .foregroundColor(.white.opacity(0.8))
+                            .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                            .lineLimit(1)
+                            .allowsTightening(true)
                     }
                 }
                 
@@ -768,15 +747,24 @@ struct MainMenuView: View {
                     Text(gamesPlayed > 0 ? "\(highScore)" : "—")
                         .font(.custom("LuloOne-Bold", size: 16))
                         .foregroundColor(gamesPlayed > 0 ? .white : .white.opacity(0.4))
+                        .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                        .lineLimit(1)
+                        .allowsTightening(true)
                     
                     if gamesPlayed > 0, let score = highestScore {
                         Text(DateFormatter.day2Formatter.string(from: score.date))
                             .font(.custom("LuloOne", size: 10))
                             .foregroundColor(.white.opacity(0.8))
+                            .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                            .lineLimit(1)
+                            .allowsTightening(true)
                     } else {
                         Text("Not played")
                             .font(.custom("LuloOne", size: 10))
                             .foregroundColor(.white.opacity(0.8))
+                            .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                            .lineLimit(1)
+                            .allowsTightening(true)
                     }
                 }
             }
@@ -811,32 +799,56 @@ struct MainMenuView: View {
     @ViewBuilder
     private func tiltableGameButton(for gameInfo: GameInfo) -> some View {
         let buttonWidth = screenWidth - 120
-        let buttonHeight: CGFloat = 40 + 32
+        let buttonHeight: CGFloat = adaptiveButtonHeight
         let tilt = gameButtonTilts[gameInfo.id] ?? (0, 0)
         let isPressed = gameButtonPressed[gameInfo.id] ?? false
         let checkDate =  Calendar.current.startOfDay(for: Date())
         let isCompleted = scoreManager.isGameCompleted(gameId: gameInfo.id, date: checkDate)
-                
+        
         Button(action: {
             navigateToGame = gameInfo.id  // Set the state instead of using NavigationLink
         }) {
-            VStack(spacing: 5) {
-                HStack(alignment: .firstTextBaseline, spacing: 10) {
-                    gameInfo.gameIcon.font(.system(size: 14))
+            HStack(alignment: .center) {
+                
+                Spacer()
+                    .frame(width: 1)
+                
+                gameInfo.gameIcon.font(.system(size: 26))
+                    .frame(maxWidth: buttonHeight)
+                
+                Spacer()
+                    .frame(width: 1)
+                
+                VStack(alignment: .leading, spacing: 5) {
                     
                     Text(gameInfo.displayName)
-                        .font(.custom("LuloOne-Bold", size: 22))
+                        .font(.custom("LuloOne-Bold", size: adaptiveFontSize22))
+                        .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                        .lineLimit(1)
+                        .allowsTightening(true)
+                        
+                    Text(gameInfo.description)
+                        .font(.custom("LuloOne", size: 10))
+                        .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                        .lineLimit(1)
+                        .allowsTightening(true)
+                        .multilineTextAlignment(.leading)
                 }
                 
-                Text(gameInfo.description)
-                    .font(.custom("LuloOne", size: 10))
+                Spacer()
+                
             }
-            .fixedSize()
-            .frame(width: buttonWidth, height: 40)
+           // .fixedSize()
+            .frame(width: buttonWidth, height: buttonHeight)
+            .frame(alignment: .leading)
             .padding()
-            .background(Color.white)
-            .foregroundColor(Color.black)
-            .scaleEffect(isPressed ? 0.98 : 1.0)
+            .background(Color.mainMenuGameButtonBg)//(Color.white)
+            .foregroundColor(Color.mainMenuGameButtonFg)
+            .overlay(
+                Rectangle().stroke(Color.mainMenuGameButtonSt, lineWidth: 0.5)
+            )
+            .shadow(color: .black, radius: 3)
+            .scaleEffect(isPressed ? 0.97 : 1.0)
             .rotation3DEffect(
                 .degrees(tilt.x),
                 axis: (x: 1, y: 0, z: 0)
@@ -849,6 +861,7 @@ struct MainMenuView: View {
             .animation(.easeOut(duration: 0.1), value: tilt.y)
             .animation(.easeOut(duration: 0.1), value: isPressed)
         }
+
         .disabled(!gameInfo.isAvailable)
         .simultaneousGesture(
             DragGesture(minimumDistance: 0)
@@ -870,11 +883,12 @@ struct MainMenuView: View {
                     Image(systemName: "checkmark.seal.fill")
                         .font(.system(size: 20, weight: .bold))
                         .foregroundColor(.yellow)
-                    .offset(x: (buttonWidth/2)-3, y: 15) // Position in btm-right corner
+                        .offset(x: (buttonWidth/2)-3, y: -(buttonHeight/2)+5) // Position in top-right corner
                 }
             }
         )
-       
+        
+        
     }
     
     // Add this helper method to your MainMenuView class
@@ -885,15 +899,15 @@ struct MainMenuView: View {
         // Print all scores with dates for debugging
         let sortedScores = scoreManager.allScores.sorted { $0.date > $1.date }
         //print("   - All scores (most recent first):")
-//        for (index, score) in sortedScores.prefix(5).enumerated() {
-//            print("     [\(index)]: \(score.gameId) - \(score.date) - Score: \(score.finalScore)")
-//        }
+        //        for (index, score) in sortedScores.prefix(5).enumerated() {
+        //            print("     [\(index)]: \(score.gameId) - \(score.date) - Score: \(score.finalScore)")
+        //        }
         
         let recentScore = sortedScores.first
         let gameId = recentScore?.gameId ?? "decode"
         
         //print("   - Most recent score: \(String(describing: recentScore))")
-       // print("   - Returning game ID: '\(gameId)'")
+        // print("   - Returning game ID: '\(gameId)'")
         
         return gameId
     }
@@ -902,7 +916,7 @@ struct MainMenuView: View {
     private func destinationView(for gameId: String) -> some View {
         //let _ = print("🔍 TRACE: destinationView called with gameId: \(gameId)")
         //let _ =  print("   Stack trace: \(Thread.callStackSymbols.prefix(5).joined(separator: "\n   "))")
-            
+        
         
         switch gameId {
         case "decode":
@@ -941,20 +955,26 @@ struct MainMenuView: View {
         
         NavigationLink(destination: MultiGameLeaderboardView(selectedGameID: mostRecentGameId)) {
             VStack(spacing: 5) {
-                HStack(spacing: 10) {
+                HStack(alignment: .lastTextBaseline, spacing: 10) {
                     Image(systemName: "trophy")
                         .font(.system(size: 10))
                     
                     Text("High Scores")
                         .font(.custom("LuloOne-Bold", size: 14))
+                        .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                        .lineLimit(1)
+                        .allowsTightening(true)
                 }
                 Text("How did you do?")
                     .font(.custom("LuloOne", size: 10))
+                    .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                    .lineLimit(1)
+                    .allowsTightening(true)
             }
             .padding()
             .fixedSize()
             .frame(width: buttonWidth, height: 60)
-            .background(Color.myAccentColor1)
+            .background(Color.myAccentColor1.opacity(0.9))
             .foregroundColor(Color.white)
             .cornerRadius(10)
             .scaleEffect(highScorePressed ? 0.98 : 1.0)
@@ -984,15 +1004,15 @@ struct MainMenuView: View {
                 }
         )
     }
-
-//    // Add this helper method to your MainMenuView class
-//    private func getMostRecentlyPlayedGame() -> String? {
-//        let recentScore = scoreManager.allScores
-//            .sorted { $0.date > $1.date }
-//            .first
-//        
-//        return recentScore?.gameId ?? "decode" // Default to decode if no scores exist
-//    }
+    
+    //    // Add this helper method to your MainMenuView class
+    //    private func getMostRecentlyPlayedGame() -> String? {
+    //        let recentScore = scoreManager.allScores
+    //            .sorted { $0.date > $1.date }
+    //            .first
+    //
+    //        return recentScore?.gameId ?? "decode" // Default to decode if no scores exist
+    //    }
     
     // Tiltable button for Settings
     @ViewBuilder
@@ -1008,10 +1028,16 @@ struct MainMenuView: View {
                     
                     Text("Settings")
                         .font(.custom("LuloOne-Bold", size: 14))
+                        .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                        .lineLimit(1)
+                        .allowsTightening(true)
                 }
                 
                 Text("get help, reset the app, etc.")
-                    .font(.custom("LuloOne", size: 10))
+                    .font(.custom("LuloOne", size: sizeCategory > .large ? 8 : 10))
+                    .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                    .lineLimit(1)
+                    .allowsTightening(true)
             }
             .padding()
             .fixedSize()
@@ -1079,10 +1105,10 @@ struct MainMenuView: View {
     }
     
     //OLD
-//    // Get cached dates for a game (returns empty array if not cached)
-//    private func getCachedAvailableDates(for gameId: String) -> [Date] {
-//        return cachedAvailableDates[gameId] ?? []
-//    }
+    //    // Get cached dates for a game (returns empty array if not cached)
+    //    private func getCachedAvailableDates(for gameId: String) -> [Date] {
+    //        return cachedAvailableDates[gameId] ?? []
+    //    }
     
     
 }

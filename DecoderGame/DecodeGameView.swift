@@ -14,6 +14,7 @@ struct DecodeGameView: View {
     @StateObject private var game: DecodeGame
     @EnvironmentObject var scoreManager: GameScoreManager
     @Environment(\.dismiss) private var dismiss  // Add this
+    @Environment(\.sizeCategory) var sizeCategory
     
     // Color picker state
     @State private var showingColorPicker = false
@@ -89,7 +90,9 @@ struct DecodeGameView: View {
                                 Text(game.gameInfo.displayName)
                                     .foregroundColor(.white)
                                     .font(.custom("LuloOne-Bold", size: 20))
-                                
+                                    .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                                    .lineLimit(1)
+                                    .allowsTightening(true)
                                 
                                 // Archive indicator
                                 if targetDate != nil {
@@ -100,41 +103,31 @@ struct DecodeGameView: View {
                                         .padding(.vertical, 2)
                                         .background(Color.orange.opacity(0.2))
                                         .cornerRadius(4)
+                                        .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                                        .lineLimit(1)
+                                        .allowsTightening(true)
                                 }
                             }
                             
                             Text(game.displayMode)
                                 .font(.custom("LuloOne", size: 12))
                                 .foregroundColor(game.willScoreCount ? .gray : .yellow) // Different color for practice mode
+                                .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                                .lineLimit(1)
+                                .allowsTightening(true)
                             
-                            //REUSE THIS WHEN DAILIES WORK:
-                            
-                            //                            else if let codeset = codeSetManager.currentCodeSet {
-                            //                                // Show the wordset date when in normal mode
-                            //                                Text(DateFormatter.dayFormatter.string(from: codeset.date))
-                            //                                    .font(.custom("LuloOne", size: 12))
-                            //                                    .foregroundColor(.gray)
-                            //                            }
                         }
                         
                         // Top-center game clock
                         Spacer()
                         
-                        //                        Group {
-                        //                            if game.gameInteractive {
-                        //                                Text("\(game.gameTimeRemaining)")
-                        //                                    .font(.custom("LuloOne-Bold", size: 20))
-                        //                                    .foregroundColor(.white)
-                        //                                    .monospacedDigit()
-                        //                                    .frame(minWidth: 54, alignment: .center)
-                        //                                    .transition(.opacity)
-                        //                            } else {
                         Text(" ")
                             .font(.custom("LuloOne-Bold", size: 20))
                             .frame(minWidth: 54)
                             .opacity(0)
-                        //                            }
-                        //                        }
+                            .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                            .lineLimit(1)
+                            .allowsTightening(true)
                         
                         Spacer()
                         
@@ -149,9 +142,8 @@ struct DecodeGameView: View {
                     .padding(.vertical, 0)
                     
                     
-                    Divider().background(.white).padding(20)
+                    Divider().background(.white).padding(8)
                     
-                    //Spacer().frame(height:20)
                     
                     // Code display with animation
                     HStack(spacing: 10) {
@@ -169,6 +161,13 @@ struct DecodeGameView: View {
                                         .foregroundColor(
                                             game.isAnimating || game.gameOver != 0 ? .clear : .white
                                         )
+                                        .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                                        .lineLimit(1)
+                                        .allowsTightening(true)
+                                        .frame(width: 45, height: 45)
+                                        .multilineTextAlignment(.center)
+                                        .offset(x: 2, y: 1)
+                                        
                                 )
                                 .overlay(
                                     Rectangle()
@@ -183,18 +182,22 @@ struct DecodeGameView: View {
                     
                     // Status text
                     Rectangle()
-                        .frame(width: 300, height: 60)//game.gameOver != 0 && game.lastScore != nil ? 115 : 60)
+                        .frame(height: 70)
                         .foregroundColor(.clear)
                         .overlay(
                             Text(game.statusText)
-                                .font(.custom("LuloOne", size: game.gameOver != 0 && game.lastScore != nil ? 10 : 8))
+                                .font(.custom("LuloOne", size: game.gameOver != 0 && game.lastScore != nil ? 12 : 10))
                                 .foregroundColor(.white)
-                                .lineSpacing(3)
+                                .lineSpacing(2)
                                 .multilineTextAlignment(.center)
-                                .padding(8)
+                                .padding(.vertical, 5)
+                                .padding(.horizontal, 10)
+                                .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                                .lineLimit(5)
+                                .allowsTightening(true)
                         )
                     
-                    Divider().background(.white).padding(5)
+                    Divider().background(.white).padding(.bottom, 15)
                     
                     // Game board
                     
@@ -379,7 +382,7 @@ struct DecodeGameView: View {
                         if isRowComplete {
                             game.statusText = "Tap the checkmark to submit your guess."
                         } else {
-                            game.statusText = "Tap the checkmark when you're ready to submit a guess. You have \(7 - game.currentTurn) guesses left."
+                            game.statusText = "Tap the checkmark when you're ready to submit a guess.\nGuesses left: \(7 - game.currentTurn)"
                         }
                     }
                 )
@@ -528,7 +531,6 @@ struct DecodeGameView: View {
                     // Check if already played first
                     let gameDate = targetDate ?? Calendar.current.startOfDay(for: Date())
                     if scoreManager.isGameCompleted(gameId: "decode", date: gameDate) {
-                        print("⚠️ Date \(gameDate) already played - showing overlay")
                         game.showAlreadyPlayedOverlay = true
                         game.willScoreCount = false
                     } else {

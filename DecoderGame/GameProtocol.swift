@@ -29,6 +29,6 @@ struct GameInfo {
         GameInfo(id: "decode", displayName: "Decode", description: "crack the color code", isAvailable: true, gameIcon: Image(systemName: "circle.hexagonpath")),
         GameInfo(id: "flashdance", displayName: "Flashdance", description: "math flashcard fun", isAvailable: true, gameIcon: Image(systemName: "30.arrow.trianglehead.clockwise")),
         //GameInfo(id: "numbers", displayName: "numbers", description: "solve the equations", isAvailable: false, gameIcon: Image(systemName: "number.circle")),
-        GameInfo(id: "anagrams", displayName: "'Grams", description: "rearrange letters into words", isAvailable: true, gameIcon: Image(systemName: "60.arrow.trianglehead.clockwise"))
+        GameInfo(id: "anagrams", displayName: "'Grams", description: "unscramble the letters", isAvailable: true, gameIcon: Image(systemName: "60.arrow.trianglehead.clockwise"))
     ]
 }

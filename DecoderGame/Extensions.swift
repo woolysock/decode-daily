@@ -23,8 +23,16 @@ extension Color {
 
     
     static let mySunColor = Color(red:246/255,green:211/255,blue:71/255)
+    static let myCheckmarks = Color(red:246/255,green:221/255,blue:0/255)
     //static let myOverlaysColor = Color(red:61/255,green:81/255,blue:116/255)
     static let myOverlaysColor = Color(red:14/255,green:30/255,blue:69/255)
+    
+    // main menu buttons
+    //static let mainMenuGameButtonBg = Color(red:91/255, green:105/255, blue:158/255)
+    static let mainMenuGameButtonBg = Color(red:56/255, green:47/255, blue:97/255).opacity(0.9)
+    static let mainMenuGameButtonFg = Color.white
+    static let mainMenuGameButtonSt = myAccentColor1//Color(red:91/255, green:105/255, blue:158/255)
+    
     
     static let myNavy = Color(red:19/255,green:42/255,blue:98/255)
     static let myGreen = Color(red:99/255,green:249/255,blue:113/255)
