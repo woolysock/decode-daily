@@ -363,6 +363,7 @@ struct AnagramsGameView: View {
                         .monospacedDigit()
                         .scaleEffect(1.05)
                         .transition(.scale)
+                        .multilineTextAlignment(.center)
                 } else if game.isGameActive {
                     Spacer().frame(height: 5)
                     gameArea
@@ -394,8 +395,11 @@ struct AnagramsGameView: View {
             if game.isGameActive {
                 HStack {
                     Text("Solved: \(game.attempts)")
-                        .font(.custom("LuloOne-Bold", size: 16))
+                        .font(.custom("LuloOne-Bold", size: 14))
                         .foregroundColor(.white)
+                        .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                        .lineLimit(1)
+                        .allowsTightening(true)
                     
                     Spacer()
                     
@@ -451,7 +455,7 @@ struct AnagramsGameView: View {
                     ForEach(game.userAnswer.count..<game.currentWord.count, id: \.self) { _ in
                         Rectangle()
                             .fill(Color.white.opacity(0.3))
-                            .frame(width: 35, height: 35)
+                            .frame(width: 40, height: 40)
                             .cornerRadius(0)
                     }
                 }
@@ -495,16 +499,19 @@ struct AnagramsGameView: View {
                 scrambledLettersGrid
             }
         }
-        .padding(.horizontal, 20)
+        .padding(.horizontal, 10)
     }
     
     // MARK: - Scrambled Letters Grid
     @ViewBuilder
     private var scrambledLettersGrid: some View {
-        let columns = Array(repeating: GridItem(.flexible(minimum: 50), spacing: 10), count: 4)
+        let num_letters = game.scrambledLetters.count
+        let col_count = num_letters < 5 ? 4 : 3
+        
+        let columns = Array(repeating: GridItem(.flexible(minimum: 50), spacing: 10), count: col_count)
         
         LazyVGrid(columns: columns, spacing: 10) {
-            ForEach(0..<game.scrambledLetters.count, id: \.self) { index in
+            ForEach(0..<num_letters, id: \.self) { index in
                 letterButton(
                     game.scrambledLetters[index],
                     isScrambled: true,
@@ -529,7 +536,9 @@ struct AnagramsGameView: View {
             Text(isUsed ? "" : letter)
                 .font(.custom("LuloOne-Bold", size: 20))
                 .foregroundColor(.black)
-                .frame(width: isScrambled ? 60 : 35, height: isScrambled ? 60 : 35)
+                .frame(width: isScrambled ? 60 : 40, height: isScrambled ? 60 : 40)
+                .offset(x: 1, y: 1) 
+                .multilineTextAlignment(.center)
                 .background(
                     (flashColor != nil ? flashColor! :
                         (isUsed ? Color.gray.opacity(0.3) :
@@ -541,11 +550,12 @@ struct AnagramsGameView: View {
                         if isScrambled {
                             Circle().stroke(Color.myAccentColor2, lineWidth: 3)
                         } else {
-                            RoundedRectangle(cornerRadius: 0).stroke(Color.black, lineWidth: 1)
+                            RoundedRectangle(cornerRadius: 5)
+                                .stroke(Color.clear, lineWidth: 1)
                         }
                     }
                 )
-                .shadow(radius: isUsed ? 1 : 2)
+                //.shadow(radius: isUsed ? 1 : 2)
                 .animation(.easeInOut(duration: 0.3), value: flashColor)
         }
         .disabled(!game.isGameActive || game.isGamePaused || isUsed || wordsetManager.isGeneratingWordsets)

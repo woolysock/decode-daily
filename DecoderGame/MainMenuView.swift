@@ -9,8 +9,9 @@ import SwiftUI
 import Mixpanel
 
 struct MainMenuView: View {
-    
+    //for screen size responsiveness
     @Environment(\.sizeCategory) var sizeCategory
+    
     @EnvironmentObject var scoreManager: GameScoreManager
     @EnvironmentObject var gameCoordinator: GameCoordinator
     @StateObject private var subscriptionManager = SubscriptionManager.shared
@@ -18,7 +19,6 @@ struct MainMenuView: View {
     
     let screenHeight = UIScreen.main.bounds.height
     let screenWidth = UIScreen.main.bounds.width
-    var logoPadding: CGFloat = -25
     let today = Calendar.current.startOfDay(for: Date())
     
     // State for tracking button interactions with 3D tilt
@@ -38,21 +38,6 @@ struct MainMenuView: View {
     @State private var selectedArchiveDate: Date?
     @State private var selectedArchiveGame: String = "decode"
     @State private var navigateToArchivedGame: (gameId: String, date: Date)? = nil
-    
-    //for screen size responsiveness
-    @Environment(\.horizontalSizeClass) var horizontalSizeClass
-    
-    private var adaptiveFontSize52: CGFloat { horizontalSizeClass == .compact ? 48 : 52 }
-    private var adaptiveFontSize22: CGFloat { horizontalSizeClass == .compact ? 18 : 22 }
-    private var adaptivePadding40: CGFloat { horizontalSizeClass == .compact ? 30 : 40 }
-    private var adaptivePadding50: CGFloat { horizontalSizeClass == .compact ? 30 : 50 }
-    private var adaptiveSpacer10: CGFloat { horizontalSizeClass == .compact ? 8 : 10 }
-    private var adaptiveSpacer15: CGFloat { horizontalSizeClass == .compact ? 13 : 15 }
-    private var adaptiveSpacer18: CGFloat { horizontalSizeClass == .compact ? 16 : 18 }
-    private var adaptiveSpacer20: CGFloat { horizontalSizeClass == .compact ? 15 : 20 }
-    private var adaptiveSpacer50: CGFloat { horizontalSizeClass == .compact ? 30 : 50 }
-    private var adaptiveButtonHeight: CGFloat { horizontalSizeClass == .compact ? 50 : 60 }
-    
     
     init(initialPage: Int = 0, selectedGame: String = "decode") {
         _currentPage = State(initialValue: initialPage)
@@ -87,139 +72,156 @@ struct MainMenuView: View {
             ZStack {
                 Color.black.ignoresSafeArea()
                 
-                // Main content layer
                 VStack(spacing: 0) {
-                    // Top swipe top nav bar w/ paid tier badging
-                    
                     Spacer().frame(height: 5)
-                    
-                    // Subscription tier badge & date
-                    HStack {
-                        // Today's Date
-                        Text(DateFormatter.day2Formatter.string(from: today))
-                            .font(.custom("LuloOne-Bold", size: 12))
-                            .foregroundColor(Color.myAccentColor1)
-                            .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
-                            .lineLimit(1)
-                            .allowsTightening(true)
-                            .padding(adaptiveSpacer20)
-                        
-                        Spacer()
-                        //SubscriptionTierSeal(tier: subscriptionManager.currentTier)
-                        
-                        Button(action: {
-                            showArchiveUpsell = true//}
-                            let _ = print("🛒 SubTierBadge: currentTier: \(subscriptionManager.currentTier)")
-                        }) {
-                            SubscriptionTierBadge(tier: subscriptionManager.currentTier)
-                        }
-                    }
-                    .padding(.bottom, adaptiveSpacer10)
-                    .padding(.horizontal, adaptiveSpacer50)
-                    .overlay(
-                        Rectangle()
-                            .frame(height: 0.5)
-                            .foregroundColor(.white.opacity(0.8)),
-                        alignment: .bottom
-                    )
-                    
-                    TabView(selection: $currentPage) {
-                        mainMenuPage.tag(0)
-                        archivesPage.tag(1)
-                        accountPage.tag(2)
-                    }
-                    .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
-                    .navigationDestination(isPresented: Binding<Bool>(
-                        get: { navigateToGame != nil },
-                        set: { if !$0 { navigateToGame = nil } }
-                    )) {
-                        if let gameId = navigateToGame {
-                            destinationView(for: gameId)
-                        }
-                    }
-                    .navigationDestination(isPresented: Binding<Bool>(
-                        get: { navigateToArchivedGame != nil },
-                        set: { if !$0 { navigateToArchivedGame = nil } }
-                    )) {
-                        if let archivedGame = navigateToArchivedGame {
-                            archivedGameDestination(for: archivedGame.gameId, date: archivedGame.date)
-                        }
-                    }
-                    .onAppear {
-                        //loadAllAvailableDates()
-                    }
-                    .onChange(of: currentPage) {
-                        // Hide the swipe instruction once user has swiped away from main page
-                        if currentPage != 0 && !hasUserSwiped {
-                            hasUserSwiped = true
-                            UserDefaults.standard.set(true, forKey: "hasSeenSwipeInstruction")
-                        }
-                    }
-                    
-                    // Bottom swipe nav bar
-                    HStack(alignment: .center) {
-                        
-                        Spacer()
-                        ForEach([0, 1, 2], id: \.self) { pageIndex in
-                            Image(systemName: currentPage == pageIndex ? "smallcircle.filled.circle.fill" : "smallcircle.filled.circle")
-                                .font(.system(size: currentPage == pageIndex ? 14 : 12))
-                                .foregroundColor(.white)
-                                .padding(.leading, pageIndex == 0 ? 30 : 0)
-                                .padding(.trailing, pageIndex == 2 ? 30 : 0)
-                        }
-                        Spacer()
-                    }
-                    .frame(height: 55)
-                    .background(LinearGradient.bottomSwipeBarGradient)
-                    
+                    headerSection
+                    mainTabView
+                    bottomNavigationBar
                     Spacer().frame(height: 20)
                 }
-                .zIndex(0) // Main content at base layer
-                .background(.clear) //top nav bar color?
+                .zIndex(0)
+                .background(.clear)
                 .ignoresSafeArea(.all, edges: .bottom)
                 
-                // Overlay layer - appears on top of everything
                 if showArchiveUpsell {
                     ArchiveUpsellOverlay(isPresented: $showArchiveUpsell)
                         .environmentObject(subscriptionManager)
-                        .zIndex(1) // Overlay on top
+                        .zIndex(1)
                 }
             }
             .navigationBarBackButtonHidden(true)
         }
         .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("NavigateToArchive"))) { notification in
-            if let userInfo = notification.userInfo,
-               let gameId = userInfo["gameId"] as? String {
-                // Navigate to archive tab and select the game
-                currentPage = 1  // Archive page
-                selectedArchiveGame = gameId
-            }
+            handleArchiveNavigation(notification)
         }
         .environmentObject(subscriptionManager)
+    }
+    
+    private var headerSection: some View {
+        HStack {
+            Text(DateFormatter.day2Formatter.string(from: today))
+                .font(.custom("LuloOne-Bold", size: 12))
+                .foregroundColor(Color.myAccentColor1)
+                .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                .lineLimit(1)
+                .allowsTightening(true)
+                .padding(20)
+            
+            Spacer()
+            
+            Button(action: {
+                showArchiveUpsell = true
+                //let _ = print("🛒 SubTierBadge: currentTier: \(subscriptionManager.currentTier)")
+            }) {
+                SubscriptionTierBadge(tier: subscriptionManager.currentTier)
+            }
+        }
+        .padding(.bottom, sizeCategory > .medium ? 8 : 12)
+        .padding(.horizontal, sizeCategory > .medium ? 20 : 50)
+        .overlay(
+            Rectangle()
+                .frame(height: 0.5)
+                .foregroundColor(.white.opacity(0.8)),
+            alignment: .bottom
+        )
+    }
+    
+    private var mainTabView: some View {
+        TabView(selection: $currentPage) {
+            mainMenuPage.tag(0)
+            archivesPage.tag(1)
+            accountPage.tag(2)
+        }
+        .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
+        .navigationDestination(isPresented: gameNavigationBinding) {
+            if let gameId = navigateToGame {
+                destinationView(for: gameId)
+            }
+        }
+        .navigationDestination(isPresented: archivedGameNavigationBinding) {
+            if let archivedGame = navigateToArchivedGame {
+                archivedGameDestination(for: archivedGame.gameId, date: archivedGame.date)
+            }
+        }
+        .onAppear {
+            //loadAllAvailableDates()
+        }
+        .onChange(of: currentPage) {
+            handlePageChange()
+        }
+    }
+    
+    private var gameNavigationBinding: Binding<Bool> {
+        Binding<Bool>(
+            get: { navigateToGame != nil },
+            set: { if !$0 { navigateToGame = nil } }
+        )
+    }
+    
+    private var archivedGameNavigationBinding: Binding<Bool> {
+        Binding<Bool>(
+            get: { navigateToArchivedGame != nil },
+            set: { if !$0 { navigateToArchivedGame = nil } }
+        )
+    }
+    
+    private var bottomNavigationBar: some View {
+        HStack(alignment: .center) {
+            Spacer()
+            ForEach([0, 1, 2], id: \.self) { pageIndex in
+                pageIndicator(for: pageIndex)
+            }
+            Spacer()
+        }
+        .frame(height: 55)
+        .background(LinearGradient.bottomSwipeBarGradient)
+    }
+    
+    private func pageIndicator(for pageIndex: Int) -> some View {
+        Image(systemName: currentPage == pageIndex ? "smallcircle.filled.circle.fill" : "smallcircle.filled.circle")
+            .font(.system(size: currentPage == pageIndex ? 14 : 12))
+            .foregroundColor(.white)
+            .padding(.leading, pageIndex == 0 ? 30 : 0)
+            .padding(.trailing, pageIndex == 2 ? 30 : 0)
+    }
+    
+    private func handlePageChange() {
+        if currentPage != 0 && !hasUserSwiped {
+            hasUserSwiped = true
+            UserDefaults.standard.set(true, forKey: "hasSeenSwipeInstruction")
+        }
+    }
+    
+    private func handleArchiveNavigation(_ notification: Notification) {
+        if let userInfo = notification.userInfo,
+           let gameId = userInfo["gameId"] as? String {
+            currentPage = 1
+            selectedArchiveGame = gameId
+        }
     }
     
     // MARK: - Main Menu Page
     @ViewBuilder
     private var mainMenuPage: some View {
         GeometryReader { geo in
-        ZStack {
-            LinearGradient.mainmenuViewGradient.ignoresSafeArea()
-            FancyAnimationLayer()
-            
-           
+            ZStack {
+                LinearGradient.mainmenuViewGradient.ignoresSafeArea()
+                FancyAnimationLayer()
+                
+                
                 ScrollView(.vertical) {
-                    VStack(spacing: adaptiveSpacer20) {
+                    VStack(spacing: sizeCategory > .medium ? 15 : 20) {
                         
                         Spacer()
-                            .frame(height: adaptiveSpacer50)
+                            .frame(height: sizeCategory > .medium ? 30 : 60)
                         
                         //game title header
                         VStack (spacing: 5){
                             Text(" DECODE!")
-                                .font(.custom("LuloOne-Bold", size: adaptiveFontSize52))
+                                .font(.custom("LuloOne-Bold", size: sizeCategory > .medium ? 46 : 52))
                                 .foregroundColor(.white)
                                 .lineLimit(1)
-                                .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                                .minimumScaleFactor(sizeCategory > .medium ? 0.7 : 1.0)
                                 .allowsTightening(true)
                             Text("DAILY")
                                 .font(.custom("LuloOne-Bold", size: 24))
@@ -230,14 +232,16 @@ struct MainMenuView: View {
                             Spacer()
                                 .frame(height: 3)
                             // Text("Just Puzzles. No Distractions.")
-                            Text("fun games, clean & simple\n(new challenges every day!)")
+                            
+                            
+                            Text("fun games, clean & simple\n＋ new challenges every day!\nsizeCategory: \(sizeCategory)\nscreen wxh: \(screenWidth), \(screenHeight)")
                                 .font(.custom("LuloOne", size: 10))
                                 .foregroundColor(.white)
                                 .multilineTextAlignment(.center)
                                 .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
                                 .allowsTightening(true)
                         }
-                       
+                        
                         Spacer()
                             .frame(height: 6)
                         
@@ -348,7 +352,7 @@ struct MainMenuView: View {
                 
                 VStack(spacing: 20) {
                     Spacer()
-                        .frame(height: 30)
+                        .frame(height: sizeCategory > .large ? 20 : 30)
                     
                     // Title for the second page
                     VStack(spacing: 10) {
@@ -409,8 +413,9 @@ struct MainMenuView: View {
                                     icon: "60.arrow.trianglehead.clockwise"
                                 )
                             }
-                            .padding(.horizontal, adaptiveSpacer20)
+                            .padding(.horizontal, sizeCategory > .medium ? 10 : 20)
                         }
+                        .padding(.horizontal, sizeCategory > .medium ? 20 : 40)
                     }
                     
                     Divider().background(.white)
@@ -421,7 +426,7 @@ struct MainMenuView: View {
                     Spacer()
                     
                 }
-                .padding(.horizontal, adaptivePadding40)
+                .padding(.horizontal, sizeCategory > .medium ? 30 : 40)
             }
         }
     }
@@ -436,7 +441,7 @@ struct MainMenuView: View {
             VStack() {
                 
                 Spacer()
-                    .frame(height: 50)
+                    .frame(height: sizeCategory > .large ? 40 : 50)
                 
                 // Title for Archives page
                 VStack(alignment: .leading, spacing: 8) {
@@ -480,8 +485,8 @@ struct MainMenuView: View {
                         Text("Decode")
                             .font(.custom("LuloOne-Bold", size: 11))
                             .foregroundColor(selectedArchiveGame == "decode" ? .black : .white)
-                            .padding(.horizontal, adaptiveSpacer18)
-                            .padding(.vertical, adaptiveSpacer15)
+                            .padding(.horizontal, sizeCategory > .medium ? 15 : 18)
+                            .padding(.vertical, sizeCategory > .medium ? 10 : 15)
                             .background(selectedArchiveGame == "decode" ? Color.white : Color.clear)
                             .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
                             .lineLimit(2)
@@ -501,8 +506,8 @@ struct MainMenuView: View {
                         Text("Flash\ndance")
                             .font(.custom("LuloOne-Bold", size: 11))
                             .foregroundColor(selectedArchiveGame == "flashdance" ? .black : .white)
-                            .padding(.horizontal, adaptiveSpacer18)
-                            .padding(.vertical, adaptiveSpacer10)
+                            .padding(.horizontal, sizeCategory > .medium ? 15 : 18)
+                            .padding(.vertical, sizeCategory > .medium ? 8 : 10)
                             .background(selectedArchiveGame == "flashdance" ? Color.white : Color.clear)
                             .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
                             .lineLimit(2)
@@ -522,8 +527,8 @@ struct MainMenuView: View {
                         Text("'Grams")
                             .font(.custom("LuloOne-Bold", size: 11))
                             .foregroundColor(selectedArchiveGame == "anagrams" ? .black : .white)
-                            .padding(.horizontal, adaptiveSpacer18)
-                            .padding(.vertical, adaptiveSpacer15)
+                            .padding(.horizontal, sizeCategory > .medium ? 15 : 18)
+                            .padding(.vertical, sizeCategory > .medium ? 10 : 15)
                             .background(selectedArchiveGame == "anagrams" ? Color.white : Color.clear)
                             .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
                             .lineLimit(2)
@@ -548,7 +553,7 @@ struct MainMenuView: View {
                             dateButton(for: date)
                         }
                     }
-                    .padding(.horizontal, adaptivePadding40)
+                    .padding(.horizontal, sizeCategory > .medium ? 20 : 40)
                     .padding(.vertical, 3)
                 }
                 
@@ -719,7 +724,7 @@ struct MainMenuView: View {
                     Text(gameName)
                         .font(.custom("LuloOne-Bold", size: 12))
                         .foregroundColor(.white)
-                        .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                        .minimumScaleFactor(sizeCategory > .medium ? 0.7 : 1.0)
                         .lineLimit(2)
                         .allowsTightening(true)
                     
@@ -799,7 +804,7 @@ struct MainMenuView: View {
     @ViewBuilder
     private func tiltableGameButton(for gameInfo: GameInfo) -> some View {
         let buttonWidth = screenWidth - 120
-        let buttonHeight: CGFloat = adaptiveButtonHeight
+        let buttonHeight = screenHeight / 8
         let tilt = gameButtonTilts[gameInfo.id] ?? (0, 0)
         let isPressed = gameButtonPressed[gameInfo.id] ?? false
         let checkDate =  Calendar.current.startOfDay(for: Date())
@@ -817,31 +822,35 @@ struct MainMenuView: View {
                     .frame(maxWidth: buttonHeight)
                 
                 Spacer()
-                    .frame(width: 1)
+                    .frame(width: 5)
                 
                 VStack(alignment: .leading, spacing: 5) {
                     
                     Text(gameInfo.displayName)
-                        .font(.custom("LuloOne-Bold", size: adaptiveFontSize22))
-                        .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                        .font(.custom("LuloOne-Bold", size: 20))
+                        .minimumScaleFactor(sizeCategory > .medium ? 0.7 : 1.0)
                         .lineLimit(1)
                         .allowsTightening(true)
-                        
+                    
                     Text(gameInfo.description)
                         .font(.custom("LuloOne", size: 10))
-                        .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                        .minimumScaleFactor(sizeCategory > .medium ? 0.7 : 1.0)
+                        .lineLimit(1)
+                        .allowsTightening(true)
+                        .multilineTextAlignment(.leading)
+                    
+                    Text("buttonHeight:\(buttonHeight)")
+                        .font(.custom("LuloOne", size: 6))
+                        .minimumScaleFactor(sizeCategory > .medium ? 0.7 : 1.0)
                         .lineLimit(1)
                         .allowsTightening(true)
                         .multilineTextAlignment(.leading)
                 }
-                
                 Spacer()
-                
             }
-           // .fixedSize()
             .frame(width: buttonWidth, height: buttonHeight)
             .frame(alignment: .leading)
-            .padding()
+            .padding(sizeCategory > .medium ? 5 : 10)
             .background(Color.mainMenuGameButtonBg)//(Color.white)
             .foregroundColor(Color.mainMenuGameButtonFg)
             .overlay(
@@ -861,7 +870,7 @@ struct MainMenuView: View {
             .animation(.easeOut(duration: 0.1), value: tilt.y)
             .animation(.easeOut(duration: 0.1), value: isPressed)
         }
-
+        
         .disabled(!gameInfo.isAvailable)
         .simultaneousGesture(
             DragGesture(minimumDistance: 0)
@@ -882,8 +891,8 @@ struct MainMenuView: View {
                 if isCompleted {
                     Image(systemName: "checkmark.seal.fill")
                         .font(.system(size: 20, weight: .bold))
-                        .foregroundColor(.yellow)
-                        .offset(x: (buttonWidth/2)-3, y: -(buttonHeight/2)+5) // Position in top-right corner
+                        .foregroundColor(Color.myCheckmarks)
+                        .offset(x: (buttonWidth/2)-2, y: (-buttonHeight/2)+5) // Position in btm-right corner
                 }
             }
         )
@@ -1005,15 +1014,6 @@ struct MainMenuView: View {
         )
     }
     
-    //    // Add this helper method to your MainMenuView class
-    //    private func getMostRecentlyPlayedGame() -> String? {
-    //        let recentScore = scoreManager.allScores
-    //            .sorted { $0.date > $1.date }
-    //            .first
-    //
-    //        return recentScore?.gameId ?? "decode" // Default to decode if no scores exist
-    //    }
-    
     // Tiltable button for Settings
     @ViewBuilder
     private var tiltableSettingsButton: some View {
@@ -1039,7 +1039,7 @@ struct MainMenuView: View {
                     .lineLimit(1)
                     .allowsTightening(true)
             }
-            .padding()
+            .padding(10)
             .fixedSize()
             .frame(width: buttonWidth, height: 60)
             .background(Color.myAccentColor1)
@@ -1103,13 +1103,6 @@ struct MainMenuView: View {
     private func getCachedAvailableDates(for gameId: String) -> [Date] {
         return gameCoordinator.getAvailableDates(for: gameId)
     }
-    
-    //OLD
-    //    // Get cached dates for a game (returns empty array if not cached)
-    //    private func getCachedAvailableDates(for gameId: String) -> [Date] {
-    //        return cachedAvailableDates[gameId] ?? []
-    //    }
-    
     
 }
 

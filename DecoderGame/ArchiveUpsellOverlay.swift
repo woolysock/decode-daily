@@ -14,7 +14,6 @@ struct ArchiveUpsellOverlay: View {
     @Binding var isPresented: Bool
     @EnvironmentObject var subscriptionManager: SubscriptionManager
     @StateObject private var storeManager = StoreManager.shared
-    @Environment(\.horizontalSizeClass) var horizontalSizeClass
     @Environment(\.sizeCategory) var sizeCategory
     
     var body: some View {
@@ -47,8 +46,8 @@ struct ArchiveUpsellOverlay: View {
             print("📈 🪵 sub tier: \(SubscriptionManager.shared.currentTier.displayName)")
         }
         .onChange(of: subscriptionManager.currentTier) {
-            let _ = print("AM I ON TO SOMETHING??????")
-            let _ = print("subscriptionManager.currentTier: \(subscriptionManager.currentTier)")
+            //let _ = print("AM I ON TO SOMETHING??????")
+            //let _ = print("subscriptionManager.currentTier: \(subscriptionManager.currentTier)")
             
         }
     }
@@ -56,7 +55,7 @@ struct ArchiveUpsellOverlay: View {
     // MARK: - Premium Benefits View
     @ViewBuilder
     private var premiumBenefitsView: some View {
-        VStack(spacing: adaptiveSpacing) {
+        VStack(spacing: sizeCategory > .medium ? 12 : 20) {
             // Header
             VStack(spacing: 8) {
                 Image(systemName: "crown.fill")
@@ -92,6 +91,7 @@ struct ArchiveUpsellOverlay: View {
                 benefitRow(icon: "gift.fill", title: "Exclusive Content", description: "Access to premium-only puzzles and challenges, coming soon!")
             }
             .padding(.vertical, 10)
+            .padding(.horizontal, sizeCategory > .large ? 5 : 10)
             
             // Manage Subscription Button
             Button(action: {
@@ -101,12 +101,12 @@ struct ArchiveUpsellOverlay: View {
                     .font(.custom("LuloOne", size: 12))
                     .foregroundColor(.white.opacity(0.9))
                     .padding(.horizontal, 20)
-                    .padding(.vertical, 8)
+                    .padding(.vertical, 5)
                     .lineLimit(1)
                     .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
                     .allowsTightening(true)
             }
-            .padding(.top, 10)
+            //.padding(.top, 10)
             
             // Close button
             Button(action: {
@@ -126,22 +126,20 @@ struct ArchiveUpsellOverlay: View {
             }
             .padding(.top, 10)
         }
-        .frame(maxWidth: adaptiveMaxWidth)
-        .padding(30)
         .background(Color.myOverlaysColor)
         .cornerRadius(20)
         .overlay(
             RoundedRectangle(cornerRadius: 15)
                 .stroke(Color.white, lineWidth: 0.5)
         )
-        .padding(.horizontal, 40)
+        .padding(.horizontal, sizeCategory > .medium ? 20 : 40)
     }
     
     @ViewBuilder
     private func benefitRow(icon: String, title: String, description: String) -> some View {
         HStack(spacing: 15) {
             Image(systemName: icon)
-                .font(.system(size: 20))
+                .font(.system(size: 25))
                 .foregroundColor(Color.mySunColor)
                 .frame(width: 30)
             
@@ -161,7 +159,7 @@ struct ArchiveUpsellOverlay: View {
                     .allowsTightening(true)
             }
             
-            Spacer()
+            //Spacer()
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 10)
@@ -181,7 +179,7 @@ struct ArchiveUpsellOverlay: View {
                     .padding(3)
                 
                 Text("Unlock More Dailies")
-                    .font(.custom("LuloOne-Bold", size: adaptiveFontSize14))
+                    .font(.custom("LuloOne-Bold", size: sizeCategory > .medium ? 12 : 14))
                     .foregroundColor(.white)
                     .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
                     .lineLimit(1)
@@ -200,7 +198,7 @@ struct ArchiveUpsellOverlay: View {
                     .allowsTightening(true)
                 
                 // Dynamic free tier description
-                Text("Play today's daily games and the last \(PaidTier.basicAccess.archiveDaysAllowed) days free. ★ Or Upgrade for more! ★")
+                Text("Play today's daily games and the last \(PaidTier.basicAccess.archiveDaysAllowed) days free. ★ Or Upgrade for more!")
                     .font(.custom("LuloOne", size: 10))
                     .foregroundColor(.white.opacity(0.9))
                     .multilineTextAlignment(.center)
@@ -303,7 +301,7 @@ struct ArchiveUpsellOverlay: View {
             }
             .padding(.top, 10)
         }
-        .padding(adaptivePadding30)
+        .padding(sizeCategory > .medium ? 15 : 30)
         .background(Color.myOverlaysColor)
         .cornerRadius(20)
         .overlay(
@@ -460,31 +458,6 @@ struct ArchiveUpsellOverlay: View {
             }
         }
     }
-    
-    private var adaptiveSpacing: CGFloat {
-        horizontalSizeClass == .compact ? 12 : 20
-    }
-    
-    private var adaptiveTitleSize: CGFloat {
-        horizontalSizeClass == .compact ? 20 : 24
-    }
-    
-    private var adaptivePadding40: CGFloat {
-        horizontalSizeClass == .compact ? 20 : 40
-    }
-    
-    private var adaptivePadding30: CGFloat {
-        horizontalSizeClass == .compact ? 15 : 30
-    }
-    
-    private var adaptiveMaxWidth: CGFloat {
-        horizontalSizeClass == .compact ? UIScreen.main.bounds.width - 32 : 400
-    }
-    
-    private var adaptiveFontSize14: CGFloat {
-        horizontalSizeClass == .compact ? 12 : 14
-    }
-    
     
 }
     

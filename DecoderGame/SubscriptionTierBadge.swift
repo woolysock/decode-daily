@@ -28,8 +28,8 @@ struct SubscriptionTierBadge: View {
                 .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
                 .allowsTightening(true)
         }
-        .padding(.horizontal, 15)
-        .padding(.vertical, 10)
+        .padding(.horizontal, sizeCategory > .large ? 10 : 15)
+        .padding(.vertical, sizeCategory > .large ? 8 : 10)
         .background(tierBackgroundView)
         .overlay(
             RoundedRectangle(cornerRadius: 12)

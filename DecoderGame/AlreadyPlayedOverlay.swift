@@ -16,7 +16,6 @@ struct AlreadyPlayedOverlay: View {
     let onPlayRandom: () -> Void
     let onNavigateToArchive: () -> Void
     @Environment(\.sizeCategory) var sizeCategory
-    @Environment(\.horizontalSizeClass) var horizontalSizeClass
         
     private var formattedDate: String {
         let formatter = DateFormatter()
@@ -143,14 +142,14 @@ struct AlreadyPlayedOverlay: View {
                     
                 }
             }
-            .padding(horizontalSizeClass == .compact ? 30 : 40)
+            .padding(sizeCategory > .medium ? 30 : 40)
             .background(Color.myOverlaysColor)
             .cornerRadius(15)
             .overlay(
                 RoundedRectangle(cornerRadius: 15)
                     .stroke(Color.white, lineWidth: 0.5)
             )
-            .padding(.horizontal, horizontalSizeClass == .compact ? 30 : 40)
+            .padding(.horizontal, sizeCategory > .medium ? 30 : 40)
         }
     }
         

@@ -9,6 +9,7 @@ import SwiftUI
 
 struct NewDayOverlay: View {
     @Environment(\.sizeCategory) var sizeCategory
+    
     @Binding var isVisible: Bool
     let onLetsPlay: () -> Void
     
@@ -37,7 +38,7 @@ struct NewDayOverlay: View {
                         .multilineTextAlignment(.center)
                     
                     Text("Fresh dailies await")
-                        .font(.custom("LuloOne", size: 16))
+                        .font(.custom("LuloOne", size: sizeCategory > .medium ? 13 : 15))
                         .foregroundColor(.white.opacity(0.8))
                         .multilineTextAlignment(.center)
                         .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)

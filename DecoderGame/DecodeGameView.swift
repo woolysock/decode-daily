@@ -586,6 +586,8 @@ struct CodeRevealOverlay: View {
     let pegShades: [Color]
     let onContinue: () -> Void
     
+    @Environment(\.sizeCategory) var sizeCategory
+    
     var body: some View {
         VStack(spacing: 20) {
             //won or loss text
@@ -630,6 +632,10 @@ struct CodeRevealOverlay: View {
             Text("Tap anywhere to continue")
                 .font(.custom("LuloOne", size: 12))
                 .foregroundColor(.gray)
+                .multilineTextAlignment(.center)
+                .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                .lineLimit(2)
+                .allowsTightening(true)
                 .padding(.top, 20)
         }
         .padding()

@@ -7,8 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		44791D742E73B027002C93C3 /* Mixpanel in Frameworks */ = {isa = PBXBuildFile; productRef = 44791D732E73B027002C93C3 /* Mixpanel */; };
 		44BCE7FE2DA87D78005DDD84 /* Launch Screen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 44BCE7FD2DA87D78005DDD84 /* Launch Screen.storyboard */; };
+		44CCBAC92E787C1500EA95EB /* Mixpanel in Frameworks */ = {isa = PBXBuildFile; productRef = 44CCBAC82E787C1500EA95EB /* Mixpanel */; settings = {ATTRIBUTES = (Required, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -42,7 +42,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				44791D742E73B027002C93C3 /* Mixpanel in Frameworks */,
+				44CCBAC92E787C1500EA95EB /* Mixpanel in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -54,6 +54,7 @@
 			children = (
 				44BCE7FD2DA87D78005DDD84 /* Launch Screen.storyboard */,
 				442B9E392CF3BAD1008DD043 /* DecoderGame */,
+				44CCBAC72E787BBB00EA95EB /* Frameworks */,
 				442B9E382CF3BAD1008DD043 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -64,6 +65,13 @@
 				442B9E372CF3BAD1008DD043 /* Decode! Daily iOS.app */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		44CCBAC72E787BBB00EA95EB /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -86,7 +94,7 @@
 			);
 			name = "Decode! Daily iOS";
 			packageProductDependencies = (
-				44791D732E73B027002C93C3 /* Mixpanel */,
+				44CCBAC82E787C1500EA95EB /* Mixpanel */,
 			);
 			productName = DecoderGame;
 			productReference = 442B9E372CF3BAD1008DD043 /* Decode! Daily iOS.app */;
@@ -187,7 +195,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 0.2.0;
+				MARKETING_VERSION = 0.3.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.megandonahue.DecoderGame;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -237,7 +245,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 0.2.0;
+				MARKETING_VERSION = 0.3.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.megandonahue.DecoderGame;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -402,7 +410,7 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		44791D732E73B027002C93C3 /* Mixpanel */ = {
+		44CCBAC82E787C1500EA95EB /* Mixpanel */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 44791D722E73B027002C93C3 /* XCRemoteSwiftPackageReference "mixpanel-swift" */;
 			productName = Mixpanel;

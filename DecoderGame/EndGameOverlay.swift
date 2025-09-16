@@ -123,7 +123,7 @@ struct EndGameOverlay: View {
             
         case "anagrams":
             guard let theseProps = gameScore.anagramsProperties else { return nil }
-            return "\(theseProps.wordsCompleted) words solved\n\n\(theseProps.totalWordsInSet) possible, \(theseProps.skippedWords) skipped\n\nlongest word solved:\n\(theseProps.longestWord) letters\n"
+            return "\(theseProps.wordsCompleted) words solved\n\n\(theseProps.skippedWords) skipped words\nout of \(theseProps.totalWordsInSet)\n\nlongest word solved:\n\(theseProps.longestWord) letters"
             
         default:
             //print("🔍 DEBUG: In default case")
@@ -153,14 +153,17 @@ struct EndGameOverlay: View {
             
             // Main content card
             VStack(spacing: 25) {
+                Spacer()
+                    .frame(height: 1)
                 // Header
                 VStack(spacing: 10) {
                     Text("Game Over!")
                         .font(.custom("LuloOne-Bold", size: 28))
                         .foregroundColor(.white)
                         .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
-                        .lineLimit(1)
+                        .lineLimit(2)
                         .allowsTightening(true)
+                        .multilineTextAlignment(.center)
                     
                     Text(displayName)
                         .font(.custom("LuloOne", size: 18))
@@ -172,7 +175,7 @@ struct EndGameOverlay: View {
                 
                 Divider()
                     .background(.white)
-                    .padding(.horizontal, 40)
+                    .padding(.horizontal, sizeCategory > .large ? 30 : 40)
                 
                 // Score section
                 VStack(spacing: 15) {
@@ -228,7 +231,7 @@ struct EndGameOverlay: View {
                         NavigationLink(destination: MainMenuView(initialPage: 1, selectedGame: "decode")) {
                             Text("New Code?")
                                 .font(.custom("LuloOne-Bold", size: 18))
-                                .frame(width: 240, height: 50)
+                                .frame(width: 250, height: 60)
                                 .foregroundColor(buttonsAreActive ? .black : .white.opacity(0.4))
                                 .background(buttonsAreActive ? Color.white : Color.black.opacity(0.4))
                                 .cornerRadius(10)
@@ -250,7 +253,7 @@ struct EndGameOverlay: View {
                         }
                         .font(.custom("LuloOne-Bold", size: 18))
                         .foregroundColor(buttonsAreActive ? .black : .gray)
-                        .frame(width: 200, height: 50)
+                        .frame(width: 250, height: 60)
                         .background(buttonsAreActive ? Color.white : Color.black.opacity(0.4))
                         .cornerRadius(10)
                         .disabled(!buttonsAreActive)
@@ -273,6 +276,7 @@ struct EndGameOverlay: View {
                                 .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
                                 .lineLimit(2)
                                 .allowsTightening(true)
+                                .frame(height: 60)
                                 
                         }
                         .disabled(!buttonsAreActive)
@@ -296,6 +300,7 @@ struct EndGameOverlay: View {
                                 .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
                                 .lineLimit(2)
                                 .allowsTightening(true)
+                                .frame(height: 60)
                         }
                         .disabled(!buttonsAreActive)
                         .animation(.easeInOut(duration: 0.3), value: buttonsAreActive)
@@ -308,7 +313,7 @@ struct EndGameOverlay: View {
                     }
                 }
             }
-            .padding(30)
+            .padding(sizeCategory > .large ? 20 : 40)
             .background(Color.myOverlaysColor)
             .cornerRadius(15)
             .overlay(
@@ -316,7 +321,6 @@ struct EndGameOverlay: View {
                     .stroke(Color.white, lineWidth: 1)
                     .foregroundColor(.clear)
             )
-            .padding(.horizontal, 40)
             .opacity(1.0) // Always show the content box immediately
             .scaleEffect(1.0) // No scaling animation on the content box
         }
