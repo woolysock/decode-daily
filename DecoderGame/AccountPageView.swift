@@ -6,13 +6,6 @@
 //
 
 
-//
-//  AccountPageView.swift
-//  Decode! Daily iOS
-//
-//  Created by Assistant on 9/15/25.
-//
-
 import SwiftUI
 
 struct AccountPageView: View {

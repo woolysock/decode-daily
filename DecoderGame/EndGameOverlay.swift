@@ -140,10 +140,9 @@ struct EndGameOverlay: View {
     
     var body: some View {
         ZStack {
-            // Semi-transparent background
             Rectangle()
                 .fill(Color.black.opacity(0.8))
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .ignoresSafeArea()
             
             // Celebration animation layer - simplified version
             if showCelebration {
@@ -161,7 +160,7 @@ struct EndGameOverlay: View {
                         .font(.custom("LuloOne-Bold", size: 28))
                         .foregroundColor(.white)
                         .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
-                        .lineLimit(2)
+                        .lineLimit(sizeCategory > .large ? 2 : 1)
                         .allowsTightening(true)
                         .multilineTextAlignment(.center)
                     
@@ -180,50 +179,51 @@ struct EndGameOverlay: View {
                 
                 // Score section
                 VStack(spacing: 15) {
-                    VStack(spacing: 7) {
-                        Text(scoreText)
-                            .font(.custom("LuloOne", size: 16))
+                    
+                    Text(scoreText)
+                        .font(.custom("LuloOne", size: 16))
+                        .foregroundColor(.white.opacity(0.8))
+                        .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                        .lineLimit(4)
+                        .allowsTightening(true)
+                    
+                    Text("\(finalScore)")
+                        .font(.custom("LuloOne-Bold", size: 48))
+                        .foregroundColor(.white)
+                        .monospacedDigit()
+                        .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                        .lineLimit(1)
+                        .allowsTightening(true)
+                    
+                    // NEW: Additional score details
+                    if let details = additionalScoreDetails {
+                        Text(details)
+                            .font(.custom("LuloOne", size: 14))
                             .foregroundColor(.white.opacity(0.8))
+                            .multilineTextAlignment(.center)
+                            .padding(.top, 6)
                             .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
-                            .lineLimit(4)
                             .allowsTightening(true)
-                        
-                        Text("\(finalScore)")
-                            .font(.custom("LuloOne-Bold", size: 48))
-                            .foregroundColor(.white)
-                            .monospacedDigit()
-                            .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
-                            .lineLimit(1)
-                            .allowsTightening(true)
-                        
-                        // NEW: Additional score details
-                        if let details = additionalScoreDetails {
-                            Text(details)
-                                .font(.custom("LuloOne", size: 14))
-                                .foregroundColor(.white.opacity(0.8))
-                                .multilineTextAlignment(.center)
-                                .padding(.top, 6)
-                                .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
-                                .allowsTightening(true)
-                        }
-                        else {
-                            Text("Score not saved\n(code was seen before)")
-                                .font(.custom("LuloOne", size: 12))
-                                .foregroundColor(.white.opacity(0.8))
-                                .multilineTextAlignment(.center)
-                                .padding(.top, 6)
-                                .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
-                                .allowsTightening(true)
-                        }
-                        //                        Text("★ ★ ★")
-                        //                            .font(.custom("LuloOne", size: 16))
-                        //                            .foregroundColor(.white.opacity(0.8))
                     }
+                    else {
+                        Text("Score not saved\n(code was seen before)")
+                            .font(.custom("LuloOne", size: 12))
+                            .foregroundColor(.white.opacity(0.8))
+                            .multilineTextAlignment(.center)
+                            .padding(.top, 6)
+                            .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                            .allowsTightening(true)
+                    }
+                    //                        Text("★ ★ ★")
+                    //                            .font(.custom("LuloOne", size: 16))
+                    //                            .foregroundColor(.white.opacity(0.8))
+                    
                 }
+                .padding(.horizontal, sizeCategory > .large ? 20 : 30)
                 
                 Divider()
                     .background(.white)
-                    .padding(.horizontal, 40)
+                    .padding(.horizontal, sizeCategory > .large ? 30 : 40)
                 
                 // Action buttons
                 VStack(spacing: 15) {
@@ -265,7 +265,7 @@ struct EndGameOverlay: View {
                         .allowsTightening(true)
                     }
                     
-                    HStack(spacing: 10) {
+                    HStack(spacing: 5) {
                         NavigationLink(destination: MultiGameLeaderboardView(selectedGameID: gameID)) {
                             Text("High\nScores")
                                 .font(.custom("LuloOne", size: 14))
@@ -277,7 +277,7 @@ struct EndGameOverlay: View {
                                 .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
                                 .lineLimit(2)
                                 .allowsTightening(true)
-                                .frame(height: 60)
+                                .frame(width: 120, height: sizeCategory > .large ? 90 : 60)
                                 
                         }
                         .disabled(!buttonsAreActive)
@@ -288,7 +288,6 @@ struct EndGameOverlay: View {
                                     isVisible = false  // Dismiss the overlay
                                 }
                         )
-                        
                         
                         NavigationLink(destination: MainMenuView(initialPage: 0)) {
                             Text("Main\nMenu")
@@ -301,7 +300,7 @@ struct EndGameOverlay: View {
                                 .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
                                 .lineLimit(2)
                                 .allowsTightening(true)
-                                .frame(height: 60)
+                                .frame(width: 120, height: sizeCategory > .large ? 90 : 60)
                         }
                         .disabled(!buttonsAreActive)
                         .animation(.easeInOut(duration: 0.3), value: buttonsAreActive)
@@ -314,6 +313,9 @@ struct EndGameOverlay: View {
                     }
                 }
                 .padding(10)
+                
+                Spacer()
+                    .frame(height: 1)
             }
             .background(Color.myOverlaysColor)
             .cornerRadius(15)
@@ -322,10 +324,10 @@ struct EndGameOverlay: View {
                     .stroke(Color.white, lineWidth: 1)
                     .foregroundColor(.clear)
             )
+            .padding(30) // DOES THIS SET THE SPACE OUTSIDE THE CONTENT BOX?
             .opacity(1.0) // Always show the content box immediately
             .scaleEffect(1.0) // No scaling animation on the content box
         }
-        .padding(30)
         .ignoresSafeArea(.all)
         .onAppear {
             startCelebrationSequence()

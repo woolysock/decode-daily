@@ -61,7 +61,7 @@ struct ArchivePageView: View {
                     .padding(.horizontal, 20)
                     
                     Spacer()
-                        .frame(height: 25)
+                        .frame(height: sizeCategory > .large ? 15 : 25)
                     
                     // Game Selector
                     GameSelectorView(selectedArchiveGame: $selectedArchiveGame)

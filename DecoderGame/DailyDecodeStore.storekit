@@ -21,6 +21,8 @@
     "_developerTeamID" : "BNU2NLP8DW",
     "_failTransactionsEnabled" : false,
     "_lastSynchronizedDate" : 779149634.99688995,
+    "_locale" : "en_US",
+    "_storefront" : "USA",
     "_storeKitErrors" : [
       {
         "current" : null,
@@ -69,15 +71,21 @@
       }
     ]
   },
-"subscriptionGroups" : [
+  "subscriptionGroups" : [
     {
       "id" : "21482209",
-      "localizations" : [ ],
+      "localizations" : [
+
+      ],
       "name" : "Archive Access",
       "subscriptions" : [
         {
-          "adHocOffers" : [ ],
-          "codeOffers" : [ ],
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
           "displayPrice" : "2.99",
           "familyShareable" : false,
           "groupNumber" : 1,
@@ -94,11 +102,18 @@
           "recurringSubscriptionPeriod" : "P1Y",
           "referenceName" : "Standard",
           "subscriptionGroupID" : "21482209",
-          "type" : "RecurringSubscription"
+          "type" : "RecurringSubscription",
+          "winbackOffers" : [
+
+          ]
         },
         {
-          "adHocOffers" : [ ],
-          "codeOffers" : [ ],
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
           "displayPrice" : "4.99",
           "familyShareable" : false,
           "groupNumber" : 1,
@@ -115,7 +130,10 @@
           "recurringSubscriptionPeriod" : "P1Y",
           "referenceName" : "Premium",
           "subscriptionGroupID" : "21482209",
-          "type" : "RecurringSubscription"
+          "type" : "RecurringSubscription",
+          "winbackOffers" : [
+
+          ]
         }
       ]
     }

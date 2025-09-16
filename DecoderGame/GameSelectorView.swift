@@ -39,7 +39,7 @@ struct GameSelectorView: View {
                 selectedGame: $selectedArchiveGame
             )
         }
-        .padding(10)
+        .padding(.vertical, 5)
     }
 }
 
@@ -58,21 +58,23 @@ struct GameSelectorButton: View {
             selectedGame = gameId
         }) {
             Text(title)
-                .font(.custom("LuloOne-Bold", size: 11))
+                .frame(width: 70, height: 35)
+                .font(.custom("LuloOne-Bold", size: sizeCategory > .medium ? 10 : 12))
                 .foregroundColor(isSelected ? .black : .white)
-                
-                .padding(.horizontal, sizeCategory > .medium ? 14 : 18)
-                .padding(.vertical, sizeCategory > .medium ? 10 : 14)
-                .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
-                .lineLimit(2)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 8)
+                .minimumScaleFactor(sizeCategory > .medium ? 0.7 : 1.0)
+                .lineLimit(2) //, reservesSpace: true)
                 .allowsTightening(true)
+                .multilineTextAlignment(.center)
+                .background(isSelected ? Color.white : Color.clear)
                 .overlay(
                     RoundedRectangle(cornerRadius: 8)
-                        .stroke(Color.white, lineWidth: 1)
+                        .stroke(Color.white, lineWidth: sizeCategory > .large ? 3 : 2)
+                        .background(.clear)
                 )
                 .cornerRadius(8)
-                .background(isSelected ? Color.white : Color.clear)
         }
-        .frame(width: 100, height: sizeCategory > .large ? 70 : 50)
+        //.padding(4)
     }
 }
