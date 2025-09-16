@@ -1,4 +1,3 @@
-
 //
 //  DecodeGame.swift
 //  Decode! Daily iOS
@@ -7,6 +6,7 @@
 //
 
 import SwiftUI
+//import Combine
 
 class DecodeGame: ObservableObject, GameProtocol {
     @Published var currentTurn: Int = 0
@@ -15,6 +15,7 @@ class DecodeGame: ObservableObject, GameProtocol {
     @Published var theCode: [Int] = []
     @Published var theBoard: [[Int]] = []
     @Published var theScore: [[Int]] = []
+    @Published var gameWon: Bool = false
 
     @Published var gameStartTime: Date?
     @Published var lastScore: GameScore?
@@ -23,16 +24,23 @@ class DecodeGame: ObservableObject, GameProtocol {
     @Published var isAnimating = false
     @Published var animatedCode: [Int] = []
     @Published var gameInteractive = false
+    
+    @Published var showAlreadyPlayedOverlay: Bool = false
+    @Published var willScoreCount: Bool = true  // Track if this game counts for scoring
 
     // Make scoreManager mutable so it can be injected after initialization
     var scoreManager: GameScoreManager
+    let targetDate: Date?
+    private let codeSetManager: DailyCodeSetManager
+    @Published var dailyCodeSet: DailyCodeSet?
+    //private var cancellables = Set<AnyCancellable>()
     
     // Animation timer
     private var animationTimer: Timer?
     private var animationStartTime: Date?
 
     // Colors
-    let myPegColor1 = Color(red:49/255,green:52/255,blue:66/255)
+    let myPegColor1 = Color.myOverlaysColor //Color(red:49/255,green:52/255,blue:66/255) //HIDES THE CODE GRAY
     let myPegColor2 = Color(red:137/255,green:99/255,blue:145/255)
     let myPegColor3 = Color(red:143/255,green:159/255,blue:219/255)
     let myPegColor4 = Color(red:99/255,green:133/255,blue:145/255)
@@ -45,63 +53,122 @@ class DecodeGame: ObservableObject, GameProtocol {
     let numRows = 7
     let numCols = 5
     
-    init(scoreManager: GameScoreManager) {
-        self.scoreManager = GameScoreManager.shared
-        startGame()
+    init(scoreManager: GameScoreManager, targetDate: Date? = nil) {
+        print("🔍 DecodeGame() init: targetDate: \(String(describing: targetDate))")
         
-        //this is nothing to do with the game, just lists post-script names of fonts in the console
-//        for family in UIFont.familyNames {
-//            print("Family: \(family)")
-//            for name in UIFont.fontNames(forFamilyName: family) {
-//                print("  Font: \(name)")
-//            }
-//        }
+        self.targetDate = targetDate
+        self.codeSetManager = DailyCodeSetManager.shared
+        self.scoreManager = GameScoreManager.shared
+        
+        //print("🔍 TRACE: DecodeGame init - END")
     }
     
     let gameInfo = GameInfo(
            id: "decode",
-           displayName: "decode",
+           displayName: "Decode",
            description: "crack the color code",
            isAvailable: true,
            //gameLocation: AnyView(DecodeGameView()),
            gameIcon: Image(systemName: "circle.hexagonpath")
        )
 
-
     func startGame() {
-        // Set animation state FIRST to hide the board
-        isAnimating = true
-        gameInteractive = false
+        print("🚀 DecodeGame.startGame() called")
+        gameOver = 0
         
+        let gameDate = targetDate ?? Calendar.current.startOfDay(for: Date())
+        
+        //print("🎯 startGame(): DATE DEBUG: is off; uncomment from code if needed")
+//        print("   - targetDate: \(String(describing: targetDate))")
+//        print("   - Calendar.current.startOfDay(for: \(Date())): \(Calendar.current.startOfDay(for: Date()))")
+//        print("   - and thus.... ")
+//        print("   - gameDate: \(gameDate)")
+//        print("   - gameDate with dayStringFormatter: \(DateFormatter.dayStringFormatter.string(from: gameDate))")
+//        
+//        // Debug: Check what the equation manager thinks about this date
+//        print("🔍 Before calling getTodaysEquationSet:")
+//        print("   - equationManager.currentEquationSet's date:")
+//        print("   - \(String(describing: codeSetManager.currentCodeSet?.date))")
+//        
+        
+        // Check if this date has already been played
+        if scoreManager.isGameCompleted(gameId: "decode", date: gameDate) {
+            showAlreadyPlayedOverlay = true
+            willScoreCount = false
+            return  // Don't start the game yet
+        }
+        
+        // Continue with normal game start
+        willScoreCount = true
+        //showAlreadyPlayedOverlay = false
+        startGameInternal()
+    }
+    
+    // Add this new method - contains your existing game start logic
+    private func startGameInternal() {
         pegShades = [myPegColor1, myPegColor2, myPegColor3, myPegColor4, myPegColor5, myPegColor6]
         currentTurn = 0
         gameOver = 0
         
-        theCode = (0..<numCols).map { _ in Int.random(in: 1..<pegShades.count) }
-              
+        // Use daily code
+        theCode = getDailyCode()
+        
         theBoard = Array(repeating: Array(repeating: 0, count: numCols), count: numRows)
         theScore = Array(repeating: Array(repeating: 0, count: numCols), count: numRows)
         gameStartTime = Date()
         lastScore = nil
-        statusText = "Try to guess the hidden color code"
         
-        // Now start the animation
+        // Start animation
         startCodeAnimation()
         
         print("🔐 SECRET CODE: \(theCode)")
-        print("🏁 startGame(): DecodeGame initialized with scoreManager: \(type(of: scoreManager))")
+        print("🏁 startGameInternal(): DecodeGame initialized")
     }
+
+    // Add this method for playing without score
+    func startGameWithoutScore() {
+        print("🎮 Starting game without score tracking")
+        gameOver = 0
+        willScoreCount = false
+        startGameInternal()
+    }
+
+    // Add this method for playing with random code
+    func startGameWithRandomCode() {
+        print("🎲 Starting game with random code")
+        willScoreCount = false
+        gameOver = 0
+        pegShades = [myPegColor1, myPegColor2, myPegColor3, myPegColor4, myPegColor5, myPegColor6]
+        currentTurn = 0
+        
+        
+        // Generate random code instead of daily code
+        theCode = (0..<numCols).map { _ in Int.random(in: 1...pegShades.count-1) }
+        
+        theBoard = Array(repeating: Array(repeating: 0, count: numCols), count: numRows)
+        theScore = Array(repeating: Array(repeating: 0, count: numCols), count: numRows)
+        gameStartTime = Date()
+        lastScore = nil
+        
+        // Start animation
+        startCodeAnimation()
+        
+        print("🔐 RANDOM SECRET CODE: \(theCode)")
+        print("🏁 startGameWithRandomCode(): DecodeGame initialized")
+    }
+
     
     //USED WHEN THEN HOW TO PLAY DIALOG IS UP
     func startGameWithoutAnimation() {
         isAnimating = false
         gameInteractive = false
-        
+        gameOver = 0
         pegShades = [myPegColor1, myPegColor2, myPegColor3, myPegColor4, myPegColor5, myPegColor6]
         currentTurn = 0
-        gameOver = 0
         
-        theCode = (0..<numCols).map { _ in Int.random(in: 1..<pegShades.count) }
+        
+        // Use daily code instead of random
+        theCode = getDailyCode()
         
         theBoard = Array(repeating: Array(repeating: 0, count: numCols), count: numRows)
         theScore = Array(repeating: Array(repeating: 0, count: numCols), count: numRows)
@@ -114,6 +181,23 @@ class DecodeGame: ObservableObject, GameProtocol {
         print("🏁 startGameWithoutAnimation(): DecodeGame initialized with scoreManager: \(type(of: scoreManager))")
     }
 
+    // New method to get the daily code
+    private func getDailyCode() -> [Int] {
+        let gameDate = targetDate ?? Calendar.current.startOfDay(for: Date())
+        print("getDailyCode(): targetDate = \(String(describing: targetDate))")
+        print("getDailyCode(): gameDate = \(gameDate)")
+        
+        if let codeSet = codeSetManager.getTodaysCodeSet(for: gameDate) {
+            let dailyCode = [codeSet.peg1, codeSet.peg2, codeSet.peg3, codeSet.peg4, codeSet.peg5]
+            print("📅 Using daily code for \(gameDate): \(dailyCode)")
+            return dailyCode
+        } else {
+            // Fallback to random if no daily code available
+            let randomCode = (0..<numCols).map { _ in Int.random(in: 1..<pegShades.count) }
+            print("🎲 No daily code found, using random: \(randomCode)")
+            return randomCode
+        }
+    }
     
     func resetGame() {
         print("⚠️ calling resetGame()")
@@ -175,12 +259,11 @@ class DecodeGame: ObservableObject, GameProtocol {
                 self.gameInteractive = true
                 // Only set status text if it's still the default or empty
                 if self.statusText.isEmpty || self.statusText == "Learn how to play, then start cracking the code!" {
-                    self.statusText = "Tap each square to assign a color."
+                    self.statusText = "Tap each square below to assign a color."
                 }
             }
         }
     }
-
 
     func checkRow(_ row: Int) -> Bool {
         for col in 0..<numCols {
@@ -240,6 +323,7 @@ class DecodeGame: ObservableObject, GameProtocol {
             if exactMatches == numCols {
                 print("🎉 WIN DETECTED! Setting gameOver = 1")
                 gameOver = 1
+                gameWon = true
                 statusText = "You cracked the code! Nice job!"
                 saveGameScore(won: true)
                 
@@ -259,6 +343,7 @@ class DecodeGame: ObservableObject, GameProtocol {
             if currentTurn >= numRows {
                 print("💀 GAME OVER! No more turns")
                 gameOver = 1
+                gameWon = false
                 statusText = "Sorry, you're out of guesses. Maybe next time!"
                 currentTurn = currentTurn - 1 //reset to pass the right information to GameScore and EndGame
                 saveGameScore(won: false)
@@ -271,9 +356,13 @@ class DecodeGame: ObservableObject, GameProtocol {
             print("Error: No start time recorded for game")
             return
         }
-
+        
         let timeElapsed = Date().timeIntervalSince(startTime)
         let attempts = currentTurn + 1
+        //let todayDate = Calendar.current.startOfDay(for: Date())
+        let todayDate = Date()
+        
+        let gameDate = targetDate ?? Calendar.current.startOfDay(for: Date()) // check if nil, and if so save today's Date instead
         
         let finalScore = GameScoreManager.calculateDecodeScore(
             attempts: attempts,
@@ -281,33 +370,57 @@ class DecodeGame: ObservableObject, GameProtocol {
             won: won,
             maxAttempts: numRows
         )
-
+        
         print("Saving game score: \(finalScore) points, won: \(won), attempts: \(attempts)")
         
-        scoreManager.saveDecodeScore(
-            attempts: attempts,
-            timeElapsed: timeElapsed,
-            won: won,
-            finalScore: finalScore,
-            turnsToSolve: attempts,
-            codeLength: numCols
-        )
+        // Only save score if this game counts for scoring
+        if willScoreCount {
+            scoreManager.saveDecodeScore(
+                date: todayDate,                    // When the game was actually played
+                archiveDate: gameDate,         // The target/archive date
+                attempts: attempts,
+                timeElapsed: timeElapsed,
+                won: won,
+                finalScore: finalScore,
+                turnsToSolve: attempts,
+                codeLength: numCols
+            )
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-            self.lastScore = self.scoreManager.getMostRecentScore(for: "decode")
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                self.lastScore = self.scoreManager.getMostRecentScore(for: "decode")
+            }
+        } else {
+            print("🚫 Game completed without scoring (replay or random)")
+            // Create a temporary score for display purposes only
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                self.lastScore = GameScore(
+                    gameId: "decode",
+                    date: Calendar.current.startOfDay(for: Date()),
+                    attempts: attempts,
+                    timeElapsed: timeElapsed,
+                    won: won,
+                    finalScore: finalScore
+                )
+            }
         }
-        
-        print("Score saved successfully to \(type(of: scoreManager))")
     }
 
     func getRecentScores() -> [GameScore] {
         return scoreManager.getScores(for: "decode")
     }
 
-    
     deinit {
         animationTimer?.invalidate()
     }
     
+    var displayMode: String {
+        if !willScoreCount {
+            return "Practice Mode"
+        } else if let targetDate = targetDate {
+            return DateFormatter.dayFormatter.string(from: targetDate)
+        } else {
+            return DateFormatter.dayFormatter.string(from: Date())
+        }
+    }
     
 }

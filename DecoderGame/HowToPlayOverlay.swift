@@ -6,43 +6,65 @@ struct HowToPlayOverlay: View {
     @Binding var isVisible: Bool
     
     @State private var dontShowAgain: Bool = false
+    @State private var isScrollable = false
+    @Environment(\.sizeCategory) var sizeCategory
     
     var body: some View {
         ZStack {
             // Dimmed background
-            Color.black.opacity(0.6)
+            Color.black.opacity(0.8)
                 .edgesIgnoringSafeArea(.all)
                 .onTapGesture {
                     dismissOverlay()
                 }
             
             // Main instruction card
-            VStack(spacing: 20) {
-                Spacer().frame(height: 10)
+            VStack(alignment: .center, spacing: 20) {
                 
                 Text("How to Play")
-                    .font(.custom("LuloOne-Bold", size: 22))
+                    .font(.custom("LuloOne-Bold", size: 26))
                     .bold()
                     .foregroundColor(.white)
+                    .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                    .lineLimit(2)
+                    .multilineTextAlignment(.center)
+                    .allowsTightening(true)
                 
-                ScrollView {
+                ScrollView(.vertical, showsIndicators: true) {
                     Text(instructions)
-                        .font(.custom("SoleilLt", size: 20))
+                        .font(.custom("SoleilLt", size: 18))
                         .foregroundColor(.white)
-                        .multilineTextAlignment(.center)
-                        .padding()
+                        .multilineTextAlignment(.leading)
+                        .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                        .allowsTightening(true)
+                        .padding(10)
+                        .background(
+                            GeometryReader { textGeometry in
+                                Color.clear
+                                    .onAppear {
+                                        checkScrollability(contentHeight: textGeometry.size.height)
+                                    }
+                                    .onChange(of: instructions) {
+                                        checkScrollability(contentHeight: textGeometry.size.height)
+                                    }
+                                    .onChange(of: sizeCategory) {
+                                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                                            checkScrollability(contentHeight: textGeometry.size.height)
+                                        }
+                                    }
+                            }
+                        )
                 }
-                .frame(maxHeight: 300)
+                .frame(maxHeight: 350)
+                .background(
+                    // Different colors based on scroll state
+                    isScrollable ?
+                    Color.myAccentColor1.opacity(0.2) :  // Scrollable
+                    Color.clear   // Fits without scrolling
+                )
+                .scrollIndicators(.visible)
                 
-                Toggle("do not show again", isOn: $dontShowAgain)
-                    .foregroundColor(.myAccentColor1)
-                    .font(.custom("LuloOne-Bold", size: 12))
-                    .padding(.horizontal)
-                    .onChange(of: dontShowAgain) {
-                        UserDefaults.standard.set(dontShowAgain, forKey: "hasSeenHowToPlay_\(gameID)")
-                    }
-
-                
+                // Rest of your code remains the same...
                 Button(action: {
                     dismissOverlay()
                 }) {
@@ -50,31 +72,49 @@ struct HowToPlayOverlay: View {
                         .font(.custom("LuloOne-Bold", size: 18))
                         .foregroundColor(.black)
                         .padding()
-                        //.frame(maxWidth: .infinity)
+                        .frame(maxWidth: .infinity)
                         .background(Color.white)
                         .cornerRadius(8)
+                        .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                        .lineLimit(1)
+                        .allowsTightening(true)
                 }
                 
-                Spacer()
-                    .frame(height: 2)
+                Toggle("do not show again", isOn: $dontShowAgain)
+                    .foregroundColor(.myAccentColor1)
+                    .font(.custom("LuloOne-Bold", size: 14))
+                    .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                    .lineLimit(1)
+                    .allowsTightening(true)
+                    .shadow(radius: 3)
+                    .onChange(of: dontShowAgain) {
+                        UserDefaults.standard.set(dontShowAgain, forKey: "hasSeenHowToPlay_\(gameID)")
+                    }
             }
+            .padding(.horizontal, 20)
+            .padding(.vertical, 40)
             .overlay(
                 RoundedRectangle(cornerRadius: 16)
-                            .stroke(Color.white, lineWidth: 1)
+                    .stroke(Color.white, lineWidth: 0.5)
             )
-            .background(Color.myAccentColor2)
+            .background(Color.myOverlaysColor)
             .cornerRadius(16)
-            .padding(30)
             .contentShape(Rectangle())
-                        .onTapGesture {
+            .onTapGesture {
                 dismissOverlay()
             }
             .onAppear {
-                // Sync toggle state with saved setting on appear
                 let savedValue = UserDefaults.standard.bool(forKey: "hasSeenHowToPlay_\(gameID)")
                 dontShowAgain = savedValue
             }
+            .padding(sizeCategory > .medium  ? 15 : 30)
         }
+    }
+    
+    private func checkScrollability(contentHeight: CGFloat) {
+        // Account for padding (10 top + 10 bottom = 20)
+        let availableHeight: CGFloat = 350 - 20
+        isScrollable = contentHeight > availableHeight
     }
     
     private func dismissOverlay() {

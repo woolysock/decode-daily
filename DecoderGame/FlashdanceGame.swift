@@ -54,7 +54,7 @@ class FlashdanceGame: GameProtocol, ObservableObject {
     
     let gameInfo = GameInfo(
         id: "flashdance",
-        displayName: "flashdance",
+        displayName: "Flashdance",
         description: "math flashcard fun",
         isAvailable: true,
         //gameLocation: AnyView(FlashdanceGameView()),
@@ -85,27 +85,28 @@ class FlashdanceGame: GameProtocol, ObservableObject {
     func startGame() {
         print("🚀 FlashdanceGame.startGame() called")
         
-        let gameDate = targetDate ?? Date()
+        let gameDate = targetDate ?? Calendar.current.startOfDay(for: Date())
+        
         print("🎯 TARGET DATE DEBUG:")
         print("   - targetDate: \(String(describing: targetDate))")
-        print("   - Current Date(): \(Date())")
-        print("   - gameDate (final): \(gameDate)")
-        print("   - gameDate formatted: \(DateFormatter.debugFormatter.string(from: gameDate))")
+        print("   - Calendar.current.startOfDay(for: \(Date())): \(Calendar.current.startOfDay(for: Date()))")
+        print("   - and thus.... ")
+        print("   - gameDate: \(gameDate)")
+        print("   - gameDate with dayStringFormatter: \(DateFormatter.dayStringFormatter.string(from: gameDate))")
         
         // Debug: Check what the equation manager thinks about this date
         print("🔍 Before calling getTodaysEquationSet:")
-        print("   - equationManager.currentEquationSet date: \(String(describing: equationManager.currentEquationSet?.date))")
+        print("   - equationManager.currentEquationSet's date:")
+        print("   - \(String(describing: equationManager.currentEquationSet?.date))")
         
         guard let todaysEquationSet = equationManager.getTodaysEquationSet(for: gameDate) else {
-            print("startGame(): ❌ No equation set available for date: \(gameDate)")
+            print(" ❌ startGame(): No equation set available for date: \(gameDate)")
             statusText = "No equations available for this date!"
             return
         }
         
-        print("✅ Got equation set for date: \(todaysEquationSet.date)")
-        print("   - Requested date: \(gameDate)")
-        print("   - Returned set date: \(todaysEquationSet.date)")
-        print("   - Are they the same day? \(Calendar.current.isDate(gameDate, inSameDayAs: todaysEquationSet.date))")
+        print("🔮 Requested equation set for: \(gameDate)")
+        print("✅ Recieved equation set for: \(todaysEquationSet.date)")
         
         dailyEquationSet = todaysEquationSet
         totalEquationsInSet = todaysEquationSet.equations.count
@@ -168,14 +169,17 @@ class FlashdanceGame: GameProtocol, ObservableObject {
         isPreCountdownActive = false
         isGamePaused = false
         gameOver = 1
-
+        
         calculateFinalScore()
         statusText = "Game over!"
-
-        // Save score with targetDate as archiveDate
+        
+        let gameDate = targetDate ?? Calendar.current.startOfDay(for: Date())
+        //let playDate = Calendar.current.startOfDay(for: Date())
+        let playDate = Date()
+        
         scoreManager.saveFlashdanceScore(
-            date: Date(),                        // actual play date
-            archiveDate: targetDate,             // target/archived date
+            date: playDate,                      // when actually played
+            archiveDate: gameDate,               // what date this counts for
             attempts: correctAttempts + incorrectAttempts,
             timeElapsed: 30.0,
             finalScore: totalScore,
@@ -183,16 +187,15 @@ class FlashdanceGame: GameProtocol, ObservableObject {
             correctAnswers: correctAttempts,
             incorrectAnswers: incorrectAttempts,
             longestStreak: maxStreak,
-            gameDate: targetDate ?? Date()
+            gameDate: gameDate  // Use consistent date
         )
-
-        // Update lastScore after save completes on main thread
+        
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
             self.lastScore = self.scoreManager.getMostRecentScore(for: "flashdance")
-            completion?()  // Call completion after lastScore is updated
+            completion?()
         }
 
-        print("Score saved successfully: \(totalScore) points, \(correctAttempts) correct, \(incorrectAttempts) wrong")
+        print("Score saved, playDate: \(playDate), gameDate: \(gameDate)")
     }
 
     

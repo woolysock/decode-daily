@@ -6,18 +6,21 @@
 //
 
 import SwiftUI
+import Mixpanel
 
 struct FlashdanceGameView: View {
     let targetDate: Date?
     
     //@EnvironmentObject var scoreManager: GameScoreManager
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.sizeCategory) var sizeCategory
     
     @ObservedObject private var equationManager = DailyEquationManager.shared
     
     @StateObject private var game: FlashdanceGame
     @StateObject private var dailyCheckManager = DailyCheckManager.shared
     @State private var finalGameData: GameScore?
+    @State private var navigateToSpecificLeaderboard = false
     
     @State private var dragOffset: CGSize = .zero
     @State private var showHowToPlay = false
@@ -25,6 +28,7 @@ struct FlashdanceGameView: View {
     @State private var hasStartedRound = false
     @State private var highlightedAnswer: Int? = nil
     @State private var navigateToHighScores = false
+    @State private var showDebugZones = false // Debug toggle
     
     // Flash feedback
     @State private var flashCardColor: Color = .white
@@ -39,13 +43,16 @@ struct FlashdanceGameView: View {
     let scoreManager = GameScoreManager.shared
     
     private let instructionsText = """
-    You have 30 seconds to solve the
-    most math problems! ⏲
+    Race against the clock to solve the most math problems!  ×  +  −  ÷
     
-    When a flashcard appears, swipe it towards the correct answer.
+    When a flashcard appears in the center of the screen, swipe it towards the correct answer.
     
-    Get streaks for bonus points!
-    More right answers yield higher scores!
+      ✅ Right answers earn big.
+      🔥 Get streaks for bonus points!
+      ☠️ Avoid wrong answers. 
+    
+    You have 30 seconds to solve as many as you can.
+    
     """
     
     init(targetDate: Date? = nil) {
@@ -79,6 +86,9 @@ struct FlashdanceGameView: View {
                                     Text("\(game.gameInfo.displayName)")
                                         .foregroundColor(.white)
                                         .font(.custom("LuloOne-Bold", size: 20))
+                                        .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                                        .lineLimit(1)
+                                        .allowsTightening(true)
                                         .onTapGesture { startRound() }
                                     
                                     // Archive indicator
@@ -89,6 +99,9 @@ struct FlashdanceGameView: View {
                                             .padding(.horizontal, 6)
                                             .padding(.vertical, 2)
                                             .background(Color.orange.opacity(0.2))
+                                            .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                                            .lineLimit(1)
+                                            .allowsTightening(true)
                                             .cornerRadius(4)
                                     }
                                 }
@@ -98,12 +111,18 @@ struct FlashdanceGameView: View {
                                     Text(DateFormatter.dayFormatter.string(from: targetDate))
                                         .font(.custom("LuloOne", size: 12))
                                         .foregroundColor(.gray)
+                                        .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                                        .lineLimit(1)
+                                        .allowsTightening(true)
                                 } else if let mathset = equationManager.currentEquationSet {
                                     // Show the equation set date when in normal mode
                                     
                                     Text(DateFormatter.dayStringFormatter.string(from: mathset.date))
                                         .font(.custom("LuloOne", size: 12))
                                         .foregroundColor(.gray)
+                                        .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                                        .lineLimit(1)
+                                        .allowsTightening(true)
                                 }
                             }
                             
@@ -118,11 +137,17 @@ struct FlashdanceGameView: View {
                                         .monospacedDigit()
                                         .frame(minWidth: 54)
                                         .transition(.opacity)
+                                        .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                                        .lineLimit(1)
+                                        .allowsTightening(true)
                                 } else {
                                     Text(" ")
                                         .font(.custom("LuloOne-Bold", size: 20))
                                         .frame(minWidth: 54)
                                         .opacity(0)
+                                        .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                                        .lineLimit(1)
+                                        .allowsTightening(true)
                                 }
                             }
                             
@@ -159,76 +184,86 @@ struct FlashdanceGameView: View {
                                 let pillWidth: CGFloat = 120
                                 let pillHeight: CGFloat = 50
                                 let spacing: CGFloat = 10
-                                                                
-                                VStack {
-                                    // === Answer Pills Row ===
-                                    if game.isGameActive {
-                                        HStack(spacing: spacing) {
-                                            answerPill(game.answers[safe: 0] ?? 0)
-                                                .frame(width: pillWidth, height: pillHeight)
-                                            answerPill(game.answers[safe: 1] ?? 0)
-                                                .frame(width: pillWidth, height: pillHeight)
-                                            answerPill(game.answers[safe: 2] ?? 0)
-                                                .frame(width: pillWidth, height: pillHeight)
+                                
+                                ZStack {
+                                    // Debug zones overlay
+                                    //                                    if showDebugZones {
+                                    //                                        debugZonesView(geo: geo, pillWidth: pillWidth, spacing: spacing)
+                                    //                                    }
+                                    
+                                    VStack {
+                                        // === Answer Pills Row ===
+                                        if game.isGameActive {
+                                            HStack(spacing: spacing) {
+                                                answerPill(game.answers[safe: 0] ?? 0)
+                                                    .frame(width: pillWidth, height: pillHeight)
+                                                answerPill(game.answers[safe: 1] ?? 0)
+                                                    .frame(width: pillWidth, height: pillHeight)
+                                                answerPill(game.answers[safe: 2] ?? 0)
+                                                    .frame(width: pillWidth, height: pillHeight)
+                                            }
+                                            .opacity(0.85)
                                         }
-                                        .opacity(0.85)
-                                    }
-                                    
-                                    Spacer().frame(height: 10)
-                                    
-                                    // === Flashcard Center ===
-                                    if game.isPreCountdownActive {
-                                        Text("\(game.countdownValue)")
-                                            .font(.custom("LuloOne-Bold", size: 100))
-                                            .foregroundColor(.white)
-                                            .monospacedDigit()
-                                            .scaleEffect(1.05)
-                                            .transition(.scale)
-                                    } else if game.isGameActive {
-                                        Text(game.currentEquation)
-                                            .padding(10)
-                                            .foregroundColor(.black)
-                                            .font(.custom("LuloOne-Bold", size: 40))
-                                            .frame(width: cardWidth, height: cardHeight)
-                                            .background(flashCardColor)
-                                            .cornerRadius(8)
-                                            .overlay(
-                                                RoundedRectangle(cornerRadius: 8)
-                                                    .stroke(Color.myAccentColor1, lineWidth: 5)
-                                            )
-                                            .shadow(radius: 6)
-                                            .scaleEffect(cardScale)
-                                            .opacity(cardOpacity)
-                                            .offset(isAnimatingCorrect ? finalOffset : dragOffset)
-                                            .gesture(
-                                                DragGesture(coordinateSpace: .named("GameBoard"))
-                                                    .onChanged { value in
-                                                        guard game.isGameActive && !game.isGamePaused && !isAnimatingCorrect else { return }
-                                                        dragOffset = value.translation
-                                                        
-                                                        // Use absolute location in GameBoard coordinate space
-                                                        highlightPillUnderDrag(location: value.location, geo: geo)
-                                                    }
-                                                    .onEnded { value in
-                                                        guard game.isGameActive && !game.isGamePaused && !isAnimatingCorrect else {
-                                                            return
+                                        
+                                        Spacer().frame(height: 10)
+                                        
+                                        // === Flashcard Center ===
+                                        if game.isPreCountdownActive {
+                                            Text("\(game.countdownValue)")
+                                                .font(.custom("LuloOne-Bold", size: 100))
+                                                .foregroundColor(.white)
+                                                .monospacedDigit()
+                                                .scaleEffect(1.05)
+                                                .transition(.scale)
+                                        } else if game.isGameActive {
+                                            Text(game.currentEquation)
+                                                .padding(10)
+                                                .foregroundColor(.black)
+                                                .font(.custom("LuloOne-Bold", size: 40))
+                                                .frame(width: cardWidth, height: cardHeight)
+                                                .background(flashCardColor)
+                                                .cornerRadius(8)
+                                                .overlay(
+                                                    RoundedRectangle(cornerRadius: 8)
+                                                        .stroke(Color.myAccentColor1, lineWidth: 5)
+                                                )
+                                                .shadow(radius: 6)
+                                                .scaleEffect(cardScale)
+                                                .opacity(cardOpacity)
+                                                .offset(isAnimatingCorrect ? finalOffset : dragOffset)
+                                                .gesture(
+                                                    DragGesture(coordinateSpace: .named("GameBoard"))
+                                                        .onChanged { value in
+                                                            guard game.isGameActive && !game.isGamePaused && !isAnimatingCorrect else { return }
+                                                            dragOffset = value.translation
+                                                            
+                                                            // Use absolute location in GameBoard coordinate space
+                                                            highlightPillUnderDrag(location: value.location, geo: geo)
                                                         }
-                                                        
-                                                        handleSwipeWithPills(location: value.location, geo: geo, currentDragOffset: value.translation, geoSize: geo.size)
-                                                        highlightedAnswer = nil
-                                                    }
-                                            )
-                                            .animation(.easeOut(duration: 0.8), value: isAnimatingCorrect ? finalOffset : dragOffset)
-                                            .animation(.easeInOut(duration: 0.25), value: cardOpacity)
-                                            .animation(.easeInOut(duration: 0.25), value: cardScale)
+                                                        .onEnded { value in
+                                                            guard game.isGameActive && !game.isGamePaused && !isAnimatingCorrect else {
+                                                                return
+                                                            }
+                                                            
+                                                            handleSwipeWithPills(location: value.location, geo: geo, currentDragOffset: value.translation, geoSize: geo.size)
+                                                            highlightedAnswer = nil
+                                                        }
+                                                )
+                                                .animation(.easeOut(duration: 0.8), value: isAnimatingCorrect ? finalOffset : dragOffset)
+                                                .animation(.easeInOut(duration: 0.25), value: cardOpacity)
+                                                .animation(.easeInOut(duration: 0.25), value: cardScale)
+                                        }
+                                        
+                                        Spacer()
                                     }
-                                    
-                                    Spacer()
+                                    .frame(width: geo.size.width, height: geo.size.height)
                                 }
-                                .frame(width: geo.size.width, height: geo.size.height)
                             }
                         }
                         .coordinateSpace(name: "GameBoard")
+                        .onTapGesture(count: 3) { // Triple tap to toggle debug zones
+                            showDebugZones.toggle()
+                        }
                         
                         // === Scoreboard at Bottom ===
                         if game.isGameActive || game.gameOver == 1 {
@@ -257,18 +292,21 @@ struct FlashdanceGameView: View {
                     }
                     .onChange(of: game.gameOver, initial: false) { _, newValue in
                         if newValue == 1 {
+                            let archiveDate = game.targetDate ?? Date()
+                            
                             // Create a GameScore with the current game data
                             let additionalProps = FlashdanceAdditionalProperties(
                                 gameDuration: 30,
                                 correctAnswers: game.correctAttempts,
                                 incorrectAnswers: game.incorrectAttempts,
                                 longestStreak: game.maxStreak,
-                                gameDate: game.targetDate ?? Date()
+                                gameDate: archiveDate
                             )
                             
                             finalGameData = GameScore(
                                 gameId: "flashdance",
                                 date: Date(),
+                                archiveDate: archiveDate,
                                 attempts: game.correctAttempts + game.incorrectAttempts,
                                 timeElapsed: 30.0,
                                 won: true,
@@ -281,12 +319,17 @@ struct FlashdanceGameView: View {
                             }
                         }
                     }
+                    
                 }
-                .navigationDestination(isPresented: $navigateToHighScores) {
+                .navigationDestination(isPresented: $navigateToSpecificLeaderboard) {
                     MultiGameLeaderboardView(selectedGameID: game.gameInfo.id)
                 }
+                .navigationBarBackButtonHidden(
+                    game.gameOver > 0 ||
+                    showEndGameOverlay ||
+                    showHowToPlay
+                )
             }
-            
             // === Overlays ===
             if showHowToPlay {
                 HowToPlayOverlay(
@@ -298,7 +341,7 @@ struct FlashdanceGameView: View {
             }
             
             // Move overlays outside NavigationStack to root ZStack level
-           
+            
             if showEndGameOverlay {
                 EndGameOverlay(
                     gameID: game.gameInfo.id,
@@ -306,7 +349,11 @@ struct FlashdanceGameView: View {
                     displayName: game.gameInfo.displayName,
                     isVisible: $showEndGameOverlay,
                     onPlayAgain: { startNewGame() },
-                    onHighScores: { navigateToHighScores = true },
+                    onHighScores: {
+                        // Navigate to specific game leaderboard
+                        navigateToSpecificLeaderboard = true
+                        dismiss()
+                    },
                     onMenu: {
                         showEndGameOverlay = false
                         dismiss()
@@ -315,8 +362,6 @@ struct FlashdanceGameView: View {
                 )
                 .transition(.opacity)
             }
-            
-    
         }
         .onChange(of: dailyCheckManager.showNewDayOverlay) { oldValue, newValue in
             // Only respond to new day overlay if this is NOT an archived game
@@ -339,8 +384,166 @@ struct FlashdanceGameView: View {
                 }
             }
         }
+        .onAppear {
+            if game.gameOver > 0 {
+                game.resetGame()
+            }
+            
+            // MIXPANEL ANALYTICS CAPTURE
+            Mixpanel.mainInstance().track(event: "Flashdance Game Page View", properties: [
+                "app": "Decode! Daily iOS",
+                "build_version": Bundle.main.infoDictionary?["CFBundleShortVersionString"],
+                "date": Date().formatted(),
+                "subscription_tier": SubscriptionManager.shared.currentTier.displayName
+            ])
+            print("📈 🪵 MIXPANEL DATA LOG EVENT: Flashdance Game Page View")
+            print("📈 🪵 date: \(Date().formatted())")
+            print("📈 🪵 sub tier: \(SubscriptionManager.shared.currentTier.displayName)")
+            
+        }
     }
     
+    //    // MARK: - Debug Zones View
+    //    @ViewBuilder
+    //    private func debugZonesView(geo: GeometryProxy, pillWidth: CGFloat, spacing: CGFloat) -> some View {
+    //        let totalPillsWidth = pillWidth * 3 + spacing * 2
+    //        let startX = (geo.size.width - totalPillsWidth) / 2
+    //        let horizontalTolerance: CGFloat = 15
+    //
+    //        // Calculate what would be selected if we let go right now
+    //        let cardCenterX = geo.size.width / 2 + dragOffset.width
+    //        let wouldSelect = getAnswerUnderCardCenter(cardCenterX: cardCenterX, geo: geo)
+    //
+    //        // Calculate swipe validation
+    //        let minSwipeThreshold: CGFloat = 10  // Updated to match handleSwipeWithPills
+    //        let minUpwardMovement: CGFloat = -10  // Updated to match handleSwipeWithPills
+    //        let horizontalDistance = abs(dragOffset.width)
+    //        let swipeMagnitude = sqrt(dragOffset.width * dragOffset.width + dragOffset.height * dragOffset.height)
+    //        let hasEnoughSwipe = horizontalDistance >= 10 || swipeMagnitude >= minSwipeThreshold  // Updated to match
+    //        let hasValidDirection = dragOffset.height <= minUpwardMovement || horizontalDistance >= 20 || swipeMagnitude >= 35  // Updated to match
+    //        let wouldBeValid = hasEnoughSwipe && hasValidDirection && wouldSelect != nil
+    //
+    //        ForEach(0..<3, id: \.self) { i in
+    //            let pillCenterX = startX + pillWidth/2 + CGFloat(i) * (pillWidth + spacing)
+    //            let zoneLeftEdge = pillCenterX - pillWidth/2 - horizontalTolerance
+    //            let zoneRightEdge = pillCenterX + pillWidth/2 + horizontalTolerance
+    //            let zoneWidth = zoneRightEdge - zoneLeftEdge
+    //            let answerValue = game.answers[safe: i] ?? 0
+    //            let isSelectedZone = wouldSelect == answerValue
+    //
+    //            Rectangle()
+    //                .fill(isSelectedZone ? Color.green.opacity(0.4) : Color.red.opacity(0.3))
+    //                .frame(width: zoneWidth, height: geo.size.height)
+    //                .position(x: pillCenterX, y: geo.size.height / 2)
+    //                .overlay(
+    //                    VStack {
+    //                        Text("Zone \(i + 1)")
+    //                            .font(.caption)
+    //                            .foregroundColor(.white)
+    //                            .padding(.horizontal, 4)
+    //                            .background(Color.black.opacity(0.7))
+    //                            .cornerRadius(4)
+    //
+    //                        Spacer()
+    //
+    //                        Text("Answer: \(answerValue)")
+    //                            .font(.caption)
+    //                            .foregroundColor(.white)
+    //                            .padding(.horizontal, 4)
+    //                            .background(isSelectedZone ? Color.green.opacity(0.8) : Color.black.opacity(0.7))
+    //                            .cornerRadius(4)
+    //
+    //                        if isSelectedZone {
+    //                            Text("SELECTED")
+    //                                .font(.caption2)
+    //                                .foregroundColor(.white)
+    //                                .padding(.horizontal, 4)
+    //                                .background(Color.green)
+    //                                .cornerRadius(4)
+    //                        }
+    //                    }
+    //                    .padding(.vertical, 20)
+    //                )
+    //        }
+    //
+    //        // Show card center position with validation status
+    //        Circle()
+    //            .fill(wouldBeValid ? Color.green : Color.yellow)
+    //            .frame(width: 12, height: 12)
+    //            .position(x: geo.size.width / 2 + dragOffset.width, y: geo.size.height / 2 + dragOffset.height)
+    //            .overlay(
+    //                Circle()
+    //                    .stroke(Color.white, lineWidth: 2)
+    //                    .frame(width: 12, height: 12)
+    //                    .position(x: geo.size.width / 2 + dragOffset.width, y: geo.size.height / 2 + dragOffset.height)
+    //            )
+    //
+    //        // Show coordinate info with prediction
+    //        VStack {
+    //            Spacer()
+    //            HStack {
+    //                VStack(alignment: .leading, spacing: 2) {
+    //                    Text("Debug Info:")
+    //                        .font(.caption)
+    //                        .foregroundColor(.white)
+    //                        .fontWeight(.bold)
+    //
+    //                    Text("Card Center X: \(Int(cardCenterX))")
+    //                        .font(.caption)
+    //                        .foregroundColor(.white)
+    //
+    //                    Text("Currently Highlighted: \(highlightedAnswer?.description ?? "None")")
+    //                        .font(.caption)
+    //                        .foregroundColor(.white)
+    //
+    //                    Divider().background(Color.white.opacity(0.5))
+    //
+    //                    if wouldBeValid {
+    //                        Text("✅ Would Select: \(wouldSelect?.description ?? "None")")
+    //                            .font(.caption)
+    //                            .foregroundColor(.green)
+    //                            .fontWeight(.bold)
+    //                    } else {
+    //                        Text("❌ Would Reject")
+    //                            .font(.caption)
+    //                            .foregroundColor(.red)
+    //                            .fontWeight(.bold)
+    //
+    //                        if !hasEnoughSwipe {
+    //                            Text("• Not enough swipe distance")
+    //                                .font(.caption2)
+    //                                .foregroundColor(.orange)
+    //                        }
+    //                        if !hasValidDirection {
+    //                            Text("• Invalid swipe direction")
+    //                                .font(.caption2)
+    //                                .foregroundColor(.orange)
+    //                        }
+    //                        if wouldSelect == nil {
+    //                            Text("• No zone detected")
+    //                                .font(.caption2)
+    //                                .foregroundColor(.orange)
+    //                        }
+    //                    }
+    //
+    //                    Divider().background(Color.white.opacity(0.5))
+    //
+    //                    Text("Swipe: H:\(Int(dragOffset.width)) V:\(Int(dragOffset.height))")
+    //                        .font(.caption2)
+    //                        .foregroundColor(.gray)
+    //
+    //                    Text("Triple-tap to hide")
+    //                        .font(.caption2)
+    //                        .foregroundColor(.yellow)
+    //                }
+    //                .padding(8)
+    //                .background(Color.black.opacity(0.9))
+    //                .cornerRadius(8)
+    //                Spacer()
+    //            }
+    //        }
+    //        .padding()
+    //    }
     
     // MARK: - Pill answer helpers
     private func answerPill(_ value: Int) -> some View {
@@ -356,7 +559,7 @@ struct FlashdanceGameView: View {
             .shadow(radius: 3)
             .accessibilityLabel(Text("Answer \(value)"))
     }
-
+    
     
     private func highlightPillUnderDrag(location: CGPoint, geo: GeometryProxy) {
         // Calculate card center based on current drag
@@ -476,10 +679,21 @@ struct FlashdanceGameView: View {
     }
     
     private func startNewGame() {
+        // Reset game state immediately to prevent flash
+        game.gameOver = 0
+        game.isGameActive = false
+        game.totalScore = 0
+        game.correctAttempts = 0
+        game.incorrectAttempts = 0
+        game.currentStreak = 0
+        
         showEndGameOverlay = false
         hasStartedRound = false
-        resetCardAnimation() // Reset animation state for new game
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { startRound() }
+        resetCardAnimation()
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+            startRound()
+        }
     }
     
     private func getAnswerUnderCardCenter(cardCenterX: CGFloat, geo: GeometryProxy) -> Int? {
@@ -495,7 +709,7 @@ struct FlashdanceGameView: View {
             let pillRightEdge = pillCenterX + pillWidth/2
             
             // Increased tolerance for easier selection, especially horizontally
-            let horizontalTolerance: CGFloat = 40  // Increased from 20
+            let horizontalTolerance: CGFloat = 15
             
             if cardCenterX >= (pillLeftEdge - horizontalTolerance) && cardCenterX <= (pillRightEdge + horizontalTolerance) {
                 return val
@@ -512,6 +726,8 @@ private struct Scoreboard: View {
     let correct: Int
     let incorrect: Int
     let streak: Int
+    
+    @Environment(\.sizeCategory) var sizeCategory
     
     var body: some View {
         VStack(spacing: 10) {
@@ -549,6 +765,8 @@ private struct StatPill: View {
     let value: String
     var emphasize: Emphasis? = nil
     
+    @Environment(\.sizeCategory) var sizeCategory
+    
     var body: some View {
         VStack(spacing: 4) {
             Text(title.uppercased())
@@ -560,7 +778,7 @@ private struct StatPill: View {
                 .font(.system(size: 22, weight: .heavy, design: .rounded))
                 .foregroundColor(.white)
                 .monospacedDigit()
-                .minimumScaleFactor(0.7)
+                .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
         }
         .frame(maxWidth: .infinity, minHeight: 56)
         .padding(.vertical, 8)

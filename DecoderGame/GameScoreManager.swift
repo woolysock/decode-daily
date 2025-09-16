@@ -7,6 +7,7 @@
 
 import Foundation
 import SwiftUI
+import Mixpanel
 
 // MARK: - Game-specific additional properties structures
 struct FlashdanceAdditionalProperties: Codable {
@@ -32,6 +33,7 @@ struct AnagramsAdditionalProperties: Codable {
     let wordsetId: String         // NEW
     let completedWordLengths: [Int]  // NEW
     let difficultyScore: Double      // NEW
+    let skippedWords: Int
 }
 
 // MARK: - Enhanced GameScore with additional properties
@@ -170,7 +172,7 @@ class GameScoreManager: ObservableObject {
     
     // Save a new score - FIXED to ensure main thread updates
     func saveScore(_ score: GameScore) {
-        print("🔄 About to save score: \(score.finalScore) for \(score.gameId)")
+        //print("🔄 About to save score: \(score.finalScore) for \(score.gameId)")
 
         DispatchQueue.main.async { [weak self] in
             guard let self = self else { return }
@@ -178,17 +180,52 @@ class GameScoreManager: ObservableObject {
             self.allScores.append(score)
             self.saveToUserDefaults()
 
-            // Use archiveDate if available, else fallback to score.date
+            
+            
+            print("saveScore(): score.date = \(score.date)")
+            print("saveScore(): score.archiveDate = \(String(describing: score.archiveDate))")
+            print("saveScore(): Date() = \(Date())")
+            print("saveScore(): Date() formatted = \(DateFormatter.scorePlayedDisplayFormatter.string(from: Date()))")
+            
+            //let markDate = score.archiveDate ?? score.date
             let markDate = score.archiveDate ?? score.date
+            
+            print("saveScore(): markDate = \(markDate)")
+            
             self.markGameCompleted(gameId: score.gameId, date: markDate)
 
             print("✅ Score saved on main thread! score.date = \(score.date)")
             print("✅ Scores for \(score.gameId): \(self.allScores.filter { $0.gameId == score.gameId }.count)")
 
+            
+            // MIXPANEL ANALYTICS CAPTURE
+            Mixpanel.mainInstance().track(event: "Game Score Saved", properties: [
+                "app": "Decode! Daily iOS",
+                "build_version": Bundle.main.infoDictionary?["CFBundleShortVersionString"],
+                "date": Date().formatted(),
+                "subscription_tier": SubscriptionManager.shared.currentTier.displayName,
+                "game": score.gameId,
+                "game_archive_date": markDate,
+                "final_score": score.finalScore
+            ])
+            print("📈 🪵 MIXPANEL DATA LOG EVENT: Game Score Saved")
+            print("📈 🪵 date: \(Date().formatted())")
+            print("📈 🪵 sub tier: \(SubscriptionManager.shared.currentTier.displayName)")
+            print("📈 🪵 game: \(score.gameId)")
+            print("📈 🪵 game_archive_date: \(markDate)")
+            print("📈 🪵 final_score: \(score.finalScore)")
+            
             self.objectWillChange.send()
         }
     }
 
+    func getScoresFromLastWeek() -> [GameScore] {
+        let oneWeekAgo = Calendar.current.date(byAdding: .day, value: -7, to: Date()) ?? Date()
+        
+        return allScores.filter { score in
+            score.date >= oneWeekAgo
+        }
+    }
     
     // MARK: - Convenience Save Methods for Specific Games
     
@@ -206,7 +243,7 @@ class GameScoreManager: ObservableObject {
         longestStreak: Int,
         gameDate: Date  // Add this parameter
     ) {
-        print("Calling saveScore()")
+        //print("Calling saveFlashdanceScore()")
         let additionalProps = FlashdanceAdditionalProperties(
             gameDuration: gameDuration,
             correctAnswers: correctAnswers,
@@ -240,7 +277,7 @@ class GameScoreManager: ObservableObject {
         turnsToSolve: Int,
         codeLength: Int
     ) {
-        print("Calling saveDecodeScore()")
+        //print("Calling saveDecodeScore()")
         let additionalProps = DecodeAdditionalProperties(
             gameDuration: timeElapsed,
             turnsToSolve: turnsToSolve,
@@ -268,7 +305,7 @@ class GameScoreManager: ObservableObject {
             .filter { $0.gameId == gameId }
             .sorted { $0.finalScore > $1.finalScore }
         
-        print("📊 getScores for '\(gameId)': found \(filteredScores.count) scores")
+        //print("📊 getScores for '\(gameId)': found \(filteredScores.count) scores")
         return filteredScores
     }
 
@@ -393,18 +430,144 @@ class GameScoreManager: ObservableObject {
         let key = "completed_\(gameId)_\(dateString)"
         UserDefaults.standard.set(true, forKey: key)
         
-        print("markGameCompleted: \(UserDefaults.standard.bool(forKey: key)) for \(key)")
+        print("✅ markGameCompleted: \(UserDefaults.standard.bool(forKey: key)) for \(key)")
         objectWillChange.send()
     }
 
 
 
     func isGameCompleted(gameId: String, date: Date) -> Bool {
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "yyyy-MM-dd"
-        let dateString = dateFormatter.string(from: date)
+        let utcCalendar = Calendar(identifier: .gregorian)
+        var calendar = utcCalendar
+        calendar.timeZone = TimeZone(secondsFromGMT: 0)!
+        let startOfDayUTC = calendar.startOfDay(for: date)
+        //print("❓ isGameCompleted(): date in: \(date)")
+        //print(" ➠ isGameCompleted(): startOfDayUTC: \(startOfDayUTC)")
+        
+        let thisFormatter = DateFormatter()
+        thisFormatter.dateFormat = "yyyy-MM-dd"
+        thisFormatter.timeZone = TimeZone(secondsFromGMT: 0)
+        thisFormatter.locale = Locale(identifier: "en_US_POSIX")
+        
+        let dateString = thisFormatter.string(from: startOfDayUTC)
+        
+        //print(" ➠ isGameCompleted(): dateString: \(dateString)")
+        
         let key = "completed_\(gameId)_\(dateString)"
+        
+        //print(" ❓ isGameCompleted() for key: \(key)")
+        
         //print("isGameCompleted: \(UserDefaults.standard.bool(forKey: key)) for \(key)")
         return UserDefaults.standard.bool(forKey: key)
     }
+    
+    func debugGameCompletion(gameId: String, date: Date) {
+        let utcCalendar = Calendar(identifier: .gregorian)
+        var calendar = utcCalendar
+        calendar.timeZone = TimeZone(secondsFromGMT: 0)!
+        let startOfDayUTC = calendar.startOfDay(for: date)
+        
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        formatter.timeZone = TimeZone(secondsFromGMT: 0)
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        let dateString = formatter.string(from: startOfDayUTC)
+        
+        let key = "completed_\(gameId)_\(dateString)"
+        let isCompleted = UserDefaults.standard.bool(forKey: key)
+        
+        print("""
+        🔍 GAME COMPLETION DEBUG for \(gameId):
+        - Input date: \(date)
+        - UTC start of day: \(startOfDayUTC)
+        - Date string: \(dateString)
+        - UserDefaults key: \(key)
+        - Stored value: \(isCompleted)
+        - Current timezone: \(TimeZone.current.identifier)
+        """)
+    }
+
+    func clearAllCompletionStatus() {
+        let userDefaults = UserDefaults.standard
+        let allKeys = userDefaults.dictionaryRepresentation().keys
+        
+        // Find all completion keys (they start with "completed_")
+        let completionKeys = allKeys.filter { $0.hasPrefix("completed_") }
+        
+        print("🗑️ Clearing \(completionKeys.count) completion status entries:")
+        
+        // Remove each completion key
+        for key in completionKeys {
+            userDefaults.removeObject(forKey: key)
+            print("   - Removed: \(key)")
+        }
+        
+        // Force UserDefaults to save immediately
+        userDefaults.synchronize()
+        
+        print("✅ All completion status cleared")
+        
+        // Notify observers that the state changed
+        DispatchQueue.main.async {
+            self.objectWillChange.send()
+        }
+    }
+
+    // Alternative: Clear completion status for a specific game only
+    func clearCompletionStatus(for gameId: String) {
+        let userDefaults = UserDefaults.standard
+        let allKeys = userDefaults.dictionaryRepresentation().keys
+        
+        // Find completion keys for this specific game
+        let gameCompletionKeys = allKeys.filter { $0.hasPrefix("completed_\(gameId)_") }
+        
+        print("🗑️ Clearing \(gameCompletionKeys.count) completion entries for \(gameId):")
+        
+        for key in gameCompletionKeys {
+            userDefaults.removeObject(forKey: key)
+            print("   - Removed: \(key)")
+        }
+        
+        userDefaults.synchronize()
+        print("✅ Completion status cleared for \(gameId)")
+        
+        DispatchQueue.main.async {
+            self.objectWillChange.send()
+        }
+    }
+
+    // Alternative: Clear completion status for a specific date across all games
+    func clearCompletionStatus(for date: Date) {
+        let utcCalendar = Calendar(identifier: .gregorian)
+        var calendar = utcCalendar
+        calendar.timeZone = TimeZone(secondsFromGMT: 0)!
+        let startOfDayUTC = calendar.startOfDay(for: date)
+        
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        formatter.timeZone = TimeZone(secondsFromGMT: 0)
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        let dateString = formatter.string(from: startOfDayUTC)
+        
+        let userDefaults = UserDefaults.standard
+        let allKeys = userDefaults.dictionaryRepresentation().keys
+        
+        // Find completion keys for this specific date
+        let dateCompletionKeys = allKeys.filter { $0.contains("_\(dateString)") && $0.hasPrefix("completed_") }
+        
+        print("🗑️ Clearing \(dateCompletionKeys.count) completion entries for \(dateString):")
+        
+        for key in dateCompletionKeys {
+            userDefaults.removeObject(forKey: key)
+            print("   - Removed: \(key)")
+        }
+        
+        userDefaults.synchronize()
+        print("✅ Completion status cleared for \(dateString)")
+        
+        DispatchQueue.main.async {
+            self.objectWillChange.send()
+        }
+    }
+    
 }

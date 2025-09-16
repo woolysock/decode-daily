@@ -29,7 +29,7 @@ struct ColorPickerOverlay: View {
                     // Picker circles
                     ZStack {
                         let adjustedCenter = computeAdjustedCenter(geo: geo)
-                        
+                        //let _ = print("🎨 colors.count: \(colors.count)")
                         ForEach(0..<min(colors.count, 5), id: \.self) { index in
                             let angleStep = 360.0 / Double(min(colors.count, 5))
                             let angle = Double(index) * angleStep * .pi / 180

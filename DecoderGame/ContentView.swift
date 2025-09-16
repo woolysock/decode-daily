@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Mixpanel
 
 struct ContentView: View {
     @State private var isLoading = true
@@ -39,6 +40,18 @@ struct ContentView: View {
                 .transition(.opacity)
             }
         }
+        .onAppear {
+            // MIXPANEL ANALYTICS CAPTURE
+            Mixpanel.mainInstance().track(event: "App Loading Page View", properties: [
+                "app": "Decode! Daily iOS",
+                "build_version": Bundle.main.infoDictionary?["CFBundleShortVersionString"],
+                "date": Date().formatted(),
+                "subscription_tier": SubscriptionManager.shared.currentTier.displayName
+            ])
+            print("📈 🪵 MIXPANEL DATA LOG EVENT: App Loading Page View")
+            print("📈 🪵 date: \(Date().formatted())")
+            print("📈 🪵 sub tier: \(SubscriptionManager.shared.currentTier.displayName)")
+        }
         // Reset navigation when coordinator says to return to main menu
         .onChange(of: gameCoordinator.shouldReturnToMainMenu) { oldValue, newValue in
             if newValue {
@@ -47,22 +60,24 @@ struct ContentView: View {
                 gameCoordinator.shouldReturnToMainMenu = false
             }
         }
-    }
+            }
 }
 
 struct LoadingView: View {
     var body: some View {
         ZStack {
             Color.black.ignoresSafeArea()
+            LinearGradient.mainmenuViewGradient.ignoresSafeArea()
+            
             ZStack {
-                Color.black.ignoresSafeArea()
-                Image("TitleLoader-w")
-                    .resizable()
-                    .scaledToFit()
+                //Color.black.ignoresSafeArea()
+//                Image("LaunchImage")
+//                    .resizable()
+//                    .scaledToFit()
             }
-            .padding(30)
+            .padding(50)
         }
-    }
+            }
 }
 
 struct ContentView_Previews: PreviewProvider {

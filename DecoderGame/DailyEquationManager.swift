@@ -22,7 +22,6 @@ struct DailyEquationSet: Codable, Identifiable {
     var completedAt: Date?
 }
 
-
 final class DailyEquationManager: ObservableObject {
     static let shared = DailyEquationManager()
     
@@ -77,30 +76,21 @@ final class DailyEquationManager: ObservableObject {
     }
     
     func getTodaysEquationSet(for date: Date) -> DailyEquationSet? {
-        let requestedDate = Calendar.current.startOfDay(for: date) // normalize to local start of day
+        // If requesting today's date, return the cached currentEquationSet
         let today = Calendar.current.startOfDay(for: Date())
-        
-        // Debug
-        print("getTodaysEquationSet -> requestedDate: \(requestedDate), today: \(today)")
+        let requestedDate = Calendar.current.startOfDay(for: date)
         
         if Calendar.current.isDate(requestedDate, inSameDayAs: today) {
             return currentEquationSet
         }
         
         // For archive dates, load the specific equation set
-        if let archiveSet = getEquationSet(for: requestedDate) {
-            print("Archive equation set found for: \(requestedDate)")
-            return archiveSet
-        }
-        
-        print("No equation set found for: \(requestedDate)")
-        return nil
+        return getEquationSet(for: requestedDate)
     }
-
     
     // Private methods similar to DailyWordsetManager...
     private func loadAllEquationSets() {
-        print("🔍 Looking for DailyEquations.json in bundle...")
+        //print("🔍 Looking for DailyEquations.json in bundle...")
         
         guard let url = Bundle.main.url(forResource: dailyEquationsResource, withExtension: "json") else {
             print("❌ DailyEquationManager - no DailyEquations.json found in bundle")
@@ -112,7 +102,7 @@ final class DailyEquationManager: ObservableObject {
         
         do {
             let data = try Data(contentsOf: url)
-            print("📊 JSON file size: \(data.count) bytes")
+            //print("📊 JSON file size: \(data.count) bytes")
             
             let decoder = JSONDecoder()
             decoder.dateDecodingStrategy = .formatted(Self.dateFormatter)
@@ -129,12 +119,12 @@ final class DailyEquationManager: ObservableObject {
     
     private func loadEquationSet(for date: Date) -> DailyEquationSet? {
         let dateKey = Self.dateFormatter.string(from: date)
-        print("🔍 Looking for equation set with dateKey: \(dateKey)")
+        print("🛻 loadEquationSet(): dateKey: \(dateKey)")
         
         // Skip UserDefaults - go directly to bundled JSON
-        print("🔍 Searching in \(allEquationSets.count) bundled equation sets...")
+        print(" --> Searching in \(allEquationSets.count) bundled equation sets...")
         if let found = allEquationSets.first(where: { $0.id == dateKey }) {
-            print("✅ Found equation set in bundled JSON for \(dateKey)")
+            print(" --> ✅ Found equation set in bundled JSON for \(dateKey)")
             return found
         }
 
