@@ -26,8 +26,10 @@ struct ArchiveUpsellOverlay: View {
             
             if subscriptionManager.currentTier == .premiumAccess {
                 premiumBenefitsView
+                    .padding(10)
             } else {
                 upsellView
+                    .padding(10)
             }
         }
         .onAppear {
@@ -61,7 +63,7 @@ struct ArchiveUpsellOverlay: View {
                 Image(systemName: "crown.fill")
                     .font(.system(size: 50))
                     .foregroundColor(Color.mySunColor)
-                    .padding(3)
+                    .padding(10)
                 
                 Text("You've got Premium!")
                     .font(.custom("LuloOne-Bold", size: 18))
@@ -83,15 +85,10 @@ struct ArchiveUpsellOverlay: View {
             // Benefits List
             VStack(spacing: 12) {
                 benefitRow(icon: "calendar.badge.checkmark", title: "Unlimited Archive Access", description: "Play any daily game from our entire collection")
-                
-//                benefitRow(icon: "bolt.fill", title: "Premium Support", description: "Priority customer support and early access to new features")
-                
                 benefitRow(icon: "sparkles", title: "Ad-Free Experience", description: "Uninterrupted gameplay without advertisements")
-                
-                benefitRow(icon: "gift.fill", title: "Exclusive Content", description: "Access to premium-only puzzles and challenges, coming soon!")
+                benefitRow(icon: "gift.fill", title: "Exclusive Content", description: "Coming soon: Access to premium-only puzzles and challenges!")
             }
-            .padding(.vertical, 10)
-            .padding(.horizontal, sizeCategory > .large ? 5 : 10)
+            .padding(10)
             
             // Manage Subscription Button
             Button(action: {
@@ -124,15 +121,17 @@ struct ArchiveUpsellOverlay: View {
                     .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
                     .allowsTightening(true)
             }
-            .padding(.top, 10)
+            .padding(15)
         }
+        .padding(sizeCategory > .medium ? 15 : 30)
         .background(Color.myOverlaysColor)
         .cornerRadius(20)
         .overlay(
             RoundedRectangle(cornerRadius: 15)
                 .stroke(Color.white, lineWidth: 0.5)
         )
-        .padding(.horizontal, sizeCategory > .medium ? 20 : 40)
+        .padding(.horizontal, sizeCategory > .large ? 20 : 30)
+        
     }
     
     @ViewBuilder
@@ -165,6 +164,7 @@ struct ArchiveUpsellOverlay: View {
         .padding(.vertical, 10)
         .background(Color.myAccentColor2.opacity(0.6))
         .cornerRadius(10)
+        
     }
     
     // MARK: - Original Upsell View

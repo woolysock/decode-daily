@@ -64,356 +64,357 @@ struct DecodeGameView: View {
     }
     
     var body: some View {
-        
-        ZStack {
-            Color.black.ignoresSafeArea()
-            
-            if game.theCode.isEmpty {
-                // Loading state - show while game initializes
-                VStack {
-                    Text("Loading...")
-                        .foregroundColor(.white)
-                        .font(.custom("LuloOne", size: 20))
-                }
-            } else {
-                // Main game content - only shown when game is properly initialized
-                VStack() {
-                    Spacer().frame(height: 10)
-                    
-                    // Title + Timer + Help button
-                    HStack {
+        NavigationStack {
+            ZStack {
+                Color.black.ignoresSafeArea()
+                
+                if game.theCode.isEmpty {
+                    // Loading state - show while game initializes
+                    VStack {
+                        Text("Loading...")
+                            .foregroundColor(.white)
+                            .font(.custom("LuloOne", size: 20))
+                    }
+                } else {
+                    // Main game content - only shown when game is properly initialized
+                    VStack() {
+                        Spacer().frame(height: 10)
                         
-                        //Game name, Archive Indicator, Date
-                        VStack(alignment: .leading, spacing: 4) {
-                            HStack(spacing: 8) {
-                                // Game name
-                                Text(game.gameInfo.displayName)
-                                    .foregroundColor(.white)
-                                    .font(.custom("LuloOne-Bold", size: 20))
+                        // Title + Timer + Help button
+                        HStack {
+                            
+                            //Game name, Archive Indicator, Date
+                            VStack(alignment: .leading, spacing: 4) {
+                                HStack(spacing: 8) {
+                                    // Game name
+                                    Text(game.gameInfo.displayName)
+                                        .foregroundColor(.white)
+                                        .font(.custom("LuloOne-Bold", size: 20))
+                                        .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                                        .lineLimit(1)
+                                        .allowsTightening(true)
+                                    
+                                    // Archive indicator
+                                    if targetDate != nil {
+                                        Text("ARCHIVE")
+                                            .font(.custom("LuloOne", size: 8))
+                                            .foregroundColor(.orange)
+                                            .padding(.horizontal, 6)
+                                            .padding(.vertical, 2)
+                                            .background(Color.orange.opacity(0.2))
+                                            .cornerRadius(4)
+                                            .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                                            .lineLimit(1)
+                                            .allowsTightening(true)
+                                    }
+                                }
+                                
+                                Text(game.displayMode)
+                                    .font(.custom("LuloOne", size: 12))
+                                    .foregroundColor(game.willScoreCount ? .gray : .yellow) // Different color for practice mode
                                     .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
                                     .lineLimit(1)
                                     .allowsTightening(true)
                                 
-                                // Archive indicator
-                                if targetDate != nil {
-                                    Text("ARCHIVE")
-                                        .font(.custom("LuloOne", size: 8))
-                                        .foregroundColor(.orange)
-                                        .padding(.horizontal, 6)
-                                        .padding(.vertical, 2)
-                                        .background(Color.orange.opacity(0.2))
-                                        .cornerRadius(4)
-                                        .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
-                                        .lineLimit(1)
-                                        .allowsTightening(true)
-                                }
                             }
                             
-                            Text(game.displayMode)
-                                .font(.custom("LuloOne", size: 12))
-                                .foregroundColor(game.willScoreCount ? .gray : .yellow) // Different color for practice mode
+                            // Top-center game clock
+                            Spacer()
+                            
+                            Text(" ")
+                                .font(.custom("LuloOne-Bold", size: 20))
+                                .frame(minWidth: 54)
+                                .opacity(0)
                                 .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
                                 .lineLimit(1)
                                 .allowsTightening(true)
                             
+                            Spacer()
+                            
+                            //How to Play button
+                            Button { showHowToPlay = true } label: {
+                                Image(systemName: "questionmark.circle")
+                                    .foregroundColor(.white)
+                                    .font(.title2)
+                            }
                         }
+                        .padding(.horizontal, 30)
+                        .padding(.vertical, 0)
                         
-                        // Top-center game clock
-                        Spacer()
                         
-                        Text(" ")
-                            .font(.custom("LuloOne-Bold", size: 20))
-                            .frame(minWidth: 54)
-                            .opacity(0)
-                            .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
-                            .lineLimit(1)
-                            .allowsTightening(true)
+                        Divider().background(.white).padding(8)
                         
-                        Spacer()
                         
-                        //How to Play button
-                        Button { showHowToPlay = true } label: {
-                            Image(systemName: "questionmark.circle")
-                                .foregroundColor(.white)
-                                .font(.title2)
-                        }
-                    }
-                    .padding(.horizontal, 30)
-                    .padding(.vertical, 0)
-                    
-                    
-                    Divider().background(.white).padding(8)
-                    
-                    
-                    // Code display with animation
-                    HStack(spacing: 10) {
-                        ForEach(0..<game.numCols, id: \.self) { col in
-                            Rectangle()
-                                .frame(width: 45, height: 45)
-                                .foregroundColor(
-                                    game.isAnimating
-                                    ? game.pegShades[game.animatedCode[col]]
-                                    : (game.gameOver != 0 ? game.pegShades[game.theCode[col]] : game.myPegColor1)
-                                )
-                                .overlay(
-                                    Text("?")
-                                        .font(.custom("LuloOne-Bold", size: 14))
-                                        .foregroundColor(
-                                            game.isAnimating || game.gameOver != 0 ? .clear : .white
-                                        )
-                                        .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
-                                        .lineLimit(1)
-                                        .allowsTightening(true)
-                                        .frame(width: 45, height: 45)
-                                        .multilineTextAlignment(.center)
-                                        .offset(x: 2, y: 1)
+                        // Code display with animation
+                        HStack(spacing: 10) {
+                            ForEach(0..<game.numCols, id: \.self) { col in
+                                Rectangle()
+                                    .frame(width: 45, height: 45)
+                                    .foregroundColor(
+                                        game.isAnimating
+                                        ? game.pegShades[game.animatedCode[col]]
+                                        : (game.gameOver != 0 ? game.pegShades[game.theCode[col]] : game.myPegColor1)
+                                    )
+                                    .overlay(
+                                        Text("?")
+                                            .font(.custom("LuloOne-Bold", size: 14))
+                                            .foregroundColor(
+                                                game.isAnimating || game.gameOver != 0 ? .clear : .white
+                                            )
+                                            .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                                            .lineLimit(1)
+                                            .allowsTightening(true)
+                                            .frame(width: 45, height: 45)
+                                            .multilineTextAlignment(.center)
+                                            .offset(x: 2, y: 1)
                                         
-                                )
-                                .overlay(
-                                    Rectangle()
-                                        .stroke(Color.white, lineWidth: 0.5)
-                                )
-                                .animation(.easeInOut(duration: 0.1), value: game.animatedCode)
+                                    )
+                                    .overlay(
+                                        Rectangle()
+                                            .stroke(Color.white, lineWidth: 0.5)
+                                    )
+                                    .animation(.easeInOut(duration: 0.1), value: game.animatedCode)
+                            }
                         }
-                    }
-                    .padding(8)
-                    .scaleEffect(game.isAnimating ? 1.05 : 1.0)
-                    .animation(.easeInOut(duration: 0.3), value: game.isAnimating)
-                    
-                    // Status text
-                    Rectangle()
-                        .frame(height: 70)
-                        .foregroundColor(.clear)
-                        .overlay(
-                            Text(game.statusText)
-                                .font(.custom("LuloOne", size: game.gameOver != 0 && game.lastScore != nil ? 12 : 10))
-                                .foregroundColor(.white)
-                                .lineSpacing(2)
-                                .multilineTextAlignment(.center)
-                                .padding(.vertical, 5)
-                                .padding(.horizontal, 10)
-                                .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
-                                .lineLimit(5)
-                                .allowsTightening(true)
-                        )
-                    
-                    Divider().background(.white).padding(.bottom, 15)
-                    
-                    // Game board
-                    
-                    VStack(spacing: 11) {
-                        ForEach(0..<game.numRows, id: \.self) { row in
-                            HStack(spacing: 8) {
-                                ForEach(0..<game.numCols, id: \.self) { col in
-                                    let currentColor = game.pegShades[game.theBoard[row][col]]
-                                    let isEmpty = game.theBoard[row][col] == 0
-                                    let isActiveRow = row == game.currentTurn
-                                    let isSelectedSquare = selectedSquare.row == row && selectedSquare.col == col && showingColorPicker
-                                    
-                                    Rectangle()
-                                        .frame(width: 50, height: 50)
-                                        .cornerRadius(1)
-                                        .foregroundColor(
-                                            // Show black when game is over
-                                            game.gameOver != 0 ? Color.black :
-                                                game.gameOver == 0 ? {
-                                                    if isEmpty {
-                                                        if isSelectedSquare {
-                                                            return Color.gray.opacity(0.6)
-                                                        } else if isActiveRow {
-                                                            return Color.gray.opacity(0.3)
-                                                        } else {
-                                                            return Color.gray.opacity(0.15)
-                                                        }
-                                                    } else {
-                                                        return currentColor
+                        .padding(8)
+                        .scaleEffect(game.isAnimating ? 1.05 : 1.0)
+                        .animation(.easeInOut(duration: 0.3), value: game.isAnimating)
+                        
+                        // Status text
+                        Rectangle()
+                            .frame(height: 70)
+                            .foregroundColor(.clear)
+                            .overlay(
+                                Text(game.statusText)
+                                    .font(.custom("LuloOne", size: game.gameOver != 0 && game.lastScore != nil ? 12 : 10))
+                                    .foregroundColor(.white)
+                                    .lineSpacing(2)
+                                    .multilineTextAlignment(.center)
+                                    .padding(.vertical, 5)
+                                    .padding(.horizontal, 10)
+                                    .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                                    .lineLimit(5)
+                                    .allowsTightening(true)
+                            )
+                        
+                        Divider().background(.white).padding(.bottom, 15)
+                        
+                        // Game board
+                        
+                        ScrollView {
+                            VStack(spacing: 11) {
+                                ForEach(0..<game.numRows, id: \.self) { row in
+                                    HStack(spacing: 8) {
+                                        ForEach(0..<game.numCols, id: \.self) { col in
+                                            let currentColor = game.pegShades[game.theBoard[row][col]]
+                                            let isEmpty = game.theBoard[row][col] == 0
+                                            let isActiveRow = row == game.currentTurn
+                                            let isSelectedSquare = selectedSquare.row == row && selectedSquare.col == col && showingColorPicker
+                                            
+                                            Rectangle()
+                                                .frame(width: 50, height: 50)
+                                                .cornerRadius(1)
+                                                .foregroundColor(
+                                                    // Show black when game is over
+                                                    game.gameOver != 0 ? Color.black :
+                                                        game.gameOver == 0 ? {
+                                                            if isEmpty {
+                                                                if isSelectedSquare {
+                                                                    return Color.gray.opacity(0.6)
+                                                                } else if isActiveRow {
+                                                                    return Color.gray.opacity(0.3)
+                                                                } else {
+                                                                    return Color.gray.opacity(0.15)
+                                                                }
+                                                            } else {
+                                                                return currentColor
+                                                            }
+                                                        }() : Color.black
+                                                )
+                                                .opacity(game.gameInteractive ? 1.0 : 0.7)
+                                                .contentShape(Rectangle())
+                                                .overlay(
+                                                    GeometryReader { geometry in
+                                                        Color.clear
+                                                            .contentShape(Rectangle())
+                                                            .onTapGesture {
+                                                                guard row == game.currentTurn else {
+                                                                    if row > game.currentTurn { game.theBoard[row][col] = 0 }
+                                                                    return
+                                                                }
+                                                                
+                                                                selectedSquare = (row: row, col: col)
+                                                                
+                                                                // Frame relative to the board coordinate space
+                                                                let frame = geometry.frame(in: .named("GameBoardSpace"))
+                                                                // Frame relative to the screen
+                                                                let screenFrame = geometry.frame(in: .global)
+                                                                
+                                                                frameOffset = CGPoint(
+                                                                    x: screenFrame.midX - frame.midX,
+                                                                    y: screenFrame.midY - frame.midY
+                                                                )
+                                                                
+                                                                // Use GameBoardSpace coordinates for picker
+                                                                colorPickerPosition = CGPoint(x: screenFrame.midX, y: screenFrame.midY - frame.height - 34)
+                                                                
+                                                                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                                                                    showingColorPicker = true
+                                                                }
+                                                                
+                                                                // Don't immediately change status text - let it be handled by the picker
+                                                            }
+                                                            .allowsHitTesting(game.gameInteractive && !showingColorPicker && !showHowToPlay && !showEndGameOverlay && game.gameOver == 0)
                                                     }
-                                                }() : Color.black
-                                        )
-                                        .opacity(game.gameInteractive ? 1.0 : 0.7)
-                                        .contentShape(Rectangle())
-                                        .overlay(
-                                            GeometryReader { geometry in
-                                                Color.clear
-                                                    .contentShape(Rectangle())
-                                                    .onTapGesture {
-                                                        guard row == game.currentTurn else {
-                                                            if row > game.currentTurn { game.theBoard[row][col] = 0 }
-                                                            return
-                                                        }
-                                                        
-                                                        selectedSquare = (row: row, col: col)
-                                                        
-                                                        // Frame relative to the board coordinate space
-                                                        let frame = geometry.frame(in: .named("GameBoardSpace"))
-                                                        // Frame relative to the screen
-                                                        let screenFrame = geometry.frame(in: .global)
-                                                        
-                                                        frameOffset = CGPoint(
-                                                            x: screenFrame.midX - frame.midX,
-                                                            y: screenFrame.midY - frame.midY
-                                                        )
-                                                        
-                                                        // Use GameBoardSpace coordinates for picker
-                                                        colorPickerPosition = CGPoint(x: screenFrame.midX, y: screenFrame.midY - frame.height - 34)
-                                                        
-                                                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                                                            showingColorPicker = true
-                                                        }
-                                                        
-                                                        // Don't immediately change status text - let it be handled by the picker
-                                                    }
-                                                    .allowsHitTesting(game.gameInteractive && !showingColorPicker && !showHowToPlay && !showEndGameOverlay && game.gameOver == 0)
-                                            }
-                                        )
-                                    
-                                }
-                                
-                                // Spacer before score button
-                                //Rectangle().frame(width: 1, height: 10).foregroundColor(.clear)
-                                
-                                // Score indicators
-                                ZStack {
-                                    VStack {
-                                        HStack {
-                                            Circle()
-                                                .frame(width: 10, height: 10)
-                                                .foregroundColor(row < game.currentTurn ? game.scoreShades[game.theScore[row][0]] : .clear)
-                                            Circle()
-                                                .frame(width: 10, height: 10)
-                                                .foregroundColor(row < game.currentTurn ? game.scoreShades[game.theScore[row][1]] : .clear)
+                                                )
+                                            
                                         }
-                                        HStack {
-                                            Circle()
-                                                .frame(width: 10, height: 10)
-                                                .foregroundColor(row < game.currentTurn ? game.scoreShades[game.theScore[row][4]] : .clear)
-                                            Circle()
-                                                .frame(width: 10, height: 10)
-                                                .foregroundColor(row < game.currentTurn ? game.scoreShades[game.theScore[row][2]] : .clear)
-                                            Circle()
-                                                .frame(width: 10, height: 10)
-                                                .foregroundColor(row < game.currentTurn ? game.scoreShades[game.theScore[row][3]] : .clear)
+                                        
+                                        // Spacer before score button
+                                        //Rectangle().frame(width: 1, height: 10).foregroundColor(.clear)
+                                        
+                                        // Score indicators
+                                        ZStack {
+                                            VStack {
+                                                HStack {
+                                                    Circle()
+                                                        .frame(width: 10, height: 10)
+                                                        .foregroundColor(row < game.currentTurn ? game.scoreShades[game.theScore[row][0]] : .clear)
+                                                    Circle()
+                                                        .frame(width: 10, height: 10)
+                                                        .foregroundColor(row < game.currentTurn ? game.scoreShades[game.theScore[row][1]] : .clear)
+                                                }
+                                                HStack {
+                                                    Circle()
+                                                        .frame(width: 10, height: 10)
+                                                        .foregroundColor(row < game.currentTurn ? game.scoreShades[game.theScore[row][4]] : .clear)
+                                                    Circle()
+                                                        .frame(width: 10, height: 10)
+                                                        .foregroundColor(row < game.currentTurn ? game.scoreShades[game.theScore[row][2]] : .clear)
+                                                    Circle()
+                                                        .frame(width: 10, height: 10)
+                                                        .foregroundColor(row < game.currentTurn ? game.scoreShades[game.theScore[row][3]] : .clear)
+                                                }
+                                            }
+                                            
+                                            // Submit button with system image
+                                            let isActiveRow = row == game.currentTurn
+                                            let isRowComplete = isActiveRow && game.theBoard[row].allSatisfy { $0 != 0 }
+                                            
+                                            Image(systemName: isRowComplete ? "checkmark.circle.badge.questionmark.fill" : "checkmark.circle.badge.questionmark")
+                                                .font(.system(size: 30))
+                                                .foregroundColor(isActiveRow ? (game.gameOver == 0 ? (isRowComplete ? .white : .gray) : .clear) : .clear)
+                                                .opacity(game.gameInteractive ? 1.0 : 0.5)
+                                                .contentShape(Circle())
+                                                .onTapGesture {
+                                                    if row == game.currentTurn {
+                                                        game.scoreRow(row)
+                                                    }
+                                                }
+                                                .allowsHitTesting(game.gameInteractive && !showingColorPicker && !showHowToPlay && !showEndGameOverlay && game.gameOver == 0)
                                         }
                                     }
-                                    
-                                    // Submit button with system image
-                                    let isActiveRow = row == game.currentTurn
-                                    let isRowComplete = isActiveRow && game.theBoard[row].allSatisfy { $0 != 0 }
-                                    
-                                    Image(systemName: isRowComplete ? "checkmark.circle.badge.questionmark.fill" : "checkmark.circle.badge.questionmark")
-                                        .font(.system(size: 30))
-                                        .foregroundColor(isActiveRow ? (game.gameOver == 0 ? (isRowComplete ? .white : .gray) : .clear) : .clear)
-                                        .opacity(game.gameInteractive ? 1.0 : 0.5)
-                                        .contentShape(Circle())
-                                        .onTapGesture {
-                                            if row == game.currentTurn {
-                                                game.scoreRow(row)
-                                            }
-                                        }
-                                        .allowsHitTesting(game.gameInteractive && !showingColorPicker && !showHowToPlay && !showEndGameOverlay && game.gameOver == 0)
                                 }
                             }
+                            .coordinateSpace(name: "GameBoardSpace") // board space for picker alignment
                         }
+                        Spacer()
                     }
-                    .coordinateSpace(name: "GameBoardSpace") // board space for picker alignment
-                    
-                    Spacer()
-                }
-                .onChange(of: showHowToPlay, initial: false) { oldValue, newValue in
-                    print("🔍 onChange showHowToPlay: \(oldValue) -> \(newValue)")
-                    print("🔍 shouldAnimateAfterHowToPlay: \(shouldAnimateAfterHowToPlay)")
-                    
-                    if oldValue && !newValue {
-                        print("🔍 How-to-play was dismissed")
+                    .onChange(of: showHowToPlay, initial: false) { oldValue, newValue in
+                        print("🔍 onChange showHowToPlay: \(oldValue) -> \(newValue)")
+                        print("🔍 shouldAnimateAfterHowToPlay: \(shouldAnimateAfterHowToPlay)")
                         
-                        if shouldAnimateAfterHowToPlay {
-                            print("🔍 Starting animation for first-time user")
-                            game.startCodeAnimation()
-                            shouldAnimateAfterHowToPlay = false
-                        } else {
-                            // Check if game is already in progress
-                            if game.theCode.isEmpty {
-                                // Game hasn't started yet - start it
-                                print("🔍 Starting game for returning user")
-                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                                    game.startGame()
-                                }
+                        if oldValue && !newValue {
+                            print("🔍 How-to-play was dismissed")
+                            
+                            if shouldAnimateAfterHowToPlay {
+                                print("🔍 Starting animation for first-time user")
+                                game.startCodeAnimation()
+                                shouldAnimateAfterHowToPlay = false
                             } else {
-                                // Game is already in progress - just resume
-                                print("🔍 Resuming existing game")
-                                // No action needed - game should continue where it left off
+                                // Check if game is already in progress
+                                if game.theCode.isEmpty {
+                                    // Game hasn't started yet - start it
+                                    print("🔍 Starting game for returning user")
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                                        game.startGame()
+                                    }
+                                } else {
+                                    // Game is already in progress - just resume
+                                    print("🔍 Resuming existing game")
+                                    // No action needed - game should continue where it left off
+                                }
                             }
                         }
                     }
-                }
-                .onChange(of: game.gameOver, initial: false) { oldValue, newValue in
-                    if newValue != 0 {
-                        
-                        //                        print("🔍 DEBUG: game.gameOver = \(newValue)")
-                        //                        print("🔍 DEBUG: game.lastScore = \(String(describing: game.lastScore))")
-                        //                        print("🔍 DEBUG: game.lastScore?.finalScore = \(String(describing: game.lastScore?.finalScore))")
-                        //
-                        // Show Code Reveal first
-                        showCodeReveal = true
-                        
-                        //                        // After 2 seconds, hide reveal and show overlay
-                        //                        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-                        //                            withAnimation {
-                        //                                showCodeReveal = false
-                        //                                showEndGameOverlay = true
-                        //                            }
-                        //                        }
-                    }
-                }
-            }
-            
-            // Color Picker Overlay
-            if showingColorPicker {
-                ColorPickerOverlay(
-                    showingPicker: $showingColorPicker,
-                    pickerPosition: $colorPickerPosition,
-                    colors: Array(game.pegShades.dropFirst()),
-                    onColorSelected: { colorIndex in
-                        let gameColorIndex = colorIndex + 1
-                        game.theBoard[selectedSquare.row][selectedSquare.col] = gameColorIndex
-                        
-                        // Check if row is now complete
-                        let isRowComplete = game.theBoard[game.currentTurn].allSatisfy { $0 != 0 }
-                        if isRowComplete {
-                            game.statusText = "Tap the checkmark to submit your guess."
-                        } else {
-                            game.statusText = "Tap the checkmark when you're ready to submit a guess.\nGuesses left: \(7 - game.currentTurn)"
+                    .onChange(of: game.gameOver, initial: false) { oldValue, newValue in
+                        if newValue != 0 {
+                            
+                            //                        print("🔍 DEBUG: game.gameOver = \(newValue)")
+                            //                        print("🔍 DEBUG: game.lastScore = \(String(describing: game.lastScore))")
+                            //                        print("🔍 DEBUG: game.lastScore?.finalScore = \(String(describing: game.lastScore?.finalScore))")
+                            //
+                            // Show Code Reveal first
+                            showCodeReveal = true
+                            
+                            //                        // After 2 seconds, hide reveal and show overlay
+                            //                        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                            //                            withAnimation {
+                            //                                showCodeReveal = false
+                            //                                showEndGameOverlay = true
+                            //                            }
+                            //                        }
                         }
                     }
-                )
-                .background(
-                    GeometryReader { geo in
-                        Color.clear
-                            .preference(key: SizePreferenceKey.self, value: geo.size)
-                    }
-                )
-                .zIndex(1)
-            }
-            
-            if game.showAlreadyPlayedOverlay {
-                AlreadyPlayedOverlay(
-                    targetDate: game.targetDate ?? Date(),
-                    isVisible: $game.showAlreadyPlayedOverlay,
-                    onPlayWithoutScore: { game.startGameWithoutScore() },
-                    onPlayRandom: { game.startGameWithRandomCode() },
-                    onNavigateToArchive: {
-                        shouldNavigateToArchive = true
-                        dismiss()
-                    }
-                )
-                .zIndex(10)  // Behind how-to-play overlay
-            }
-            
-            // How-to-Play Overlay ▢ ▢ ▢ ▢ ▢  ➜
-            if showHowToPlay {
-                HowToPlayOverlay(
-                    gameID: game.gameInfo.id,
-                    instructions: """
+                }
+                
+                // Color Picker Overlay
+                if showingColorPicker {
+                    ColorPickerOverlay(
+                        showingPicker: $showingColorPicker,
+                        pickerPosition: $colorPickerPosition,
+                        colors: Array(game.pegShades.dropFirst()),
+                        onColorSelected: { colorIndex in
+                            let gameColorIndex = colorIndex + 1
+                            game.theBoard[selectedSquare.row][selectedSquare.col] = gameColorIndex
+                            
+                            // Check if row is now complete
+                            let isRowComplete = game.theBoard[game.currentTurn].allSatisfy { $0 != 0 }
+                            if isRowComplete {
+                                game.statusText = "Tap the checkmark to submit your guess."
+                            } else {
+                                game.statusText = "Tap the checkmark when you're ready to submit a guess.\nGuesses left: \(7 - game.currentTurn)"
+                            }
+                        }
+                    )
+                    .background(
+                        GeometryReader { geo in
+                            Color.clear
+                                .preference(key: SizePreferenceKey.self, value: geo.size)
+                        }
+                    )
+                    .zIndex(1)
+                }
+                
+                if game.showAlreadyPlayedOverlay {
+                    AlreadyPlayedOverlay(
+                        targetDate: game.targetDate ?? Date(),
+                        isVisible: $game.showAlreadyPlayedOverlay,
+                        onPlayWithoutScore: { game.startGameWithoutScore() },
+                        onPlayRandom: { game.startGameWithRandomCode() },
+                        onNavigateToArchive: {
+                            shouldNavigateToArchive = true
+                            dismiss()
+                        }
+                    )
+                    .zIndex(10)  // Behind how-to-play overlay
+                }
+                
+                // How-to-Play Overlay ▢ ▢ ▢ ▢ ▢  ➜
+                if showHowToPlay {
+                    HowToPlayOverlay(
+                        gameID: game.gameInfo.id,
+                        instructions: """
                     Crack the secret color code! 
                     
                     Each turn, tap a square in the row to assign a color. Colors can be resused. Check your pattern by tapping the circle.
@@ -427,59 +428,60 @@ struct DecodeGameView: View {
                     
                     You get 7 tries. Solve it in less for higher scores! 
                     """,
-                    isVisible: $showHowToPlay
-                )
-                .transition(.opacity)
-                .zIndex(20)
-            }
-            
-            // Game over overlay
-            if game.gameOver > 0 {
-                EndGameOverlay(
-                    gameID: game.gameInfo.id,
-                    finalScore: game.lastScore?.finalScore ?? 0,
-                    displayName: game.gameInfo.displayName,
-                    isVisible: .constant(true),
-                    onPlayAgain: {
-                        game.startGame()  // This will check for replay again
-                        dismiss()
-                    },
-                    onHighScores: {
-                        // Navigate to specific game leaderboard
-                        navigateToSpecificLeaderboard = true
-                        dismiss()
-                    },
-                    onMenu: {
-                        dismiss()
-                    },
-                    timeElapsed: 300.0,
-                    additionalInfo: game.willScoreCount ? nil : "Practice round - no score saved",
-                    gameScore: game.lastScore
-                )
-                .zIndex(30)  // Top level
-            }
-            
-            // Code Reveal Overlay
-            if showCodeReveal {
-//                let _ = print("game.currentTurn: \(game.currentTurn) vs game.numRows: \(game.numRows)")
-//                let _ = print("game.gameOver: \(game.gameOver)")
-//                let _ = print("game.currentTurn + 1: \(game.currentTurn+1)")
-//                let _ = print("game.numRows: \(game.numRows)")
-                
-                CodeRevealOverlay(
-                    theCode: game.theCode,
-                    theBoard: game.theBoard,
-                    lastTurn: game.currentTurn,
-                    won: game.gameWon,
-                    pegShades: game.pegShades
-                ) {
-                    withAnimation {
-                        showCodeReveal = false
-                        showEndGameOverlay = true
-                    }
+                        isVisible: $showHowToPlay
+                    )
+                    .transition(.opacity)
+                    .zIndex(20)
                 }
-                .transition(.opacity)
-                .zIndex(40)
+                
+                // Game over overlay
+                if game.gameOver > 0 {
+                    EndGameOverlay(
+                        gameID: game.gameInfo.id,
+                        finalScore: game.lastScore?.finalScore ?? 0,
+                        displayName: game.gameInfo.displayName,
+                        isVisible: .constant(true),
+                        onPlayAgain: {
+                            game.startGame()  // This will check for replay again
+                            dismiss()
+                        },
+                        onHighScores: {
+                            // Navigate to specific game leaderboard
+                            navigateToSpecificLeaderboard = true
+                            dismiss()
+                        },
+                        onMenu: {
+                            dismiss()
+                        },
+                        timeElapsed: 300.0,
+                        additionalInfo: game.willScoreCount ? nil : "Practice round - no score saved",
+                        gameScore: game.lastScore
+                    )
+                    .zIndex(30)  // Top level
+                }
+                
+                // Code Reveal Overlay
+                if showCodeReveal {
+                    //                let _ = print("game.currentTurn: \(game.currentTurn) vs game.numRows: \(game.numRows)")
+                    //                let _ = print("game.gameOver: \(game.gameOver)")
+                    //                let _ = print("game.currentTurn + 1: \(game.currentTurn+1)")
+                    //                let _ = print("game.numRows: \(game.numRows)")
+                    
+                    CodeRevealOverlay(
+                        theCode: game.theCode,
+                        theBoard: game.theBoard,
+                        lastTurn: game.currentTurn,
+                        won: game.gameWon,
+                        pegShades: game.pegShades
+                    ) {
+                        withAnimation {
+                            showCodeReveal = false
+                            showEndGameOverlay = true
+                        }
+                    }
+                    .transition(.opacity)
+                    .zIndex(40)
+                }
             }
         }
         //        .onDisappear {

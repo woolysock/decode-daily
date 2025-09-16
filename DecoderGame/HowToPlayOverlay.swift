@@ -60,7 +60,7 @@ struct HowToPlayOverlay: View {
                     // Different colors based on scroll state
                     isScrollable ?
                     Color.myAccentColor1.opacity(0.2) :  // Scrollable
-                    Color.myAccentColor1.opacity(0.4)    // Fits without scrolling
+                    Color.clear   // Fits without scrolling
                 )
                 .scrollIndicators(.visible)
                 
@@ -106,7 +106,6 @@ struct HowToPlayOverlay: View {
             .onAppear {
                 let savedValue = UserDefaults.standard.bool(forKey: "hasSeenHowToPlay_\(gameID)")
                 dontShowAgain = savedValue
-                let _ = print("📲 sizeCategory: \(sizeCategory)")
             }
             .padding(sizeCategory > .medium  ? 15 : 30)
         }

@@ -47,8 +47,8 @@ struct AnagramsGameView: View {
     }
     
     var body: some View {
-        ZStack {
-            NavigationStack {
+        NavigationStack {
+            ZStack {
                 ZStack {
                     Color.black.ignoresSafeArea()
                     gameContent
@@ -67,67 +67,68 @@ struct AnagramsGameView: View {
                     print("📈 🪵 date: \(Date().formatted())")
                     print("📈 🪵 sub tier: \(SubscriptionManager.shared.currentTier.displayName)")
                 }
-            }
-            .navigationDestination(isPresented: $navigateToSpecificLeaderboard) {
-                MultiGameLeaderboardView(selectedGameID: game.gameInfo.id)
-            }
-            .navigationBarBackButtonHidden(showEndGameOverlay || showHowToPlay)
-            
-            // Overlays at root level
-            if showEndGameOverlay {
-                EndGameOverlay(
-                    gameID: game.gameInfo.id,
-                    finalScore: game.lastScore?.finalScore ?? game.attempts,
-                    displayName: game.gameInfo.displayName,
-                    isVisible: $showEndGameOverlay,
-                    onPlayAgain: { startNewGame() },
-                    onHighScores: {
-                        navigateToSpecificLeaderboard = true
-                        dismiss()
-                    },
-                    onMenu: {
-                        showEndGameOverlay = false
-                        dismiss()
-                    },
-                    gameScore: game.lastScore
-                )
-                .transition(.opacity)
-            }
-
-            if showHowToPlay {
-                GeometryReader { geometry in
-                    HowToPlayOverlay(
+                
+                // Overlays at root level
+                if showEndGameOverlay {
+                    EndGameOverlay(
                         gameID: game.gameInfo.id,
-                        instructions: instructionsText,
-                        isVisible: $showHowToPlay
+                        finalScore: game.lastScore?.finalScore ?? game.attempts,
+                        displayName: game.gameInfo.displayName,
+                        isVisible: $showEndGameOverlay,
+                        onPlayAgain: { startNewGame() },
+                        onHighScores: {
+                            navigateToSpecificLeaderboard = true
+                            dismiss()
+                        },
+                        onMenu: {
+                            showEndGameOverlay = false
+                            dismiss()
+                        },
+                        gameScore: game.lastScore
                     )
-                    .frame(width: geometry.size.width, height: geometry.size.height)
-                    .position(x: geometry.size.width / 2, y: geometry.size.height / 2)
+                    .transition(.opacity)
                 }
-                .ignoresSafeArea(.all)
-                .transition(.opacity)
-            }
-        }
-        .onChange(of: dailyCheckManager.showNewDayOverlay) { oldValue, newValue in
-            // Only respond to new day overlay if this is NOT an archived game
-            if targetDate == nil {
-                if newValue {
-                    print("AnagramsGameView: Force ending game due to new day overlay")
-                    game.endGame()
-                    showEndGameOverlay = false
-                    showHowToPlay = false
-                    hasStartedRound = false
-                } else if oldValue == true && newValue == false {
-                    print("AnagramsGameView: New day overlay dismissed, returning to main menu")
-                    dismiss()
+                
+                if showHowToPlay {
+                    GeometryReader { geometry in
+                        HowToPlayOverlay(
+                            gameID: game.gameInfo.id,
+                            instructions: instructionsText,
+                            isVisible: $showHowToPlay
+                        )
+                        .frame(width: geometry.size.width, height: geometry.size.height)
+                        .position(x: geometry.size.width / 2, y: geometry.size.height / 2)
+                    }
+                    .ignoresSafeArea(.all)
+                    .transition(.opacity)
                 }
             }
-        }
-        .onAppear {
-            if game.gameOver > 0 {
-                game.resetGame()
+            .onChange(of: dailyCheckManager.showNewDayOverlay) { oldValue, newValue in
+                // Only respond to new day overlay if this is NOT an archived game
+                if targetDate == nil {
+                    if newValue {
+                        print("AnagramsGameView: Force ending game due to new day overlay")
+                        game.endGame()
+                        showEndGameOverlay = false
+                        showHowToPlay = false
+                        hasStartedRound = false
+                    } else if oldValue == true && newValue == false {
+                        print("AnagramsGameView: New day overlay dismissed, returning to main menu")
+                        dismiss()
+                    }
+                }
+            }
+            .onAppear {
+                if game.gameOver > 0 {
+                    game.resetGame()
+                }
             }
         }
+        .navigationDestination(isPresented: $navigateToSpecificLeaderboard) {
+            MultiGameLeaderboardView(selectedGameID: game.gameInfo.id)
+        }
+        .navigationBarBackButtonHidden(showEndGameOverlay || showHowToPlay)
+        
     }
     
     // MARK: - Main Game Content

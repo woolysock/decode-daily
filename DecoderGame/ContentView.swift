@@ -71,11 +71,11 @@ struct LoadingView: View {
             
             ZStack {
                 //Color.black.ignoresSafeArea()
-                Image("TitleLoader-w")
-                    .resizable()
-                    .scaledToFit()
+//                Image("LaunchImage")
+//                    .resizable()
+//                    .scaledToFit()
             }
-            .padding(40)
+            .padding(50)
         }
             }
 }

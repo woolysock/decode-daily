@@ -172,6 +172,7 @@ struct EndGameOverlay: View {
                         .lineLimit(1)
                         .allowsTightening(true)
                 }
+                .padding(.horizontal, sizeCategory > .large ? 30 : 40)
                 
                 Divider()
                     .background(.white)
@@ -312,8 +313,8 @@ struct EndGameOverlay: View {
                         )
                     }
                 }
+                .padding(10)
             }
-            .padding(sizeCategory > .large ? 20 : 40)
             .background(Color.myOverlaysColor)
             .cornerRadius(15)
             .overlay(
@@ -324,6 +325,7 @@ struct EndGameOverlay: View {
             .opacity(1.0) // Always show the content box immediately
             .scaleEffect(1.0) // No scaling animation on the content box
         }
+        .padding(30)
         .ignoresSafeArea(.all)
         .onAppear {
             startCelebrationSequence()

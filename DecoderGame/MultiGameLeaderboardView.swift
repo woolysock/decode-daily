@@ -310,16 +310,16 @@ struct ScoreRowView: View {
 
 // MARK: - MultiGameLeaderboardView
 struct MultiGameLeaderboardView: View {
-
+    
     @Environment(\.sizeCategory) var sizeCategory
     @EnvironmentObject var scoreManager: GameScoreManager
     @Environment(\.dismiss) private var dismiss
     
     @State private var currentTabIndex: Int = 0
     @State private var navigateToGame: String? = nil
-
+    
     private let games: [GameInfo]
-
+    
     init(selectedGameID: String? = nil) {
         self.games = GameInfo.availableGames
         if let gameID = selectedGameID,
@@ -327,138 +327,140 @@ struct MultiGameLeaderboardView: View {
             _currentTabIndex = State(initialValue: index)
         }
     }
-
+    
     var body: some View {
+        NavigationStack {
         ZStack{
-            Color.black.ignoresSafeArea()
-            LinearGradient.highscoresNavGradient.ignoresSafeArea()
-            
-            VStack {
-                // NEW: Header with home button and icon tabs
-                VStack(alignment: .center, spacing: 12) {
-                    // Top bar with home button
-                    HStack {
-                        
-                        Text("High Scores")
-                            .font(.custom("LuloOne-Bold", size: 26))
-                            .foregroundColor(.white)
-                            .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
-                            .lineLimit(2)
-                            .allowsTightening(true)
-                            .multilineTextAlignment(.center)
-                                                
-                        Spacer()
-                            .frame(width:10)
-                        
-                        NavigationLink(destination: MainMenuView(initialPage: 0)) {
-                            HStack(alignment: .lastTextBaseline, spacing: 6) {
-                                Image(systemName: "house.fill")
-                                    .font(.system(size: 14))
-                                Text("Home")
-                                    .font(.custom("LuloOne-Bold", size: sizeCategory > .large ? 12 : 14))
-                                    .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
-                                    .lineLimit(1)
-                                    .allowsTightening(true)
+                Color.black.ignoresSafeArea()
+                LinearGradient.highscoresNavGradient.ignoresSafeArea()
+                
+                VStack {
+                    // NEW: Header with home button and icon tabs
+                    VStack(alignment: .center, spacing: 12) {
+                        // Top bar with home button
+                        HStack {
+                            
+                            Text("High Scores")
+                                .font(.custom("LuloOne-Bold", size: 26))
+                                .foregroundColor(.white)
+                                .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                                .lineLimit(2)
+                                .allowsTightening(true)
+                                .multilineTextAlignment(.center)
+                            
+                            Spacer()
+                                .frame(width:10)
+                            
+                            NavigationLink(destination: MainMenuView(initialPage: 0)) {
+                                HStack(alignment: .lastTextBaseline, spacing: 6) {
+                                    Image(systemName: "house.fill")
+                                        .font(.system(size: 14))
+                                    Text("Home")
+                                        .font(.custom("LuloOne-Bold", size: sizeCategory > .large ? 12 : 14))
+                                        .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                                        .lineLimit(1)
+                                        .allowsTightening(true)
+                                }
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 8)
+                                .background(Color.myAccentColor1.opacity(0.3))
+                                .cornerRadius(8)
                             }
-                            .foregroundColor(.white)
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 8)
-                            .background(Color.myAccentColor1.opacity(0.3))
-                            .cornerRadius(8)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .stroke(Color.white, lineWidth: 0.5)
+                            )
+                            
+                            
                         }
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 8)
-                                .stroke(Color.white, lineWidth: 0.5)
-                        )
+                        .frame(minHeight: 50)
+                        .padding(.horizontal, 20)
                         
-                                                
-                    }
-                    .frame(minHeight: 50)
-                    .padding(.horizontal, 20)
-                    
-                    // Game icon tabs
-                    HStack(spacing: 30) {
-                        ForEach(0..<games.count, id: \.self) { index in
-                            VStack(spacing: 10) {
-                                // Game icon
-                                games[index].gameIcon
-                                    .font(.system(size: 26))
-                                    .foregroundColor(currentTabIndex != index ? Color.myAccentColor1 : .white.opacity(0.8))
-                                    .shadow(color: (currentTabIndex != index ? Color.myNavy : Color.clear), radius:1)
-                                
-                                // Game name
-                                Text(games[index].displayName)
-                                    .font(.custom("LuloOne-Bold", size: sizeCategory > .large ? 10 : 12))
-                                    .foregroundColor(currentTabIndex != index ? Color.myAccentColor1 : Color.white.opacity(0.8))
-                                    .shadow(color: (currentTabIndex != index ? Color.myNavy : Color.clear), radius:1)
-                                    .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
-                                    .lineLimit(1)
-                                    .allowsTightening(true)
-                                
-                                // Active indicator dot
-                                Circle()
-                                    .fill(currentTabIndex == index ? Color.white : Color.clear)
-                                    .frame(width: 6, height: 6)
+                        // Game icon tabs
+                        HStack(spacing: 30) {
+                            ForEach(0..<games.count, id: \.self) { index in
+                                VStack(spacing: 10) {
+                                    // Game icon
+                                    games[index].gameIcon
+                                        .font(.system(size: 26))
+                                        .foregroundColor(currentTabIndex != index ? Color.myAccentColor1 : .white.opacity(0.8))
+                                        .shadow(color: (currentTabIndex != index ? Color.myNavy : Color.clear), radius:1)
                                     
-                            }
-                            .onTapGesture {
-                                withAnimation(.easeInOut(duration: 0.3)) {
-                                    currentTabIndex = index
+                                    // Game name
+                                    Text(games[index].displayName)
+                                        .font(.custom("LuloOne-Bold", size: sizeCategory > .large ? 10 : 12))
+                                        .foregroundColor(currentTabIndex != index ? Color.myAccentColor1 : Color.white.opacity(0.8))
+                                        .shadow(color: (currentTabIndex != index ? Color.myNavy : Color.clear), radius:1)
+                                        .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                                        .lineLimit(1)
+                                        .allowsTightening(true)
+                                    
+                                    // Active indicator dot
+                                    Circle()
+                                        .fill(currentTabIndex == index ? Color.white : Color.clear)
+                                        .frame(width: 6, height: 6)
+                                    
+                                }
+                                .onTapGesture {
+                                    withAnimation(.easeInOut(duration: 0.3)) {
+                                        currentTabIndex = index
+                                    }
                                 }
                             }
                         }
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 10)
+                        
                     }
-                    .padding(.horizontal, 20)
-                    .padding(.vertical, 10)
-                   
+                    .padding(.top, 15)
+                    
+                    
+                    // TabView content
+                    TabView(selection: $currentTabIndex) {
+                        ForEach(0..<games.count, id: \.self) { index in
+                            LeaderboardPageView(
+                                gameID: games[index].id.lowercased(),
+                                title: "\(games[index].displayName) Leaderboard",
+                                onPlayGame: { navigateToGame = games[index].id }
+                            )
+                            .tag(index)
+                            .padding(.top, 20)
+                        }
+                    }
+                    .tabViewStyle(.page(indexDisplayMode: .never))
+                    .background(Color.white)
+                    .overlay(
+                        Rectangle()
+                            .frame(height: 0.5)
+                            .foregroundColor(Color.black),
+                        alignment: .top
+                    )
                 }
-                .padding(.top, 15)
-                
-                
-                // TabView content
-                TabView(selection: $currentTabIndex) {
-                    ForEach(0..<games.count, id: \.self) { index in
-                        LeaderboardPageView(
-                            gameID: games[index].id.lowercased(),
-                            title: "\(games[index].displayName) Leaderboard",
-                            onPlayGame: { navigateToGame = games[index].id }
-                        )
-                        .tag(index)
-                        .padding(.top, 20)
+                .navigationDestination(isPresented: Binding<Bool>(
+                    get: { navigateToGame != nil },
+                    set: { if !$0 { navigateToGame = nil } }
+                )) {
+                    if let gameId = navigateToGame {
+                        gameDestinationView(for: gameId)
                     }
                 }
-                .tabViewStyle(.page(indexDisplayMode: .never))
-                .background(Color.white)
-                .overlay(
-                    Rectangle()
-                        .frame(height: 0.5)
-                        .foregroundColor(Color.black),
-                    alignment: .top
-                )
             }
-            .navigationDestination(isPresented: Binding<Bool>(
-                get: { navigateToGame != nil },
-                set: { if !$0 { navigateToGame = nil } }
-            )) {
-                if let gameId = navigateToGame {
-                    gameDestinationView(for: gameId)
-                }
+            .navigationBarBackButtonHidden(true) // Hide the default back button
+            .onAppear {
+                // MIXPANEL ANALYTICS CAPTURE
+                Mixpanel.mainInstance().track(event: "High Scores Page View", properties: [
+                    "app": "Decode! Daily iOS",
+                    "build_version": Bundle.main.infoDictionary?["CFBundleShortVersionString"],
+                    "date": Date().formatted(),
+                    "subscription_tier": SubscriptionManager.shared.currentTier.displayName
+                ])
+                print("📈 🪵 MIXPANEL DATA LOG EVENT: High Scores Page View")
+                print("📈 🪵 date: \(Date().formatted())")
+                print("📈 🪵 sub tier: \(SubscriptionManager.shared.currentTier.displayName)")
             }
         }
-        .navigationBarBackButtonHidden(true) // Hide the default back button
-        .onAppear {
-            // MIXPANEL ANALYTICS CAPTURE
-            Mixpanel.mainInstance().track(event: "High Scores Page View", properties: [
-                "app": "Decode! Daily iOS",
-                "build_version": Bundle.main.infoDictionary?["CFBundleShortVersionString"],
-                "date": Date().formatted(),
-                "subscription_tier": SubscriptionManager.shared.currentTier.displayName
-            ])
-            print("📈 🪵 MIXPANEL DATA LOG EVENT: High Scores Page View")
-            print("📈 🪵 date: \(Date().formatted())")
-            print("📈 🪵 sub tier: \(SubscriptionManager.shared.currentTier.displayName)")
-        }
-       
+        
     }
     
     private func gameDestinationView(for gameId: String) -> AnyView {

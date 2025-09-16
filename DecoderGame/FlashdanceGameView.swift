@@ -52,7 +52,7 @@ struct FlashdanceGameView: View {
       ☠️ Avoid wrong answers. 
     
     You have 30 seconds to solve as many as you can.
-
+    
     """
     
     init(targetDate: Date? = nil) {
@@ -187,9 +187,9 @@ struct FlashdanceGameView: View {
                                 
                                 ZStack {
                                     // Debug zones overlay
-//                                    if showDebugZones {
-//                                        debugZonesView(geo: geo, pillWidth: pillWidth, spacing: spacing)
-//                                    }
+                                    //                                    if showDebugZones {
+                                    //                                        debugZonesView(geo: geo, pillWidth: pillWidth, spacing: spacing)
+                                    //                                    }
                                     
                                     VStack {
                                         // === Answer Pills Row ===
@@ -319,17 +319,17 @@ struct FlashdanceGameView: View {
                             }
                         }
                     }
+                    
                 }
+                .navigationDestination(isPresented: $navigateToSpecificLeaderboard) {
+                    MultiGameLeaderboardView(selectedGameID: game.gameInfo.id)
+                }
+                .navigationBarBackButtonHidden(
+                    game.gameOver > 0 ||
+                    showEndGameOverlay ||
+                    showHowToPlay
+                )
             }
-            .navigationDestination(isPresented: $navigateToSpecificLeaderboard) {
-                MultiGameLeaderboardView(selectedGameID: game.gameInfo.id)
-            }
-            .navigationBarBackButtonHidden(
-                game.gameOver > 0 ||
-                showEndGameOverlay ||
-                showHowToPlay
-            )
-            
             // === Overlays ===
             if showHowToPlay {
                 HowToPlayOverlay(
@@ -341,7 +341,7 @@ struct FlashdanceGameView: View {
             }
             
             // Move overlays outside NavigationStack to root ZStack level
-           
+            
             if showEndGameOverlay {
                 EndGameOverlay(
                     gameID: game.gameInfo.id,
@@ -399,151 +399,151 @@ struct FlashdanceGameView: View {
             print("📈 🪵 MIXPANEL DATA LOG EVENT: Flashdance Game Page View")
             print("📈 🪵 date: \(Date().formatted())")
             print("📈 🪵 sub tier: \(SubscriptionManager.shared.currentTier.displayName)")
-
+            
         }
     }
     
-//    // MARK: - Debug Zones View
-//    @ViewBuilder
-//    private func debugZonesView(geo: GeometryProxy, pillWidth: CGFloat, spacing: CGFloat) -> some View {
-//        let totalPillsWidth = pillWidth * 3 + spacing * 2
-//        let startX = (geo.size.width - totalPillsWidth) / 2
-//        let horizontalTolerance: CGFloat = 15
-//        
-//        // Calculate what would be selected if we let go right now
-//        let cardCenterX = geo.size.width / 2 + dragOffset.width
-//        let wouldSelect = getAnswerUnderCardCenter(cardCenterX: cardCenterX, geo: geo)
-//        
-//        // Calculate swipe validation
-//        let minSwipeThreshold: CGFloat = 10  // Updated to match handleSwipeWithPills
-//        let minUpwardMovement: CGFloat = -10  // Updated to match handleSwipeWithPills
-//        let horizontalDistance = abs(dragOffset.width)
-//        let swipeMagnitude = sqrt(dragOffset.width * dragOffset.width + dragOffset.height * dragOffset.height)
-//        let hasEnoughSwipe = horizontalDistance >= 10 || swipeMagnitude >= minSwipeThreshold  // Updated to match
-//        let hasValidDirection = dragOffset.height <= minUpwardMovement || horizontalDistance >= 20 || swipeMagnitude >= 35  // Updated to match
-//        let wouldBeValid = hasEnoughSwipe && hasValidDirection && wouldSelect != nil
-//        
-//        ForEach(0..<3, id: \.self) { i in
-//            let pillCenterX = startX + pillWidth/2 + CGFloat(i) * (pillWidth + spacing)
-//            let zoneLeftEdge = pillCenterX - pillWidth/2 - horizontalTolerance
-//            let zoneRightEdge = pillCenterX + pillWidth/2 + horizontalTolerance
-//            let zoneWidth = zoneRightEdge - zoneLeftEdge
-//            let answerValue = game.answers[safe: i] ?? 0
-//            let isSelectedZone = wouldSelect == answerValue
-//            
-//            Rectangle()
-//                .fill(isSelectedZone ? Color.green.opacity(0.4) : Color.red.opacity(0.3))
-//                .frame(width: zoneWidth, height: geo.size.height)
-//                .position(x: pillCenterX, y: geo.size.height / 2)
-//                .overlay(
-//                    VStack {
-//                        Text("Zone \(i + 1)")
-//                            .font(.caption)
-//                            .foregroundColor(.white)
-//                            .padding(.horizontal, 4)
-//                            .background(Color.black.opacity(0.7))
-//                            .cornerRadius(4)
-//                        
-//                        Spacer()
-//                        
-//                        Text("Answer: \(answerValue)")
-//                            .font(.caption)
-//                            .foregroundColor(.white)
-//                            .padding(.horizontal, 4)
-//                            .background(isSelectedZone ? Color.green.opacity(0.8) : Color.black.opacity(0.7))
-//                            .cornerRadius(4)
-//                        
-//                        if isSelectedZone {
-//                            Text("SELECTED")
-//                                .font(.caption2)
-//                                .foregroundColor(.white)
-//                                .padding(.horizontal, 4)
-//                                .background(Color.green)
-//                                .cornerRadius(4)
-//                        }
-//                    }
-//                    .padding(.vertical, 20)
-//                )
-//        }
-//        
-//        // Show card center position with validation status
-//        Circle()
-//            .fill(wouldBeValid ? Color.green : Color.yellow)
-//            .frame(width: 12, height: 12)
-//            .position(x: geo.size.width / 2 + dragOffset.width, y: geo.size.height / 2 + dragOffset.height)
-//            .overlay(
-//                Circle()
-//                    .stroke(Color.white, lineWidth: 2)
-//                    .frame(width: 12, height: 12)
-//                    .position(x: geo.size.width / 2 + dragOffset.width, y: geo.size.height / 2 + dragOffset.height)
-//            )
-//        
-//        // Show coordinate info with prediction
-//        VStack {
-//            Spacer()
-//            HStack {
-//                VStack(alignment: .leading, spacing: 2) {
-//                    Text("Debug Info:")
-//                        .font(.caption)
-//                        .foregroundColor(.white)
-//                        .fontWeight(.bold)
-//                    
-//                    Text("Card Center X: \(Int(cardCenterX))")
-//                        .font(.caption)
-//                        .foregroundColor(.white)
-//                    
-//                    Text("Currently Highlighted: \(highlightedAnswer?.description ?? "None")")
-//                        .font(.caption)
-//                        .foregroundColor(.white)
-//                    
-//                    Divider().background(Color.white.opacity(0.5))
-//                    
-//                    if wouldBeValid {
-//                        Text("✅ Would Select: \(wouldSelect?.description ?? "None")")
-//                            .font(.caption)
-//                            .foregroundColor(.green)
-//                            .fontWeight(.bold)
-//                    } else {
-//                        Text("❌ Would Reject")
-//                            .font(.caption)
-//                            .foregroundColor(.red)
-//                            .fontWeight(.bold)
-//                        
-//                        if !hasEnoughSwipe {
-//                            Text("• Not enough swipe distance")
-//                                .font(.caption2)
-//                                .foregroundColor(.orange)
-//                        }
-//                        if !hasValidDirection {
-//                            Text("• Invalid swipe direction")
-//                                .font(.caption2)
-//                                .foregroundColor(.orange)
-//                        }
-//                        if wouldSelect == nil {
-//                            Text("• No zone detected")
-//                                .font(.caption2)
-//                                .foregroundColor(.orange)
-//                        }
-//                    }
-//                    
-//                    Divider().background(Color.white.opacity(0.5))
-//                    
-//                    Text("Swipe: H:\(Int(dragOffset.width)) V:\(Int(dragOffset.height))")
-//                        .font(.caption2)
-//                        .foregroundColor(.gray)
-//                    
-//                    Text("Triple-tap to hide")
-//                        .font(.caption2)
-//                        .foregroundColor(.yellow)
-//                }
-//                .padding(8)
-//                .background(Color.black.opacity(0.9))
-//                .cornerRadius(8)
-//                Spacer()
-//            }
-//        }
-//        .padding()
-//    }
+    //    // MARK: - Debug Zones View
+    //    @ViewBuilder
+    //    private func debugZonesView(geo: GeometryProxy, pillWidth: CGFloat, spacing: CGFloat) -> some View {
+    //        let totalPillsWidth = pillWidth * 3 + spacing * 2
+    //        let startX = (geo.size.width - totalPillsWidth) / 2
+    //        let horizontalTolerance: CGFloat = 15
+    //
+    //        // Calculate what would be selected if we let go right now
+    //        let cardCenterX = geo.size.width / 2 + dragOffset.width
+    //        let wouldSelect = getAnswerUnderCardCenter(cardCenterX: cardCenterX, geo: geo)
+    //
+    //        // Calculate swipe validation
+    //        let minSwipeThreshold: CGFloat = 10  // Updated to match handleSwipeWithPills
+    //        let minUpwardMovement: CGFloat = -10  // Updated to match handleSwipeWithPills
+    //        let horizontalDistance = abs(dragOffset.width)
+    //        let swipeMagnitude = sqrt(dragOffset.width * dragOffset.width + dragOffset.height * dragOffset.height)
+    //        let hasEnoughSwipe = horizontalDistance >= 10 || swipeMagnitude >= minSwipeThreshold  // Updated to match
+    //        let hasValidDirection = dragOffset.height <= minUpwardMovement || horizontalDistance >= 20 || swipeMagnitude >= 35  // Updated to match
+    //        let wouldBeValid = hasEnoughSwipe && hasValidDirection && wouldSelect != nil
+    //
+    //        ForEach(0..<3, id: \.self) { i in
+    //            let pillCenterX = startX + pillWidth/2 + CGFloat(i) * (pillWidth + spacing)
+    //            let zoneLeftEdge = pillCenterX - pillWidth/2 - horizontalTolerance
+    //            let zoneRightEdge = pillCenterX + pillWidth/2 + horizontalTolerance
+    //            let zoneWidth = zoneRightEdge - zoneLeftEdge
+    //            let answerValue = game.answers[safe: i] ?? 0
+    //            let isSelectedZone = wouldSelect == answerValue
+    //
+    //            Rectangle()
+    //                .fill(isSelectedZone ? Color.green.opacity(0.4) : Color.red.opacity(0.3))
+    //                .frame(width: zoneWidth, height: geo.size.height)
+    //                .position(x: pillCenterX, y: geo.size.height / 2)
+    //                .overlay(
+    //                    VStack {
+    //                        Text("Zone \(i + 1)")
+    //                            .font(.caption)
+    //                            .foregroundColor(.white)
+    //                            .padding(.horizontal, 4)
+    //                            .background(Color.black.opacity(0.7))
+    //                            .cornerRadius(4)
+    //
+    //                        Spacer()
+    //
+    //                        Text("Answer: \(answerValue)")
+    //                            .font(.caption)
+    //                            .foregroundColor(.white)
+    //                            .padding(.horizontal, 4)
+    //                            .background(isSelectedZone ? Color.green.opacity(0.8) : Color.black.opacity(0.7))
+    //                            .cornerRadius(4)
+    //
+    //                        if isSelectedZone {
+    //                            Text("SELECTED")
+    //                                .font(.caption2)
+    //                                .foregroundColor(.white)
+    //                                .padding(.horizontal, 4)
+    //                                .background(Color.green)
+    //                                .cornerRadius(4)
+    //                        }
+    //                    }
+    //                    .padding(.vertical, 20)
+    //                )
+    //        }
+    //
+    //        // Show card center position with validation status
+    //        Circle()
+    //            .fill(wouldBeValid ? Color.green : Color.yellow)
+    //            .frame(width: 12, height: 12)
+    //            .position(x: geo.size.width / 2 + dragOffset.width, y: geo.size.height / 2 + dragOffset.height)
+    //            .overlay(
+    //                Circle()
+    //                    .stroke(Color.white, lineWidth: 2)
+    //                    .frame(width: 12, height: 12)
+    //                    .position(x: geo.size.width / 2 + dragOffset.width, y: geo.size.height / 2 + dragOffset.height)
+    //            )
+    //
+    //        // Show coordinate info with prediction
+    //        VStack {
+    //            Spacer()
+    //            HStack {
+    //                VStack(alignment: .leading, spacing: 2) {
+    //                    Text("Debug Info:")
+    //                        .font(.caption)
+    //                        .foregroundColor(.white)
+    //                        .fontWeight(.bold)
+    //
+    //                    Text("Card Center X: \(Int(cardCenterX))")
+    //                        .font(.caption)
+    //                        .foregroundColor(.white)
+    //
+    //                    Text("Currently Highlighted: \(highlightedAnswer?.description ?? "None")")
+    //                        .font(.caption)
+    //                        .foregroundColor(.white)
+    //
+    //                    Divider().background(Color.white.opacity(0.5))
+    //
+    //                    if wouldBeValid {
+    //                        Text("✅ Would Select: \(wouldSelect?.description ?? "None")")
+    //                            .font(.caption)
+    //                            .foregroundColor(.green)
+    //                            .fontWeight(.bold)
+    //                    } else {
+    //                        Text("❌ Would Reject")
+    //                            .font(.caption)
+    //                            .foregroundColor(.red)
+    //                            .fontWeight(.bold)
+    //
+    //                        if !hasEnoughSwipe {
+    //                            Text("• Not enough swipe distance")
+    //                                .font(.caption2)
+    //                                .foregroundColor(.orange)
+    //                        }
+    //                        if !hasValidDirection {
+    //                            Text("• Invalid swipe direction")
+    //                                .font(.caption2)
+    //                                .foregroundColor(.orange)
+    //                        }
+    //                        if wouldSelect == nil {
+    //                            Text("• No zone detected")
+    //                                .font(.caption2)
+    //                                .foregroundColor(.orange)
+    //                        }
+    //                    }
+    //
+    //                    Divider().background(Color.white.opacity(0.5))
+    //
+    //                    Text("Swipe: H:\(Int(dragOffset.width)) V:\(Int(dragOffset.height))")
+    //                        .font(.caption2)
+    //                        .foregroundColor(.gray)
+    //
+    //                    Text("Triple-tap to hide")
+    //                        .font(.caption2)
+    //                        .foregroundColor(.yellow)
+    //                }
+    //                .padding(8)
+    //                .background(Color.black.opacity(0.9))
+    //                .cornerRadius(8)
+    //                Spacer()
+    //            }
+    //        }
+    //        .padding()
+    //    }
     
     // MARK: - Pill answer helpers
     private func answerPill(_ value: Int) -> some View {
@@ -559,7 +559,7 @@ struct FlashdanceGameView: View {
             .shadow(radius: 3)
             .accessibilityLabel(Text("Answer \(value)"))
     }
-
+    
     
     private func highlightPillUnderDrag(location: CGPoint, geo: GeometryProxy) {
         // Calculate card center based on current drag
