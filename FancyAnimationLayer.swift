@@ -13,6 +13,11 @@ struct FancyAnimationLayer: View {
     @State private var motionManager = CMMotionManager()
     @State private var tiltForce = CGVector(dx: 0, dy: 0)
     
+    // Shake detection
+    @State private var lastAcceleration = CMAcceleration(x: 0, y: 0, z: 0)
+    @State private var shakeThreshold: Double = 2.5
+    @State private var isShaking = false
+    
     // Configuration
     private let itemCount = 30
     private let baseSpeed: Double = 0.04
@@ -65,23 +70,61 @@ struct FancyAnimationLayer: View {
         motionManager.startDeviceMotionUpdates(to: .main) { [self] motion, error in
             guard let motion = motion else { return }
             
-            // Get device gravity vector
+            // Get device gravity vector for tilt
             let gravity = motion.gravity
-            
-            // Debug: Print gravity values to understand the coordinate system
-            //print("Gravity - X: \(String(format: "%.3f", gravity.x)), Y: \(String(format: "%.3f", gravity.y)), Z: \(String(format: "%.3f", gravity.z))")
-            
-            // For portrait orientation, map gravity correctly:
-            // Don't invert Y - use gravity values directly
             let forceX = gravity.x * tiltSensitivity
-            let forceY = gravity.y * tiltSensitivity  // No inversion needed
+            let forceY = gravity.y * tiltSensitivity
             
             // Clamp the forces
             let clampedForceX = min(max(forceX, -maxTiltForce), maxTiltForce)
             let clampedForceY = min(max(forceY, -maxTiltForce), maxTiltForce)
             
             tiltForce = CGVector(dx: clampedForceX, dy: clampedForceY)
+            
+            // Shake detection using user acceleration
+            let userAccel = motion.userAcceleration
+            
+            // Calculate the magnitude of acceleration change
+            let deltaX = abs(userAccel.x - lastAcceleration.x)
+            let deltaY = abs(userAccel.y - lastAcceleration.y)
+            let deltaZ = abs(userAccel.z - lastAcceleration.z)
+            
+            let totalDelta = deltaX + deltaY + deltaZ
+            
+            // Check if shake threshold is exceeded
+            if totalDelta > shakeThreshold && !isShaking {
+                print("🔄 Shake detected! Delta: \(String(format: "%.2f", totalDelta))")
+                triggerJumpEffect()
+                
+                // Prevent multiple triggers in quick succession
+                isShaking = true
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                    isShaking = false
+                }
+            }
+            
+            lastAcceleration = userAccel
         }
+    }
+    
+    private func triggerJumpEffect() {
+        // Give all items a random burst of velocity
+        for i in 0..<funTextItems.count {
+            var item = funTextItems[i]
+            
+            // Add random jump velocity - stronger than normal movement
+            let jumpStrengthX = Double.random(in: -120...120)
+            let jumpStrengthY = Double.random(in: -120...120)
+            
+            item.velocity.dx += jumpStrengthX
+            item.velocity.dy += jumpStrengthY
+            
+            funTextItems[i] = item
+        }
+        
+        // Optional: Add haptic feedback
+        let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
+        impactFeedback.impactOccurred()
     }
     
     private func stopMotionUpdates() {
@@ -96,7 +139,6 @@ struct FancyAnimationLayer: View {
     
     private func updatePositions() {
         let screenBounds = UIScreen.main.bounds
-        //let screenCenter = CGPoint(x: screenBounds.width / 2, y: screenBounds.height / 2)
         let screenCenter = CGPoint(x: screenBounds.width / 2, y: (screenBounds.height / 2)-100)
         
         for i in 0..<funTextItems.count {

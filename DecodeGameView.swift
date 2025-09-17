@@ -191,7 +191,7 @@ struct DecodeGameView: View {
                                     .lineSpacing(2)
                                     .multilineTextAlignment(.center)
                                     .padding(.vertical, 5)
-                                    .padding(.horizontal, 10)
+                                    .padding(.horizontal, 20)
                                     .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
                                     .lineLimit(5)
                                     .allowsTightening(true)
@@ -321,11 +321,11 @@ struct DecodeGameView: View {
                         Spacer()
                     }
                     .onChange(of: showHowToPlay, initial: false) { oldValue, newValue in
-                        print("🔍 onChange showHowToPlay: \(oldValue) -> \(newValue)")
-                        print("🔍 shouldAnimateAfterHowToPlay: \(shouldAnimateAfterHowToPlay)")
+//                        print("🔍 onChange showHowToPlay: \(oldValue) -> \(newValue)")
+//                        print("🔍 shouldAnimateAfterHowToPlay: \(shouldAnimateAfterHowToPlay)")
                         
                         if oldValue && !newValue {
-                            print("🔍 How-to-play was dismissed")
+                            //print("🔍 How-to-play was dismissed")
                             
                             if shouldAnimateAfterHowToPlay {
                                 print("🔍 Starting animation for first-time user")

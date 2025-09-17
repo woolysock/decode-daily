@@ -34,10 +34,7 @@
 		44639B332E7A865700213BDC /* StoreManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44639B2E2E7A865700213BDC /* StoreManager.swift */; };
 		44639B342E7A865700213BDC /* SubscriptionTierBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44639B2F2E7A865700213BDC /* SubscriptionTierBadge.swift */; };
 		44639B3F2E7A867100213BDC /* LuloOne-Bold.otf in Resources */ = {isa = PBXBuildFile; fileRef = 44639B3B2E7A867100213BDC /* LuloOne-Bold.otf */; };
-		44639B402E7A867100213BDC /* DailyWordsets.json in Resources */ = {isa = PBXBuildFile; fileRef = 44639B382E7A867100213BDC /* DailyWordsets.json */; };
-		44639B412E7A867100213BDC /* DailyCodes.json in Resources */ = {isa = PBXBuildFile; fileRef = 44639B362E7A867100213BDC /* DailyCodes.json */; };
 		44639B432E7A867100213BDC /* Sole-Light.otf in Resources */ = {isa = PBXBuildFile; fileRef = 44639B3C2E7A867100213BDC /* Sole-Light.otf */; };
-		44639B442E7A867100213BDC /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 44639B352E7A867100213BDC /* Assets.xcassets */; };
 		44639B452E7A867100213BDC /* DailyDecodeStore.storekit in Resources */ = {isa = PBXBuildFile; fileRef = 44639B372E7A867100213BDC /* DailyDecodeStore.storekit */; };
 		44639B522E7A89CD00213BDC /* LuloOne.otf in Resources */ = {isa = PBXBuildFile; fileRef = 44639B4A2E7A89CC00213BDC /* LuloOne.otf */; };
 		44639B532E7A89CD00213BDC /* MasterWordList.json in Resources */ = {isa = PBXBuildFile; fileRef = 44639B4C2E7A89CD00213BDC /* MasterWordList.json */; };
@@ -57,6 +54,9 @@
 		44909E022E7A8F810063A706 /* PaidTier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44909DF42E7A8F810063A706 /* PaidTier.swift */; };
 		44909E032E7A8F810063A706 /* ArchivePageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44909DE72E7A8F810063A706 /* ArchivePageView.swift */; };
 		44909E042E7A8F810063A706 /* EndGameOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44909DEC2E7A8F810063A706 /* EndGameOverlay.swift */; };
+		44909E062E7B0C5E0063A706 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 44909E052E7B0C5E0063A706 /* Assets.xcassets */; };
+		44909E092E7B0DDF0063A706 /* DailyCodes.json in Resources */ = {isa = PBXBuildFile; fileRef = 44909E072E7B0DDF0063A706 /* DailyCodes.json */; };
+		44909E0A2E7B0DDF0063A706 /* DailyWordsets.json in Resources */ = {isa = PBXBuildFile; fileRef = 44909E082E7B0DDF0063A706 /* DailyWordsets.json */; };
 		44AD93482E7A8D8F0095BCE2 /* Mixpanel in Frameworks */ = {isa = PBXBuildFile; productRef = 44AD93472E7A8D8F0095BCE2 /* Mixpanel */; };
 		44BCE7FE2DA87D78005DDD84 /* Launch Screen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 44BCE7FD2DA87D78005DDD84 /* Launch Screen.storyboard */; };
 /* End PBXBuildFile section */
@@ -88,23 +88,17 @@
 		44639B2D2E7A865700213BDC /* NumbersGameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NumbersGameView.swift; sourceTree = "<group>"; };
 		44639B2E2E7A865700213BDC /* StoreManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreManager.swift; sourceTree = "<group>"; };
 		44639B2F2E7A865700213BDC /* SubscriptionTierBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionTierBadge.swift; sourceTree = "<group>"; };
-		44639B352E7A867100213BDC /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		44639B362E7A867100213BDC /* DailyCodes.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = DailyCodes.json; sourceTree = "<group>"; };
 		44639B372E7A867100213BDC /* DailyDecodeStore.storekit */ = {isa = PBXFileReference; lastKnownFileType = text; path = DailyDecodeStore.storekit; sourceTree = "<group>"; };
-		44639B382E7A867100213BDC /* DailyWordsets.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = DailyWordsets.json; sourceTree = "<group>"; };
 		44639B3A2E7A867100213BDC /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		44639B3B2E7A867100213BDC /* LuloOne-Bold.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "LuloOne-Bold.otf"; sourceTree = "<group>"; };
 		44639B3C2E7A867100213BDC /* Sole-Light.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Sole-Light.otf"; sourceTree = "<group>"; };
-		44639B472E7A884500213BDC /* DecodeDailyiOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DecodeDailyiOS.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		44639B472E7A884500213BDC /* DecodeDailyiOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; name = DecodeDailyiOS.app; path = /Users/megan/Code/DecodeDaily/build/Debug/DecodeDailyiOS.app; sourceTree = "<absolute>"; };
 		44639B482E7A89CC00213BDC /* LuloOne-Bold.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "LuloOne-Bold.otf"; sourceTree = "<group>"; };
 		44639B492E7A89CC00213BDC /* Launch Screen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = "Launch Screen.storyboard"; sourceTree = "<group>"; };
 		44639B4A2E7A89CC00213BDC /* LuloOne.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = LuloOne.otf; sourceTree = "<group>"; };
-		44639B4B2E7A89CD00213BDC /* DailyCodes.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = DailyCodes.json; sourceTree = "<group>"; };
 		44639B4C2E7A89CD00213BDC /* MasterWordList.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = MasterWordList.json; sourceTree = "<group>"; };
 		44639B4D2E7A89CD00213BDC /* DecoderGame.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = DecoderGame.entitlements; sourceTree = "<group>"; };
-		44639B4E2E7A89CD00213BDC /* DailyWordsets.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = DailyWordsets.json; sourceTree = "<group>"; };
 		44639B4F2E7A89CD00213BDC /* Sole-Light.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Sole-Light.otf"; sourceTree = "<group>"; };
-		44639B502E7A89CD00213BDC /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		44639B512E7A89CD00213BDC /* DailyEquations.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = DailyEquations.json; sourceTree = "<group>"; };
 		44909DE72E7A8F810063A706 /* ArchivePageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArchivePageView.swift; sourceTree = "<group>"; };
 		44909DE82E7A8F810063A706 /* DailyCheckManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyCheckManager.swift; sourceTree = "<group>"; };
@@ -121,6 +115,9 @@
 		44909DF32E7A8F810063A706 /* NewDayOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewDayOverlay.swift; sourceTree = "<group>"; };
 		44909DF42E7A8F810063A706 /* PaidTier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaidTier.swift; sourceTree = "<group>"; };
 		44909DF52E7A8F810063A706 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		44909E052E7B0C5E0063A706 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		44909E072E7B0DDF0063A706 /* DailyCodes.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = DailyCodes.json; sourceTree = "<group>"; };
+		44909E082E7B0DDF0063A706 /* DailyWordsets.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = DailyWordsets.json; sourceTree = "<group>"; };
 		44BCE7FD2DA87D78005DDD84 /* Launch Screen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = "Launch Screen.storyboard"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -146,23 +143,19 @@
 				44639B052E7A863500213BDC /* ArchiveDateButtonView.swift */,
 				44909DE72E7A8F810063A706 /* ArchivePageView.swift */,
 				44639B062E7A863500213BDC /* ArchiveUpsellOverlay.swift */,
-				44639B502E7A89CD00213BDC /* Assets.xcassets */,
-				44639B352E7A867100213BDC /* Assets.xcassets */,
+				44909E052E7B0C5E0063A706 /* Assets.xcassets */,
 				44639B072E7A863500213BDC /* BottomNavigationBar.swift */,
 				44639B082E7A863500213BDC /* ColorPickerView.swift */,
 				44639B092E7A863500213BDC /* ContentView.swift */,
 				44909DE82E7A8F810063A706 /* DailyCheckManager.swift */,
-				44639B4B2E7A89CD00213BDC /* DailyCodes.json */,
-				44639B362E7A867100213BDC /* DailyCodes.json */,
+				44909E072E7B0DDF0063A706 /* DailyCodes.json */,
 				44639B0A2E7A863500213BDC /* DailyCodeSetManager.swift */,
 				44639B372E7A867100213BDC /* DailyDecodeStore.storekit */,
 				44909DE92E7A8F810063A706 /* DailyEquationManager.swift */,
 				44639B512E7A89CD00213BDC /* DailyEquations.json */,
 				44639B0B2E7A863500213BDC /* DailyWordset.swift */,
 				44639B0C2E7A863500213BDC /* DailyWordsetManager.swift */,
-				44639B4E2E7A89CD00213BDC /* DailyWordsets.json */,
-				44639B382E7A867100213BDC /* DailyWordsets.json */,
-				44639B472E7A884500213BDC /* DecodeDailyiOS.app */,
+				44909E082E7B0DDF0063A706 /* DailyWordsets.json */,
 				44909DEA2E7A8F810063A706 /* DecodeGame.swift */,
 				44639B0D2E7A863500213BDC /* DecodeGameView.swift */,
 				44639B4D2E7A89CD00213BDC /* DecoderGame.entitlements */,
@@ -271,11 +264,11 @@
 				44639B3F2E7A867100213BDC /* LuloOne-Bold.otf in Resources */,
 				44BCE7FE2DA87D78005DDD84 /* Launch Screen.storyboard in Resources */,
 				44639B522E7A89CD00213BDC /* LuloOne.otf in Resources */,
-				44639B412E7A867100213BDC /* DailyCodes.json in Resources */,
+				44909E062E7B0C5E0063A706 /* Assets.xcassets in Resources */,
 				44639B532E7A89CD00213BDC /* MasterWordList.json in Resources */,
-				44639B402E7A867100213BDC /* DailyWordsets.json in Resources */,
 				44639B432E7A867100213BDC /* Sole-Light.otf in Resources */,
-				44639B442E7A867100213BDC /* Assets.xcassets in Resources */,
+				44909E092E7B0DDF0063A706 /* DailyCodes.json in Resources */,
+				44909E0A2E7B0DDF0063A706 /* DailyWordsets.json in Resources */,
 				44639B552E7A89CD00213BDC /* DailyEquations.json in Resources */,
 				44639B452E7A867100213BDC /* DailyDecodeStore.storekit in Resources */,
 			);
@@ -345,7 +338,7 @@
 				CODE_SIGN_ENTITLEMENTS = DecoderGame.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "";
 				DEVELOPMENT_TEAM = BNU2NLP8DW;
@@ -403,7 +396,7 @@
 				CODE_SIGN_ENTITLEMENTS = DecoderGame.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "";
 				DEVELOPMENT_TEAM = BNU2NLP8DW;

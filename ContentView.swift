@@ -84,15 +84,12 @@ struct LoadingView: View {
             Color.black.ignoresSafeArea()
             LinearGradient.mainmenuViewGradient.ignoresSafeArea()
             
-            VStack(alignment: .center, spacing: 20){
+            VStack(alignment: .center, spacing: 30){
                 Text("♡  For Conor  ♡")
                     .font(.custom("LuloOne-Bold", size: 12))
                     .foregroundColor(.white)
-                Text("With special thanks\nto Wendy\n & Claude")
+                Text("Special thanks\nto Wendy\n&\nClaude")
                     .font(.custom("LuloOne", size: 10))
-                    .foregroundColor(Color.myAccentColor1)
-                Text("And for all who have carved our own paths out of wood, code, paper, ink or whatever beautiful materials found in our beautiful spaces.")
-                    .font(.custom("LuloOne-Bold", size: 10))
                     .foregroundColor(Color.myAccentColor1)
                     .multilineTextAlignment(.center)
                     .lineSpacing(2)

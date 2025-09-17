@@ -159,8 +159,8 @@ struct EndGameOverlay: View {
                     Text("Game Over!")
                         .font(.custom("LuloOne-Bold", size: 28))
                         .foregroundColor(.white)
-                        .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
-                        .lineLimit(sizeCategory > .large ? 2 : 1)
+                        .minimumScaleFactor(sizeCategory > .medium ? 0.7 : 1.0)
+                        .lineLimit(sizeCategory > .medium ? 2 : 1)
                         .allowsTightening(true)
                         .multilineTextAlignment(.center)
                     
@@ -171,7 +171,7 @@ struct EndGameOverlay: View {
                         .lineLimit(1)
                         .allowsTightening(true)
                 }
-                .padding(.horizontal, sizeCategory > .large ? 30 : 40)
+                .padding(.horizontal, sizeCategory > .medium ? 20 : 40)
                 
                 Divider()
                     .background(.white)
@@ -266,6 +266,7 @@ struct EndGameOverlay: View {
                     }
                     
                     HStack(spacing: 5) {
+                        Spacer()
                         NavigationLink(destination: MultiGameLeaderboardView(selectedGameID: gameID)) {
                             Text("High\nScores")
                                 .font(.custom("LuloOne", size: 14))
@@ -277,7 +278,7 @@ struct EndGameOverlay: View {
                                 .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
                                 .lineLimit(2)
                                 .allowsTightening(true)
-                                .frame(width: 120, height: sizeCategory > .large ? 90 : 60)
+                                .frame(width: 150, height: sizeCategory > .large ? 90 : 60)
                                 
                         }
                         .disabled(!buttonsAreActive)
@@ -300,7 +301,7 @@ struct EndGameOverlay: View {
                                 .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
                                 .lineLimit(2)
                                 .allowsTightening(true)
-                                .frame(width: 120, height: sizeCategory > .large ? 90 : 60)
+                                .frame(width: 150, height: sizeCategory > .large ? 90 : 60)
                         }
                         .disabled(!buttonsAreActive)
                         .animation(.easeInOut(duration: 0.3), value: buttonsAreActive)
@@ -310,7 +311,9 @@ struct EndGameOverlay: View {
                                     isVisible = false  // Dismiss the overlay
                                 }
                         )
+                        Spacer()
                     }
+                    .padding(30)
                 }
                 .padding(10)
                 

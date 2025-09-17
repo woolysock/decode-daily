@@ -166,7 +166,7 @@ extension DateFormatter {
     static let scorePlayedDisplayFormatter: DateFormatter = {
              let formatter = DateFormatter()
      //formatter.dateFormat = "MMM d, yyyy ▻ h:mm a"
-        formatter.dateFormat = "mm/dd/yy @ h:mm a"
+        formatter.dateFormat = "MM/dd/yy @ h:mm a"
      formatter.timeZone = TimeZone.current
      formatter.locale = Locale(identifier: "en_US_POSIX")
      return formatter

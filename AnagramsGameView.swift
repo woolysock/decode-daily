@@ -27,7 +27,7 @@ struct AnagramsGameView: View {
     @State private var answerFlashColor: Color? = nil
     
     private let instructionsText = """
-    Race against the clock in order to unscramble the most words!
+    Race against the clock to unscramble the most words!
     
     Tap letters to spell out the correct word in the boxes above.
     
@@ -496,7 +496,7 @@ struct AnagramsGameView: View {
                 Text("Scrambled Letters:")
                     .font(.custom("LuloOne", size: 14))
                     .foregroundColor(.white)
-                
+                Spacer().frame(height:5)
                 scrambledLettersGrid
             }
         }
@@ -509,7 +509,7 @@ struct AnagramsGameView: View {
         let num_letters = game.scrambledLetters.count
         let col_count = num_letters < 5 ? 4 : 3
         
-        let columns = Array(repeating: GridItem(.flexible(minimum: 50), spacing: 10), count: col_count)
+        let columns = Array(repeating: GridItem(.flexible(minimum: 60, maximum: 80), spacing: 10), count: col_count)
         
         LazyVGrid(columns: columns, spacing: 10) {
             ForEach(0..<num_letters, id: \.self) { index in
@@ -522,7 +522,7 @@ struct AnagramsGameView: View {
                 }
             }
         }
-        .padding(.horizontal, 10)
+        .padding(.horizontal, 40)
     }
     
     // MARK: - Letter Button

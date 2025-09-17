@@ -182,15 +182,15 @@ class GameScoreManager: ObservableObject {
 
             
             
-            print("saveScore(): score.date = \(score.date)")
-            print("saveScore(): score.archiveDate = \(String(describing: score.archiveDate))")
-            print("saveScore(): Date() = \(Date())")
-            print("saveScore(): Date() formatted = \(DateFormatter.scorePlayedDisplayFormatter.string(from: Date()))")
-            
+//            print("saveScore(): score.date = \(score.date)")
+//            print("saveScore(): score.archiveDate = \(String(describing: score.archiveDate))")
+//            print("saveScore(): Date() = \(Date())")
+//            print("saveScore(): Date() formatted = \(DateFormatter.scorePlayedDisplayFormatter.string(from: Date()))")
+//            
             //let markDate = score.archiveDate ?? score.date
             let markDate = score.archiveDate ?? score.date
             
-            print("saveScore(): markDate = \(markDate)")
+            //print("saveScore(): markDate = \(markDate)")
             
             self.markGameCompleted(gameId: score.gameId, date: markDate)
 
@@ -329,10 +329,10 @@ class GameScoreManager: ObservableObject {
     static func calculateDecodeScore(attempts: Int, timeElapsed: TimeInterval, won: Bool, maxAttempts: Int = 7) -> Int {
         guard won else { return 0 }
         
-        let baseScore = 1000
+        let baseScore = 100
         
         // Heavy penalty for more attempts (this should be the primary factor)
-        let attemptPenalty = (attempts - 1) * 150  // Increased from 100
+        let attemptPenalty = (attempts - 1) * 15  // Increased from 100
         
         // Time penalty - but cap it so time doesn't dominate the score
         // Only penalize time beyond 30 seconds per attempt
@@ -347,22 +347,22 @@ class GameScoreManager: ObservableObject {
         // Significant bonuses for exceptional performance
         switch attempts {
         case 1:
-            finalScore += 800  // Massive bonus for perfect guess
+            finalScore += 90  // Massive bonus for perfect guess
         case 2:
-            finalScore += 400  // Large bonus for 2 attempts
+            finalScore += 40  // Large bonus for 2 attempts
         case 3:
-            finalScore += 200  // Good bonus for 3 attempts
+            finalScore += 20  // Good bonus for 3 attempts
         case 4:
-            finalScore += 100  // Small bonus for 4 attempts
+            finalScore += 10  // Small bonus for 4 attempts
         default:
             break
         }
         
         // Speed bonuses (but only significant for very fast times)
-        if timeElapsed < Double(attempts * 15) {  // 15 seconds per attempt
-            finalScore += 100
+        if timeElapsed < Double(attempts * 20) {  // 20 seconds per attempt
+            finalScore += 10
         }
-        if timeElapsed < Double(attempts * 10) {  // 10 seconds per attempt
+        if timeElapsed < Double(attempts * 15) {  // 15 seconds per attempt
             finalScore += 50
         }
         

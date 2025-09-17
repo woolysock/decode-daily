@@ -170,6 +170,9 @@ struct FlashdanceGameView: View {
                             .foregroundColor(.white)
                             .font(.custom("LuloOne", size: 12))
                             .multilineTextAlignment(.center)
+                            .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                            .lineLimit(4, reservesSpace: true)
+                            .allowsTightening(true)
                             .padding(.horizontal, 20)
                         
                         Spacer().frame(height:45)
