@@ -16,8 +16,8 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "442B9E362CF3BAD1008DD043"
-               BuildableName = "Decode! Daily iOS.app"
-               BlueprintName = "Decode! Daily iOS"
+               BuildableName = "DecodeDailyiOS.app"
+               BlueprintName = "DecodeDailyiOS"
                ReferencedContainer = "container:DecoderGame.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -45,8 +45,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "442B9E362CF3BAD1008DD043"
-            BuildableName = "Decode! Daily iOS.app"
-            BlueprintName = "Decode! Daily iOS"
+            BuildableName = "DecodeDailyiOS.app"
+            BlueprintName = "DecodeDailyiOS"
             ReferencedContainer = "container:DecoderGame.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
@@ -65,8 +65,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "442B9E362CF3BAD1008DD043"
-            BuildableName = "Decode! Daily iOS.app"
-            BlueprintName = "Decode! Daily iOS"
+            BuildableName = "DecodeDailyiOS.app"
+            BlueprintName = "DecodeDailyiOS"
             ReferencedContainer = "container:DecoderGame.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>

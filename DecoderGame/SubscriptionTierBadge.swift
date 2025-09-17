@@ -14,7 +14,7 @@ struct SubscriptionTierBadge: View {
     let tier: PaidTier
     
     var body: some View {
-        HStack(alignment: .lastTextBaseline, spacing: 6) {
+        HStack(alignment: .center, spacing: 6) {
             // Tier icon/symbol
             tierIcon
                 .font(.system(size: 12, weight: .bold))
@@ -28,8 +28,8 @@ struct SubscriptionTierBadge: View {
                 .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
                 .allowsTightening(true)
         }
-        .padding(.horizontal, sizeCategory > .large ? 10 : 15)
-        .padding(.vertical, sizeCategory > .large ? 8 : 10)
+        .padding(.horizontal, 15)
+        .padding(.vertical, 10)
         .background(tierBackgroundView)
         .overlay(
             RoundedRectangle(cornerRadius: 12)

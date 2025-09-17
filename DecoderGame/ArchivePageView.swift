@@ -29,7 +29,6 @@ struct ArchivePageView: View {
         NavigationStack {
             ZStack {
                 LinearGradient.archivesViewGradient.ignoresSafeArea()
-                
                 VStack() {
                     Spacer()
                         .frame(height: sizeCategory > .large ? 40 : 50)
@@ -58,7 +57,7 @@ struct ArchivePageView: View {
                             .lineLimit(1)
                             .allowsTightening(true)
                     }
-                    .padding(.horizontal, 20)
+                    .padding(.horizontal, sizeCategory > .medium ? 10 : 20)
                     
                     Spacer()
                         .frame(height: sizeCategory > .large ? 15 : 25)

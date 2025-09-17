@@ -26,7 +26,7 @@ struct AccountPageView: View {
                     
                     VStack(spacing: 20) {
                         Spacer()
-                            .frame(height: sizeCategory > .medium ? 40 : 60)
+                            .frame(height: sizeCategory > .medium ? 30 : 40)
                         
                         // Title for the second page
                         VStack(spacing: 10) {
@@ -56,7 +56,7 @@ struct AccountPageView: View {
                                 )
                                 
                                 Spacer()
-                                    .frame(height: sizeCategory > .large ? 1 : 5)
+                                    .frame(height: 1)
                                 
                                 Text("High Scores")
                                     .font(.custom("LuloOne", size: 12))
@@ -88,7 +88,6 @@ struct AccountPageView: View {
                                         icon: "60.arrow.trianglehead.clockwise"
                                     )
                                 }
-                                .padding(.horizontal, 10)
                             }
                             .padding(.horizontal, sizeCategory > .medium ? 10 : 20)
                         }
@@ -244,6 +243,7 @@ struct AccountPageView: View {
                     .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
                     .lineLimit(1)
                     .allowsTightening(true)
+                    .padding(.horizontal, 5)
             }
             .padding(10)
             .fixedSize()

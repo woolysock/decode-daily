@@ -2,8 +2,14 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>CFBundleDisplayName</key>
+	<string>Decode! Daily</string>
+	<key>CFBundleExecutable</key>
+	<string>DecodeDailyiOS</string>
 	<key>CFBundleIdentifier</key>
-	<string></string>
+	<string>com.megandonahue.DecoderGame</string>
+	<key>CFBundleName</key>
+	<string>DecodeDaily</string>
 	<key>UIAppFonts</key>
 	<array>
 		<string>Sole-Light.otf</string>
@@ -12,5 +18,11 @@
 	</array>
 	<key>UIBackgroundModes</key>
 	<array/>
+	<key>UIStatusBarStyle</key>
+	<string>UIStatusBarStyleDarkContent</string>
+	<key>UISupportedInterfaceOrientations</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+	</array>
 </dict>
 </plist>

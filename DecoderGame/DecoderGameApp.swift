@@ -9,6 +9,7 @@ import SwiftUI
 import SwiftData
 import Mixpanel
 
+
 @main
 struct DecoderGameApp: App {
     // Remove the @StateObject and use the shared instance instead

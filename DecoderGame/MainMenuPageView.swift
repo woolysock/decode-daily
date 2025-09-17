@@ -30,7 +30,7 @@ struct MainMenuPageView: View {
                     FancyAnimationLayer()
                     
                     ScrollView(.vertical) {
-                        VStack(spacing: 15) {
+                        VStack(spacing: sizeCategory > .medium ? 12 : 15) {
                             
                             Spacer()
                                 .frame(height: sizeCategory > .medium ? 40 : 60)
@@ -78,9 +78,7 @@ struct MainMenuPageView: View {
                                 .frame(height: 1)
                             
                             HStack {
-                                Image(systemName: "hand.draw")
-                                    .font(.system(size: 16))
-                                    .foregroundColor(.white)
+
                                 Text("Swipe to view archive & settings")
                                     .font(.custom("LuloOne", size: 9))
                                     .foregroundColor(.white)
@@ -88,6 +86,9 @@ struct MainMenuPageView: View {
                                     .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
                                     .lineLimit(1)
                                     .allowsTightening(true)
+                                Image(systemName: "hand.point.right")
+                                    .font(.system(size: 16))
+                                    .foregroundColor(Color.myAccentColor2)
                             }
                             .padding(.horizontal, 50)
                             .opacity(hasUserSwiped ? 0 : 1)
@@ -99,6 +100,7 @@ struct MainMenuPageView: View {
                     .frame(alignment: .center)
                 }
             }
+            
         }
     }
     
