@@ -85,29 +85,61 @@ struct ColorCircle: View {
     @State private var isSelected = false
     
     var body: some View {
-        Circle()
-            .fill(color)
-            .frame(width: isSelected ? 70 : 60,
-                   height: isSelected ? 70 : 60)
-            .shadow(color: .black.opacity(0.4),
-                    radius: 6, x: 0, y: 3)
-            .scaleEffect(isSelected ? 1.05 : 1.0)
-            .onTapGesture { select() }
-            .gesture(
-                DragGesture(minimumDistance: 0)
-                    .onChanged { _ in
-                        if !isSelected {
-                            isSelected = true
-                            hapticFeedback()
-                        }
+        ZStack {
+            Circle()
+                .fill(color)
+                .frame(width: isSelected ? 70 : 60,
+                       height: isSelected ? 70 : 60)
+                .shadow(color: .black.opacity(0.4),
+                        radius: 6, x: 0, y: 3)
+            
+            // Shape overlay for accessibility
+            shapeForIndex(colorIndex)
+                .foregroundColor(.black.opacity(0.15))
+                .frame(width: isSelected ? 70 : 60,
+                       height: isSelected ? 70 : 60)
+        }
+        .scaleEffect(isSelected ? 1.05 : 1.0)
+        .onTapGesture { select() }
+        .gesture(
+            DragGesture(minimumDistance: 0)
+                .onChanged { _ in
+                    if !isSelected {
+                        isSelected = true
+                        hapticFeedback()
                     }
-                    .onEnded { _ in
-                        select()
-                    }
-            )
-            .animation(.spring(response: 0.3,
-                               dampingFraction: 0.7),
-                       value: isSelected)
+                }
+                .onEnded { _ in
+                    select()
+                }
+        )
+        .animation(.spring(response: 0.3,
+                           dampingFraction: 0.7),
+                   value: isSelected)
+    }
+    
+    // Return different shapes based on color index
+    @ViewBuilder
+    private func shapeForIndex(_ index: Int) -> some View {
+        switch index {
+        case 0:
+            Image(systemName: "triangle.fill")
+                .font(.system(size: isSelected ? 28 : 24))
+        case 1:
+            Image(systemName: "square.fill")
+                .font(.system(size: isSelected ? 28 : 24))
+        case 2:
+            Image(systemName: "circle.fill")
+                .font(.system(size: isSelected ? 28 : 24))
+        case 3:
+            Image(systemName: "hexagon.fill")
+                .font(.system(size: isSelected ? 28 : 24))
+        case 4:
+            Image(systemName: "diamond.fill")
+                .font(.system(size: isSelected ? 28 : 24))
+        default:
+            Circle()
+        }
     }
     
     private func select() {

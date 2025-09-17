@@ -265,8 +265,7 @@ struct EndGameOverlay: View {
                         .allowsTightening(true)
                     }
                     
-                    HStack(spacing: 5) {
-                        Spacer()
+                    HStack() {
                         NavigationLink(destination: MultiGameLeaderboardView(selectedGameID: gameID)) {
                             Text("High\nScores")
                                 .font(.custom("LuloOne", size: 14))
@@ -279,7 +278,7 @@ struct EndGameOverlay: View {
                                 .lineLimit(2)
                                 .allowsTightening(true)
                                 .frame(width: 150, height: sizeCategory > .large ? 90 : 60)
-                                
+                            
                         }
                         .disabled(!buttonsAreActive)
                         .animation(.easeInOut(duration: 0.3), value: buttonsAreActive)
@@ -311,9 +310,8 @@ struct EndGameOverlay: View {
                                     isVisible = false  // Dismiss the overlay
                                 }
                         )
-                        Spacer()
                     }
-                    .padding(30)
+                    .padding(.horizontal, 0)
                 }
                 .padding(10)
                 
