@@ -265,7 +265,10 @@ struct EndGameOverlay: View {
                         .allowsTightening(true)
                     }
                     
-                    HStack() {
+                    HStack(spacing:5) {
+                        
+                        Spacer().frame(width:1)
+                        
                         NavigationLink(destination: MultiGameLeaderboardView(selectedGameID: gameID)) {
                             Text("High\nScores")
                                 .font(.custom("LuloOne", size: 14))
@@ -277,7 +280,8 @@ struct EndGameOverlay: View {
                                 .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
                                 .lineLimit(2)
                                 .allowsTightening(true)
-                                .frame(width: 150, height: sizeCategory > .large ? 90 : 60)
+                                .frame(minWidth: 130)
+                                .frame(height: sizeCategory > .large ? 90 : 60)
                             
                         }
                         .disabled(!buttonsAreActive)
@@ -300,7 +304,8 @@ struct EndGameOverlay: View {
                                 .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
                                 .lineLimit(2)
                                 .allowsTightening(true)
-                                .frame(width: 150, height: sizeCategory > .large ? 90 : 60)
+                                .frame(minWidth: 130)
+                                .frame(height: sizeCategory > .large ? 90 : 60)
                         }
                         .disabled(!buttonsAreActive)
                         .animation(.easeInOut(duration: 0.3), value: buttonsAreActive)
@@ -310,6 +315,8 @@ struct EndGameOverlay: View {
                                     isVisible = false  // Dismiss the overlay
                                 }
                         )
+                        
+                        Spacer().frame(width:1)
                     }
                     .padding(.horizontal, 0)
                 }

@@ -512,7 +512,7 @@ struct SettingsView: View {
                 .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
                 .allowsTightening(true)
             
-            Link("www.meganddesign.com", destination: URL(string: "http://www.meganddesign.com/decodedaily")!)
+            Link("www.meganddesign.com", destination: URL(string: "https://www.meganddesign.com/decodedaily")!)
                 .font(.custom("LuloOne", size: 14))
                 .foregroundColor(Color.myAccentColor2)
                 .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)

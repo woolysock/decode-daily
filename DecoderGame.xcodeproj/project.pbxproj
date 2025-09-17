@@ -92,7 +92,6 @@
 		44639B3A2E7A867100213BDC /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		44639B3B2E7A867100213BDC /* LuloOne-Bold.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "LuloOne-Bold.otf"; sourceTree = "<group>"; };
 		44639B3C2E7A867100213BDC /* Sole-Light.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Sole-Light.otf"; sourceTree = "<group>"; };
-		44639B472E7A884500213BDC /* DecodeDailyiOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; name = DecodeDailyiOS.app; path = /Users/megan/Code/DecodeDaily/build/Debug/DecodeDailyiOS.app; sourceTree = "<absolute>"; };
 		44639B482E7A89CC00213BDC /* LuloOne-Bold.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "LuloOne-Bold.otf"; sourceTree = "<group>"; };
 		44639B492E7A89CC00213BDC /* Launch Screen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = "Launch Screen.storyboard"; sourceTree = "<group>"; };
 		44639B4A2E7A89CC00213BDC /* LuloOne.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = LuloOne.otf; sourceTree = "<group>"; };
@@ -118,6 +117,7 @@
 		44909E052E7B0C5E0063A706 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		44909E072E7B0DDF0063A706 /* DailyCodes.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = DailyCodes.json; sourceTree = "<group>"; };
 		44909E082E7B0DDF0063A706 /* DailyWordsets.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = DailyWordsets.json; sourceTree = "<group>"; };
+		44909E0B2E7B338A0063A706 /* DecodeDailyiOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DecodeDailyiOS.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		44BCE7FD2DA87D78005DDD84 /* Launch Screen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = "Launch Screen.storyboard"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -192,6 +192,7 @@
 				44639B3C2E7A867100213BDC /* Sole-Light.otf */,
 				44639B2E2E7A865700213BDC /* StoreManager.swift */,
 				44639B2F2E7A865700213BDC /* SubscriptionTierBadge.swift */,
+				44909E0B2E7B338A0063A706 /* DecodeDailyiOS.app */,
 			);
 			sourceTree = "<group>";
 		};
@@ -215,7 +216,7 @@
 				44AD93472E7A8D8F0095BCE2 /* Mixpanel */,
 			);
 			productName = DecoderGame;
-			productReference = 44639B472E7A884500213BDC /* DecodeDailyiOS.app */;
+			productReference = 44909E0B2E7B338A0063A706 /* DecodeDailyiOS.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -338,7 +339,7 @@
 				CODE_SIGN_ENTITLEMENTS = DecoderGame.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 1;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "";
 				DEVELOPMENT_TEAM = BNU2NLP8DW;
@@ -371,7 +372,7 @@
 					"$(PROJECT_DIR)",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 0.3.1;
+				MARKETING_VERSION = 0.5;
 				PRODUCT_BUNDLE_IDENTIFIER = com.megandonahue.DecoderGame;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -396,7 +397,7 @@
 				CODE_SIGN_ENTITLEMENTS = DecoderGame.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 1;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "";
 				DEVELOPMENT_TEAM = BNU2NLP8DW;
@@ -429,7 +430,7 @@
 					"$(PROJECT_DIR)",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 0.3.1;
+				MARKETING_VERSION = 0.5;
 				PRODUCT_BUNDLE_IDENTIFIER = com.megandonahue.DecoderGame;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
