@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		444224752E7B482F00361A89 /* FlashdanceSwipeHintOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 444224742E7B482F00361A89 /* FlashdanceSwipeHintOverlay.swift */; };
 		44639B162E7A863500213BDC /* ColorPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44639B082E7A863500213BDC /* ColorPickerView.swift */; };
 		44639B172E7A863500213BDC /* GameScoreManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44639B122E7A863500213BDC /* GameScoreManager.swift */; };
 		44639B182E7A863500213BDC /* BottomNavigationBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44639B072E7A863500213BDC /* BottomNavigationBar.swift */; };
@@ -62,6 +63,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		444224742E7B482F00361A89 /* FlashdanceSwipeHintOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlashdanceSwipeHintOverlay.swift; sourceTree = "<group>"; };
 		44639B012E7A863500213BDC /* AccountPageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountPageView.swift; sourceTree = "<group>"; };
 		44639B022E7A863500213BDC /* AlreadyPlayedOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlreadyPlayedOverlay.swift; sourceTree = "<group>"; };
 		44639B032E7A863500213BDC /* AnagramsGame.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnagramsGame.swift; sourceTree = "<group>"; };
@@ -136,6 +138,7 @@
 		442B9E2E2CF3BAD1008DD043 = {
 			isa = PBXGroup;
 			children = (
+				444224742E7B482F00361A89 /* FlashdanceSwipeHintOverlay.swift */,
 				44639B012E7A863500213BDC /* AccountPageView.swift */,
 				44639B022E7A863500213BDC /* AlreadyPlayedOverlay.swift */,
 				44639B032E7A863500213BDC /* AnagramsGame.swift */,
@@ -294,6 +297,7 @@
 				44639B1F2E7A863500213BDC /* GameCoordinator.swift in Sources */,
 				44639B202E7A863500213BDC /* AnagramsGame.swift in Sources */,
 				44639B302E7A865700213BDC /* NumbersGameView.swift in Sources */,
+				444224752E7B482F00361A89 /* FlashdanceSwipeHintOverlay.swift in Sources */,
 				44639B312E7A865700213BDC /* MainTabView.swift in Sources */,
 				44639B322E7A865700213BDC /* NumbersGame.swift in Sources */,
 				44639B332E7A865700213BDC /* StoreManager.swift in Sources */,

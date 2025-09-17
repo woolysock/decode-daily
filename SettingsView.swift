@@ -142,8 +142,8 @@ struct SettingsView: View {
                     appInfoCard
                 }
                 .onTapGesture(count: 7) {
-                    isDeveloperMode.toggle()
-                    print("🔧 Developer mode: \(isDeveloperMode ? "ON" : "OFF")")
+                    //isDeveloperMode.toggle()
+                    //print("🔧 Developer mode: \(isDeveloperMode ? "ON" : "OFF")")
                 }
                 
                 // Data Management Section

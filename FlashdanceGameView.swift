@@ -42,6 +42,9 @@ struct FlashdanceGameView: View {
     
     let scoreManager = GameScoreManager.shared
     
+    @State private var showSwipeHint = false
+
+    
     private let instructionsText = """
     Race against the clock to solve the most math problems!  ×  +  −  ÷
     
@@ -334,6 +337,19 @@ struct FlashdanceGameView: View {
                 )
             }
             // === Overlays ===
+            
+            if showSwipeHint {
+                FlashdanceSwipeHintOverlay(isVisible: $showSwipeHint) {
+                    UserDefaults.standard.set(true, forKey: "hasSeenSwipeHint_flashdance")
+                    //print("📱 User completed swipe tutorial")
+                }
+                .transition(.opacity)
+                .zIndex(102) // Higher than other overlays
+            }
+//            } else {
+//                let _ = UserDefaults.standard.removeObject(forKey: "hasSeenSwipeHint_flashdance")
+//            }
+//            
             if showHowToPlay {
                 HowToPlayOverlay(
                     gameID: game.gameInfo.id,
@@ -342,6 +358,7 @@ struct FlashdanceGameView: View {
                 )
                 .transition(.opacity)
             }
+            
             
             // Move overlays outside NavigationStack to root ZStack level
             
@@ -387,6 +404,12 @@ struct FlashdanceGameView: View {
                 }
             }
         }
+        .onChange(of: game.isGameActive) { oldValue, newValue in
+            print("🎮 game.isGameActive changed: \(oldValue) -> \(newValue)")
+            if newValue && !oldValue {
+                checkForSwipeHint()
+            }
+        }
         .onAppear {
             if game.gameOver > 0 {
                 game.resetGame()
@@ -404,6 +427,7 @@ struct FlashdanceGameView: View {
             print("📈 🪵 sub tier: \(SubscriptionManager.shared.currentTier.displayName)")
             
         }
+
     }
     
     //    // MARK: - Debug Zones View
@@ -721,6 +745,25 @@ struct FlashdanceGameView: View {
         
         return nil
     }
+    
+    private func checkForSwipeHint() {
+        let hasSeenSwipeHint = UserDefaults.standard.bool(forKey: "hasSeenSwipeHint_flashdance")
+        print("🎯 checkForSwipeHint called:")
+        print("   - hasSeenSwipeHint: \(hasSeenSwipeHint)")
+        print("   - game.isGameActive: \(game.isGameActive)")
+        print("   - showHowToPlay: \(showHowToPlay)")
+        
+        if !hasSeenSwipeHint && game.isGameActive && !showHowToPlay {
+            print("   - ✅ Conditions met, showing swipe hint in 2 seconds")
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                print("   - 🎯 Actually showing swipe hint now")
+                showSwipeHint = true
+            }
+        } else {
+            print("   - ❌ Conditions not met")
+        }
+    }
+    
 }
 
 // MARK: - Scoreboard (bottom half)
@@ -801,6 +844,7 @@ private struct StatPill: View {
         case .none:  return Color.white.opacity(0.10)
         }
     }
+    
 }
 
 extension Collection {
