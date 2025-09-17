@@ -51,7 +51,7 @@
          </BuildableReference>
       </BuildableProductRunnable>
       <StoreKitConfigurationFileReference
-         identifier = "../../DecoderGame/DailyDecodeStore.storekit">
+         identifier = "../../DailyDecodeStore.storekit">
       </StoreKitConfigurationFileReference>
    </LaunchAction>
    <ProfileAction

@@ -55,15 +55,15 @@ struct ContentView: View {
                 print("📈 🪵 MIXPANEL DATA LOG EVENT: App Loading Page View")
                 print("📈 🪵 date: \(Date().formatted())")
                 print("📈 🪵 sub tier: \(SubscriptionManager.shared.currentTier.displayName)")
-                print("🔍 Screen size: \(geometry.size)")
-                print("🔍 Safe area: \(geometry.safeAreaInsets)")
-                print("🔍 Device model: \(UIDevice.current.model)")
-                print("🔍 System version: \(UIDevice.current.systemVersion)")
-                if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene {
-                    print("🔍 Screen bounds: \(windowScene.screen.bounds)")
-                    print("🔍 Screen scale: \(windowScene.screen.scale)")
-                    print("🔍 Native bounds: \(windowScene.screen.nativeBounds)")
-                }
+//                print("🔍 Screen size: \(geometry.size)")
+//                print("🔍 Safe area: \(geometry.safeAreaInsets)")
+//                print("🔍 Device model: \(UIDevice.current.model)")
+//                print("🔍 System version: \(UIDevice.current.systemVersion)")
+//                if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene {
+//                    print("🔍 Screen bounds: \(windowScene.screen.bounds)")
+//                    print("🔍 Screen scale: \(windowScene.screen.scale)")
+//                    print("🔍 Native bounds: \(windowScene.screen.nativeBounds)")
+//                }
                 
             }
             // Reset navigation when coordinator says to return to main menu
@@ -88,13 +88,14 @@ struct LoadingView: View {
                 Text("♡  For Conor  ♡")
                     .font(.custom("LuloOne-Bold", size: 12))
                     .foregroundColor(.white)
-                Text("With special thanks to\n Wendy & Claude")
+                Text("With special thanks\nto Wendy\n & Claude")
                     .font(.custom("LuloOne", size: 10))
                     .foregroundColor(Color.myAccentColor1)
                 Text("And for all who have carved our own paths out of wood, code, paper, ink or whatever beautiful materials found in our beautiful spaces.")
                     .font(.custom("LuloOne-Bold", size: 10))
                     .foregroundColor(Color.myAccentColor1)
                     .multilineTextAlignment(.center)
+                    .lineSpacing(2)
             }
             .padding(50)
         }
