@@ -117,6 +117,7 @@ struct NewDayOverlay: View {
     
     private func dismiss() {
         isVisible = false
+        NotificationCenter.default.post(name: NSNotification.Name("NewDayRefresh"), object: nil)
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
             onLetsPlay()
         }

@@ -14,6 +14,8 @@ struct MainMenuView: View {
     @State private var navigateToGame: String? = nil
     @State private var navigateToArchivedGame: (gameId: String, date: Date)? = nil
     @State private var showArchiveUpsell = false
+   
+    @State private var refreshTrigger = UUID()
     
     // Environment objects
     @EnvironmentObject var scoreManager: GameScoreManager
@@ -39,6 +41,7 @@ struct MainMenuView: View {
                         navigateToArchivedGame: $navigateToArchivedGame,
                         showArchiveUpsell: $showArchiveUpsell
                     )
+                    .id(refreshTrigger)
                     BottomNavigationBar(currentPage: currentPage)
                     Spacer().frame(height: 20)
                 }
@@ -53,6 +56,12 @@ struct MainMenuView: View {
                 }
             }
             .navigationBarBackButtonHidden(true)
+            .onAppear {
+                refreshTrigger = UUID()
+            }
+            .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("NewDayRefresh"))) { _ in
+                refreshTrigger = UUID()  // Handles new day while on main menu
+            }
             
             .navigationDestination(isPresented: gameNavigationBinding) {
                 if let gameId = navigateToGame {
