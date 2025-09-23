@@ -107,12 +107,12 @@ struct AlreadyPlayedOverlay: View {
 //                            .contentShape(Rectangle())
 //                            .cornerRadius(8)
 //                    }
-//                    
+//
 //                    Text("Practice rounds generate random color codes and\nare not scored.")
 //                        .font(.custom("LuloOne", size: 12))
 //                        .foregroundColor(.white)
 //                        .multilineTextAlignment(.center)
-//                    
+//
                     
                     Divider()
                         .background(.white)
@@ -138,6 +138,14 @@ struct AlreadyPlayedOverlay: View {
                             .lineLimit(1)
                             .allowsTightening(true)
                     }
+                    .simultaneousGesture(
+                        TapGesture()
+                            .onEnded { _ in
+                                // Set the archive game selection before navigation
+                                UserDefaults.standard.set("decode", forKey: "selectedArchiveGame")
+                                isVisible = false  // Dismiss the overlay
+                            }
+                    )
                     .padding(5)
                     
                 }

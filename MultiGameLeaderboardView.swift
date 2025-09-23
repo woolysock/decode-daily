@@ -155,17 +155,6 @@ struct ScoreRowView: View {
                 .frame(width: 20)
             VStack(alignment: .leading) {
                 
-                HStack(spacing: 4) {
-                    Text("Played: \(DateFormatter.scorePlayedDisplayFormatter.string(from:score.date))")
-                        .font(.custom("LuloOne-Bold", size: 12))
-                        .foregroundColor(.black)
-                        .minimumScaleFactor(sizeCategory > .medium ? 0.7 : 1.0)
-                        .lineLimit(1)
-                        .allowsTightening(true)
-                }
-                
-                // CUSTOM SCORE EXTRAS
-                
                 if let flashdanceProps = score.flashdanceProperties {
                     if let the_date = score.archiveDate {
                         Text("Game ID: \(DateFormatter.dayFormatter.string(from: the_date))\n")
@@ -241,14 +230,14 @@ struct ScoreRowView: View {
                 
                 if let anagramsProps = score.anagramsProperties {
                     if let the_date = score.archiveDate {
-                        Text("Game ID: \(DateFormatter.dayFormatter.string(from: the_date))\n")
+                        Text("Game ID: \(DateFormatter.dayFormatter.string(from: the_date))")
                             .font(.custom("LuloOne", size: 10))
                             .foregroundColor(.black)
                             .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
                             .lineLimit(2)
                             .allowsTightening(true)
                     } else {
-                        Text("Game ID: Not Found\n")
+                        Text("Game ID: Not Found")
                             .font(.custom("LuloOne", size: 10))
                             .foregroundColor(.black)
                             .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
@@ -274,6 +263,13 @@ struct ScoreRowView: View {
                         .lineLimit(2)
                         .allowsTightening(true)
                 }
+                
+                Text("Played \(DateFormatter.scorePlayedDisplayFormatter.string(from:score.date))")
+                    .font(.custom("LuloOne-Bold", size: 10))
+                    .foregroundColor(Color.myNavy)
+                    .minimumScaleFactor(sizeCategory > .medium ? 0.7 : 1.0)
+                    .lineLimit(1)
+                    .allowsTightening(true)
             
             }
             Spacer()

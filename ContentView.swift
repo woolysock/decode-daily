@@ -85,9 +85,10 @@ struct LoadingView: View {
             LinearGradient.mainmenuViewGradient.ignoresSafeArea()
             
             VStack(alignment: .center, spacing: 30){
-                Text("For\nConor")
+                Spacer()
+                Text("For\nCFD")
                     .font(.custom("LuloOne", size: 12))
-                    .foregroundColor(.white)
+                    .foregroundColor(Color.myAccentColor1)
                     .multilineTextAlignment(.center)
                 Text("♡")
                     .font(.custom("LuloOne", size: 14))

@@ -244,10 +244,22 @@ struct EndGameOverlay: View {
                                 .simultaneousGesture(
                                     TapGesture()
                                         .onEnded { _ in
+                                            // Set the archive game selection before navigation
+                                            UserDefaults.standard.set("decode", forKey: "selectedArchiveGame")
                                             isVisible = false  // Dismiss the overlay
                                         }
                                 )
                         }
+                        .font(.custom("LuloOne-Bold", size: 18))
+                        .frame(width: 250, height: 60)
+                        .foregroundColor(buttonsAreActive ? .black : .white.opacity(0.4))
+                        .background(buttonsAreActive ? Color.white : Color.black.opacity(0.4))
+                        .cornerRadius(10)
+                        .disabled(!buttonsAreActive)
+                        .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                        .lineLimit(1)
+                        .allowsTightening(true)
+                        .animation(.easeInOut(duration: 0.3), value: buttonsAreActive)
                     } else {
                         Button("Replay?") {
                             dismiss(startNewGame: true)

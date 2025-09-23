@@ -351,11 +351,12 @@ struct AnagramsGameView: View {
         }
     }
     
-    // MARK: - Game Board
     @ViewBuilder
     private var gameBoard: some View {
         ZStack {
             Color.black.ignoresSafeArea()
+            
+            // Main game content
             VStack(spacing: 30) {
                 if game.isPreCountdownActive {
                     Text("\(game.countdownValue)")
@@ -386,6 +387,34 @@ struct AnagramsGameView: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
             .padding([.leading, .trailing, .bottom], 20)
+            
+            // Bottom-anchored shuffle button
+            if game.isGameActive {
+                VStack {
+                    Spacer()
+                    HStack {
+                        Spacer()
+                        Button(action: {
+                            game.shuffleCurrentWord()
+                        }) {
+                            Image(systemName: "shuffle")
+                                .font(.system(size: 20, weight: .semibold))
+                                .foregroundColor(.white)
+                                .frame(width: 50, height: 50)
+                                .background(Color.myAccentColor2.opacity(0.9))
+                                .cornerRadius(28)
+                                .shadow(color: .black.opacity(0.3), radius: 4, x: 0, y: 2)
+                        }
+                        .disabled(game.isGamePaused || wordsetManager.isGeneratingWordsets)
+                        .opacity((game.isGamePaused || wordsetManager.isGeneratingWordsets) ? 0.5 : 1.0)
+                        .scaleEffect((game.isGamePaused || wordsetManager.isGeneratingWordsets) ? 0.9 : 1.0)
+                        .animation(.easeInOut(duration: 0.2), value: game.isGamePaused)
+                        Spacer()
+                    }
+                    .padding(.bottom, 10)
+                }
+                .padding(.bottom, 0)
+            }
         }
     }
     
@@ -498,6 +527,7 @@ struct AnagramsGameView: View {
                     .foregroundColor(.white)
                 Spacer().frame(height:5)
                 scrambledLettersGrid
+                
             }
         }
         .padding(.horizontal, 10)

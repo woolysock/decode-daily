@@ -38,7 +38,7 @@ struct NewDayOverlay: View {
                         .multilineTextAlignment(.center)
                     
                     Text("Fresh dailies await")
-                        .font(.custom("LuloOne", size: sizeCategory > .medium ? 13 : 15))
+                        .font(.custom("LuloOne", size: sizeCategory > .medium ? 12 : 14))
                         .foregroundColor(.white.opacity(0.8))
                         .multilineTextAlignment(.center)
                         .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
@@ -58,7 +58,7 @@ struct NewDayOverlay: View {
                         .symbolRenderingMode(.hierarchical)
                     
                     Text("Play the challenges for \(DateFormatter.day2Formatter.string(from: Date()))!")
-                        .font(.custom("LuloOne", size: 14))
+                        .font(.custom("LuloOne", size: 12))
                         .foregroundColor(.white.opacity(0.8))
                         .multilineTextAlignment(.center)
                         .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)

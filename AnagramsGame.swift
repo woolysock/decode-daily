@@ -663,6 +663,27 @@ class AnagramsGame: GameProtocol, ObservableObject {
             """)
     }
     
+    func shuffleCurrentWord() {
+        guard !currentWord.isEmpty && currentWord.count > 1 else { return }
+        
+        let originalOrder = scrambledLetters.joined()
+        let correctAnswer = currentWord.uppercased()
+        var attempts = 0
+        let maxAttempts = 20
+        
+        repeat {
+            scrambledLetters.shuffle()
+            attempts += 1
+        } while (scrambledLetters.joined() == originalOrder ||
+                 scrambledLetters.joined() == correctAnswer) &&
+                 attempts < maxAttempts
+        
+        // Clear any current user input since letters have moved
+        clearAnswer()
+        
+        print("🔀 Shuffled letters: \(scrambledLetters.joined()) (attempt \(attempts))")
+    }
+    
 }
 
 

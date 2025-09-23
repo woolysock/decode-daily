@@ -111,8 +111,15 @@ struct MainMenuView: View {
     // MARK: - Navigation Helpers
     private func handleArchiveNavigation(_ notification: Notification) {
         if let userInfo = notification.userInfo,
-           let _ = userInfo["gameId"] as? String {
+           let gameId = userInfo["gameId"] as? String {
+            // Ensure the archive tab shows the correct game
+            UserDefaults.standard.set(gameId, forKey: "selectedArchiveGame")
+            
+            // Navigate to the archive tab
             currentPage = 1
+            
+            // Refresh the view to ensure the new selection is loaded
+            refreshTrigger = UUID()
         }
     }
     

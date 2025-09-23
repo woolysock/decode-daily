@@ -18,7 +18,8 @@ struct MainTabView: View {
     @EnvironmentObject var gameCoordinator: GameCoordinator
     @StateObject private var subscriptionManager = SubscriptionManager.shared
     
-    @State private var selectedArchiveGame: String = "decode"
+    // Updated to use UserDefaults for persistence
+    @State private var selectedArchiveGame: String = UserDefaults.standard.string(forKey: "selectedArchiveGame") ?? "decode"
     @State private var hasUserSwiped: Bool = UserDefaults.standard.bool(forKey: "hasSeenSwipeInstruction")
     
     var body: some View {
@@ -43,6 +44,10 @@ struct MainTabView: View {
         .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
         .onChange(of: currentPage) { oldValue, newValue in
             handlePageChange(newValue)
+        }
+        // Save the selected archive game whenever it changes
+        .onChange(of: selectedArchiveGame) { oldValue, newValue in
+            UserDefaults.standard.set(newValue, forKey: "selectedArchiveGame")
         }
     }
     
