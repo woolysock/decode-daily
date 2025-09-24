@@ -221,6 +221,7 @@ struct FlashdanceGameView: View {
                                                 .monospacedDigit()
                                                 .scaleEffect(1.05)
                                                 .transition(.scale)
+                                                .zIndex(300) // Ensure countdown is above everything
                                         } else if game.isGameActive {
                                             Text(game.currentEquation)
                                                 .padding(10)
@@ -258,11 +259,13 @@ struct FlashdanceGameView: View {
                                                 .animation(.easeOut(duration: 0.8), value: isAnimatingCorrect ? finalOffset : dragOffset)
                                                 .animation(.easeInOut(duration: 0.25), value: cardOpacity)
                                                 .animation(.easeInOut(duration: 0.25), value: cardScale)
+                                                .zIndex(100)
                                         }
                                         
                                         Spacer()
                                     }
                                     .frame(width: geo.size.width, height: geo.size.height)
+                                    .zIndex(100)
                                 }
                             }
                         }
@@ -270,6 +273,7 @@ struct FlashdanceGameView: View {
                         .onTapGesture(count: 3) { // Triple tap to toggle debug zones
                             showDebugZones.toggle()
                         }
+                        .zIndex(100) 
                         
                         // === Scoreboard at Bottom ===
                         if game.isGameActive || game.gameOver == 1 {
@@ -282,7 +286,9 @@ struct FlashdanceGameView: View {
                             .padding(.horizontal, 20)
                             .padding(.top, 6)
                             .transition(.move(edge: .bottom).combined(with: .opacity))
+                            .zIndex(5) // Lower z-index than the flashcard
                         }
+
                         
                         Spacer(minLength: 8)
                     }
@@ -344,7 +350,7 @@ struct FlashdanceGameView: View {
                     //print("📱 User completed swipe tutorial")
                 }
                 .transition(.opacity)
-                .zIndex(102) // Higher than other overlays
+                .zIndex(200) // Higher than other overlays
             }
 //            } else {
 //                let _ = UserDefaults.standard.removeObject(forKey: "hasSeenSwipeHint_flashdance")
@@ -802,6 +808,7 @@ private struct Scoreboard: View {
         .animation(.easeInOut(duration: 0.2), value: correct)
         .animation(.easeInOut(duration: 0.2), value: incorrect)
         .animation(.easeInOut(duration: 0.2), value: streak)
+        .zIndex(6)
     }
 }
 
@@ -835,6 +842,7 @@ private struct StatPill: View {
                 .stroke(.white.opacity(0.15), lineWidth: 1)
         )
         .shadow(color: .black.opacity(0.35), radius: 6, x: 0, y: 3)
+        .zIndex(5)
     }
     
     private var backgroundColor: Color {

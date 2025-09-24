@@ -57,12 +57,12 @@ struct NewDayOverlay: View {
                         .foregroundColor(Color.mySunColor)
                         .symbolRenderingMode(.hierarchical)
                     
-                    Text("Play the challenges for \(DateFormatter.day2Formatter.string(from: Date()))!")
+                    Text("Play the challenges for\n\(DateFormatter.day2Formatter.string(from: Date()))!")
                         .font(.custom("LuloOne", size: 12))
                         .foregroundColor(.white.opacity(0.8))
                         .multilineTextAlignment(.center)
                         .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
-                        .lineLimit(2)
+                        .lineLimit(3)
                         .allowsTightening(true)
                 }
                 

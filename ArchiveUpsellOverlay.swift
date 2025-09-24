@@ -202,8 +202,8 @@ struct ArchiveUpsellOverlay: View {
                     .font(.custom("LuloOne", size: 10))
                     .foregroundColor(.white.opacity(0.9))
                     .multilineTextAlignment(.center)
-                    .padding(5)
-                    .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                    .padding(sizeCategory > .medium ? 5 : 2)
+                    .minimumScaleFactor(sizeCategory > .medium ? 0.7 : 1.0)
                     .allowsTightening(true)
                
             }
@@ -275,8 +275,8 @@ struct ArchiveUpsellOverlay: View {
                 }
                 .font(.custom("LuloOne", size: 10))
                 .foregroundColor(.white.opacity(0.6))
-                .padding(.top, 10)
-                .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                .padding(.top, 5)
+                .minimumScaleFactor(sizeCategory > .medium ? 0.7 : 1.0)
                 .lineLimit(1)
                 .allowsTightening(true)
             }
@@ -299,7 +299,7 @@ struct ArchiveUpsellOverlay: View {
                             .stroke(Color.white.opacity(0.8), lineWidth: 1)
                     )
             }
-            .padding(.top, 10)
+            //.padding(.top, 8)
         }
         .padding(sizeCategory > .medium ? 15 : 30)
         .background(Color.myOverlaysColor)
@@ -388,7 +388,7 @@ struct ArchiveUpsellOverlay: View {
                             .allowsTightening(true)
                     }
                     Text(description)
-                        .font(.custom("LuloOne", size: 11))
+                        .font(.custom("LuloOne", size: 10))
                         .foregroundColor(.white.opacity(0.8))
                         .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
                         .allowsTightening(true)

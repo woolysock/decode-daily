@@ -264,9 +264,9 @@ struct ScoreRowView: View {
                         .allowsTightening(true)
                 }
                 
-                Text("Played \(DateFormatter.scorePlayedDisplayFormatter.string(from:score.date))")
+                Text(" ✓ Played \(DateFormatter.scorePlayedDisplayFormatter.string(from:score.date))")
                     .font(.custom("LuloOne-Bold", size: 10))
-                    .foregroundColor(Color.myNavy)
+                    .foregroundColor(Color.myAccentColor2)
                     .minimumScaleFactor(sizeCategory > .medium ? 0.7 : 1.0)
                     .lineLimit(1)
                     .allowsTightening(true)

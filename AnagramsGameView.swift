@@ -353,67 +353,70 @@ struct AnagramsGameView: View {
     
     @ViewBuilder
     private var gameBoard: some View {
-        ZStack {
-            Color.black.ignoresSafeArea()
-            
-            // Main game content
-            VStack(spacing: 30) {
-                if game.isPreCountdownActive {
-                    Text("\(game.countdownValue)")
-                        .font(.custom("LuloOne-Bold", size: 100))
-                        .foregroundColor(.white)
-                        .monospacedDigit()
-                        .scaleEffect(1.05)
-                        .transition(.scale)
-                        .multilineTextAlignment(.center)
-                } else if game.isGameActive {
-                    Spacer().frame(height: 5)
-                    gameArea
-                    Spacer()
-                } else if wordsetManager.isGeneratingWordsets {
-                    VStack(spacing: 20) {
-                        ProgressView()
-                            .scaleEffect(2.0)
-                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                        
-                        Text("Preparing today's challenge...")
-                            .font(.custom("LuloOne", size: 16))
+        GeometryReader { geometry in
+            ZStack {
+                Color.black.ignoresSafeArea()
+                
+                // Main game content
+                VStack(spacing: 30) {
+                    if game.isPreCountdownActive {
+                        Text("\(game.countdownValue)")
+                            .font(.custom("LuloOne-Bold", size: 100))
                             .foregroundColor(.white)
-                    }
-                } else {
-                    Spacer()
-                }
-                Spacer()
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
-            .padding([.leading, .trailing, .bottom], 20)
-            
-            // Bottom-anchored shuffle button
-            if game.isGameActive {
-                VStack {
-                    Spacer()
-                    HStack {
+                            .monospacedDigit()
+                            .scaleEffect(1.05)
+                            .transition(.scale)
+                            .multilineTextAlignment(.center)
+                    } else if game.isGameActive {
+                        Spacer().frame(height: 5)
+                        gameArea
                         Spacer()
-                        Button(action: {
-                            game.shuffleCurrentWord()
-                        }) {
-                            Image(systemName: "shuffle")
-                                .font(.system(size: 20, weight: .semibold))
+                    } else if wordsetManager.isGeneratingWordsets {
+                        VStack(spacing: 20) {
+                            ProgressView()
+                                .scaleEffect(2.0)
+                                .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                            
+                            Text("Preparing today's challenge...")
+                                .font(.custom("LuloOne", size: 16))
                                 .foregroundColor(.white)
-                                .frame(width: 50, height: 50)
-                                .background(Color.myAccentColor2.opacity(0.9))
-                                .cornerRadius(28)
-                                .shadow(color: .black.opacity(0.3), radius: 4, x: 0, y: 2)
                         }
-                        .disabled(game.isGamePaused || wordsetManager.isGeneratingWordsets)
-                        .opacity((game.isGamePaused || wordsetManager.isGeneratingWordsets) ? 0.5 : 1.0)
-                        .scaleEffect((game.isGamePaused || wordsetManager.isGeneratingWordsets) ? 0.9 : 1.0)
-                        .animation(.easeInOut(duration: 0.2), value: game.isGamePaused)
+                    } else {
                         Spacer()
                     }
-                    .padding(.bottom, 10)
+                    Spacer()
                 }
-                .padding(.bottom, 0)
+                .padding([.leading, .trailing], 20)
+                
+                // Bottom-anchored shuffle button with safe area consideration
+                if game.isGameActive {
+                    VStack {
+                        Spacer()
+                        HStack {
+                            Spacer()
+                            Button(action: {
+                                game.shuffleCurrentWord()
+                            }) {
+                                Image(systemName: "shuffle")
+                                    .font(.system(size: geometry.size.height < 600 ? 20 : 24, weight: .semibold))
+                                    .foregroundColor(.white)
+                                    .frame(
+                                        width: geometry.size.height < 600 ? 48 : 56,
+                                        height: geometry.size.height < 600 ? 48 : 56
+                                    )
+                                    .background(Color.myAccentColor2.opacity(0.9))
+                                    .cornerRadius(geometry.size.height < 600 ? 24 : 28)
+                                    .shadow(color: .black.opacity(0.3), radius: 4, x: 0, y: 2)
+                            }
+                            .disabled(game.isGamePaused || wordsetManager.isGeneratingWordsets)
+                            .opacity((game.isGamePaused || wordsetManager.isGeneratingWordsets) ? 0.5 : 1.0)
+                            .scaleEffect((game.isGamePaused || wordsetManager.isGeneratingWordsets) ? 0.9 : 1.0)
+                            .animation(.easeInOut(duration: 0.2), value: game.isGamePaused)
+                            Spacer()
+                        }
+                        .padding(.bottom, max(20, geometry.safeAreaInsets.bottom + 10))
+                    }
+                }
             }
         }
     }
@@ -421,154 +424,191 @@ struct AnagramsGameView: View {
     // MARK: - Game Area
     @ViewBuilder
     private var gameArea: some View {
-        VStack(spacing: 10) {
-            if game.isGameActive {
-                HStack {
-                    Text("Solved: \(game.attempts)")
-                        .font(.custom("LuloOne-Bold", size: 14))
-                        .foregroundColor(.white)
-                        .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
-                        .lineLimit(1)
-                        .allowsTightening(true)
-                    
-                    Spacer()
-                    
-                    if let wordset = wordsetManager.currentWordset {
-                        VStack(alignment: .trailing, spacing: 2) {
-                            Text("Word \(game.currentWordIndex + 1) of \(wordset.words.count)")
-                                .font(.custom("LuloOne", size: 12))
-                                .foregroundColor(.white)
-                                .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
-                                .lineLimit(1)
-                                .allowsTightening(true)
-                            
-                            if !game.skippedWordIndices.isEmpty {
-                                Text("Skipped: \(game.skippedWordIndices.count)")
-                                    .font(.custom("LuloOne", size: 10))
-                                    .foregroundColor(.orange)
-                                    .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+        GeometryReader { geometry in
+            let availableHeight = geometry.size.height
+            let isCompactHeight = availableHeight < 400 // Adjusted for iPhone SE (568 points total, less available after headers)
+            
+            VStack(spacing: isCompactHeight ? 8 : 10) {
+                // Game stats section - make more compact on small screens
+                if game.isGameActive {
+                    HStack {
+                        Text("Solved: \(game.attempts)")
+                            .font(.custom("LuloOne-Bold", size: isCompactHeight ? 12 : 14))
+                            .foregroundColor(.white)
+                            .minimumScaleFactor(0.7)
+                            .lineLimit(1)
+                            .allowsTightening(true)
+                        
+                        Spacer()
+                        
+                        if let wordset = wordsetManager.currentWordset {
+                            VStack(alignment: .trailing, spacing: 1) {
+                                Text("Word \(game.currentWordIndex + 1) of \(wordset.words.count)")
+                                    .font(.custom("LuloOne", size: isCompactHeight ? 10 : 12))
+                                    .foregroundColor(.white)
+                                    .minimumScaleFactor(0.7)
                                     .lineLimit(1)
                                     .allowsTightening(true)
-                            } else {
-                                Text("Skipped: 0")
-                                    .font(.custom("LuloOne", size: 10))
-                                    .foregroundColor(.white.opacity(0.3))
-                                    .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
-                                    .lineLimit(1)
-                                    .allowsTightening(true)
+                                
+                                if !game.skippedWordIndices.isEmpty {
+                                    Text("Skipped: \(game.skippedWordIndices.count)")
+                                        .font(.custom("LuloOne", size: isCompactHeight ? 8 : 10))
+                                        .foregroundColor(.orange)
+                                        .minimumScaleFactor(0.7)
+                                        .lineLimit(1)
+                                        .allowsTightening(true)
+                                } else {
+                                    Text("Skipped: 0")
+                                        .font(.custom("LuloOne", size: isCompactHeight ? 8 : 10))
+                                        .foregroundColor(.white.opacity(0.3))
+                                        .minimumScaleFactor(0.7)
+                                        .lineLimit(1)
+                                        .allowsTightening(true)
+                                }
                             }
                         }
                     }
+                    Divider().background(Color.myAccentColor1).padding(2)
                 }
-                Divider().background(Color.myAccentColor1).padding(5)
-            }
-            
-            Spacer().frame(height: 20)
-            
-            // User Answer Boxes
-            VStack(spacing: 10) {
-                Text("Your Answer:")
-                    .font(.custom("LuloOne", size: 14))
-                    .foregroundColor(.white)
                 
-                HStack(spacing: 5) {
-                    ForEach(0..<game.userAnswer.count, id: \.self) { index in
-                        let letter = String(
-                            game.userAnswer[game.userAnswer.index(game.userAnswer.startIndex, offsetBy: index)]
-                        )
-                        letterButton(letter, isScrambled: false, isUsed: false, flashColor: answerFlashColor) {
-                            game.removeLetter(at: index)
+                // Answer section - make more compact
+                VStack(spacing: 8) {
+                    Text("Your Answer:")
+                        .font(.custom("LuloOne", size: isCompactHeight ? 12 : 14))
+                        .foregroundColor(.white)
+                    
+                    HStack(spacing: isCompactHeight ? 3 : 4) {
+                        ForEach(0..<game.userAnswer.count, id: \.self) { index in
+                            let letter = String(
+                                game.userAnswer[game.userAnswer.index(game.userAnswer.startIndex, offsetBy: index)]
+                            )
+                            letterButton(
+                                letter,
+                                isScrambled: false,
+                                isUsed: false,
+                                flashColor: answerFlashColor,
+                                isCompact: isCompactHeight
+                            ) {
+                                game.removeLetter(at: index)
+                            }
+                        }
+                        
+                        // Show empty boxes for remaining letters
+                        ForEach(game.userAnswer.count..<game.currentWord.count, id: \.self) { _ in
+                            Rectangle()
+                                .fill(Color.white.opacity(0.3))
+                                .frame(
+                                    width: isCompactHeight ? 32 : 40,
+                                    height: isCompactHeight ? 32 : 40
+                                )
+                                .cornerRadius(0)
                         }
                     }
+                    .frame(minHeight: isCompactHeight ? 40 : 55)
                     
-                    // Show empty boxes for remaining letters
-                    ForEach(game.userAnswer.count..<game.currentWord.count, id: \.self) { _ in
-                        Rectangle()
-                            .fill(Color.white.opacity(0.3))
-                            .frame(width: 40, height: 40)
-                            .cornerRadius(0)
+                    // Action buttons - make more compact
+                    HStack(spacing: isCompactHeight ? 15 : 25) {
+                        Button("skip") {
+                            game.skipCurrentWord()
+                        }
+                        .font(.custom("LuloOne", size: isCompactHeight ? 10 : 12))
+                        .foregroundColor(.white)
+                        .padding(.horizontal, isCompactHeight ? 12 : 20)
+                        .padding(.vertical, isCompactHeight ? 6 : 8)
+                        .background(Color.mySunColor.opacity(0.7))
+                        .cornerRadius(6)
+                        .disabled(game.isGamePaused || wordsetManager.isGeneratingWordsets)
+                        
+                        Button("clear") {
+                            game.clearAnswer()
+                        }
+                        .font(.custom("LuloOne", size: isCompactHeight ? 10 : 12))
+                        .foregroundColor(game.userAnswer.isEmpty ? .gray : .white)
+                        .padding(.horizontal, isCompactHeight ? 12 : 20)
+                        .padding(.vertical, isCompactHeight ? 6 : 8)
+                        .background(game.userAnswer.isEmpty ? Color.gray.opacity(0.3) : Color.pink.opacity(0.7))
+                        .cornerRadius(6)
+                        .disabled(game.userAnswer.isEmpty || game.isGamePaused || wordsetManager.isGeneratingWordsets)
                     }
                 }
-                .frame(minHeight: 55)
                 
-                HStack(spacing: 25) {
-                    // Skip button
-                    Button("skip") {
-                        game.skipCurrentWord()
-                    }
-                    .font(.custom("LuloOne", size: 12))
-                    .foregroundColor(.white)
-                    .padding(.horizontal, 20)
-                    .padding(.vertical, 8)
-                    .background(Color.mySunColor.opacity(0.7))
-                    .cornerRadius(8)
-                    .disabled(game.isGamePaused || wordsetManager.isGeneratingWordsets)
+                // Spacer that adapts to available space
+                Spacer().frame(height: isCompactHeight ? 8 : 15)
+                
+                // Scrambled letters section - make grid more compact
+                VStack(spacing: isCompactHeight ? 5 : 8) {
+                    Text("Scrambled Letters:")
+                        .font(.custom("LuloOne", size: isCompactHeight ? 12 : 14))
+                        .foregroundColor(.white)
                     
-                    // Clear button
-                    Button("clear") {
-                        game.clearAnswer()
-                    }
-                    .font(.custom("LuloOne", size: 12))
-                    .foregroundColor(game.userAnswer.isEmpty ? .gray : .white)
-                    .padding(.horizontal, 20)
-                    .padding(.vertical, 8)
-                    .background(game.userAnswer.isEmpty ? Color.gray.opacity(0.3) : Color.pink.opacity(0.7))
-                    .cornerRadius(8)
-                    .disabled(game.userAnswer.isEmpty || game.isGamePaused || wordsetManager.isGeneratingWordsets)
+                    responsiveScrambledLettersGrid(isCompact: isCompactHeight)
                 }
-            }
-            
-            Spacer().frame(height: 25)
-            
-            // Scrambled letters grid
-            VStack(spacing: 10) {
-                Text("Scrambled Letters:")
-                    .font(.custom("LuloOne", size: 14))
-                    .foregroundColor(.white)
-                Spacer().frame(height:5)
-                scrambledLettersGrid
                 
+                // Reserve space for shuffle button at bottom
+                Spacer().frame(height: isCompactHeight ? 65 : 80)
+                
+//                Text("📏 isCompactHeight? \(isCompactHeight)\navailableHeight: \(availableHeight)")
+//                    .font(.custom("LuloOne", size: isCompactHeight ? 12 : 14))
+//                    .foregroundColor(.white)
             }
+            .padding(.horizontal, isCompactHeight ? 8 : 10)
         }
-        .padding(.horizontal, 10)
     }
     
     // MARK: - Scrambled Letters Grid
     @ViewBuilder
-    private var scrambledLettersGrid: some View {
+    private func responsiveScrambledLettersGrid(isCompact: Bool) -> some View {
         let num_letters = game.scrambledLetters.count
-        let col_count = num_letters < 5 ? 4 : 3
+        let buttonSize: CGFloat = isCompact ? 45 : 60
+        let spacing: CGFloat = isCompact ? 6 : 10
         
-        let columns = Array(repeating: GridItem(.flexible(minimum: 60, maximum: 80), spacing: 10), count: col_count)
+        // Calculate column count based on number of letters and screen size
+        let col_count = calculateColumnCount(letterCount: num_letters, isCompact: isCompact)
         
-        LazyVGrid(columns: columns, spacing: 10) {
+        let columns = Array(repeating: GridItem(.flexible(minimum: buttonSize, maximum: buttonSize + 10), spacing: spacing), count: col_count)
+        
+        LazyVGrid(columns: columns, spacing: spacing) {
             ForEach(0..<num_letters, id: \.self) { index in
                 letterButton(
                     game.scrambledLetters[index],
                     isScrambled: true,
-                    isUsed: game.usedLetterIndices.contains(index)
+                    isUsed: game.usedLetterIndices.contains(index),
+                    isCompact: isCompact
                 ) {
                     game.selectLetter(at: index)
                 }
             }
         }
-        .padding(.horizontal, 40)
+        .padding(.horizontal, isCompact ? 20 : 30)
     }
     
-    // MARK: - Letter Button
+    // MARK: - Helper Function for Column Count
+    private func calculateColumnCount(letterCount: Int, isCompact: Bool) -> Int {
+        if isCompact {
+            return letterCount <= 4 ? letterCount : (letterCount <= 6 ? 3 : 4)
+        } else {
+            return letterCount < 5 ? 4 : 3
+        }
+    }
+    
+    // MARK: - Updated Letter Button with Compact Mode
     private func letterButton(
         _ letter: String,
         isScrambled: Bool,
         isUsed: Bool,
         flashColor: Color? = nil,
+        isCompact: Bool = false,
         action: @escaping () -> Void
     ) -> some View {
-        Button(action: action) {
+        let buttonSize: CGFloat = isCompact ? (isScrambled ? 45 : 32) : (isScrambled ? 60 : 40)
+        let fontSize: CGFloat = isCompact ? (isScrambled ? 18 : 16) : 20
+        
+        return Button(action: action) {
             Text(isUsed ? "" : letter)
-                .font(.custom("LuloOne-Bold", size: 20))
+                .font(.custom("LuloOne-Bold", size: fontSize))
                 .foregroundColor(.black)
-                .frame(width: isScrambled ? 60 : 40, height: isScrambled ? 60 : 40)
-                .offset(x: 1, y: 1) 
+                .frame(width: buttonSize, height: buttonSize)
+                .offset(x: 1, y: 1)
                 .multilineTextAlignment(.center)
                 .background(
                     (flashColor != nil ? flashColor! :
@@ -579,14 +619,13 @@ struct AnagramsGameView: View {
                 .overlay(
                     Group {
                         if isScrambled {
-                            Circle().stroke(Color.myAccentColor2, lineWidth: 3)
+                            Circle().stroke(Color.myAccentColor2, lineWidth: isCompact ? 2 : 3)
                         } else {
                             RoundedRectangle(cornerRadius: 5)
                                 .stroke(Color.clear, lineWidth: 1)
                         }
                     }
                 )
-                //.shadow(radius: isUsed ? 1 : 2)
                 .animation(.easeInOut(duration: 0.3), value: flashColor)
         }
         .disabled(!game.isGameActive || game.isGamePaused || isUsed || wordsetManager.isGeneratingWordsets)

@@ -34,7 +34,7 @@ struct AccountPageView: View {
                                 .font(.custom("LuloOne-Bold", size: 40))
                                 .foregroundColor(.white)
                                 .lineLimit(2)
-                                .minimumScaleFactor(sizeCategory > .large ? 0.7 : 1.0)
+                                .minimumScaleFactor(sizeCategory > .medium ? 0.7 : 1.0)
                                 .allowsTightening(true)
                                 .padding(.horizontal, 20)
                             
