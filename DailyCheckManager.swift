@@ -7,6 +7,11 @@
 
 import SwiftUI
 import Foundation
+#if os(iOS)
+import UIKit
+#elseif os(watchOS)
+import WatchKit
+#endif
 
 class DailyCheckManager: ObservableObject {
     static let shared = DailyCheckManager()
@@ -49,12 +54,21 @@ class DailyCheckManager: ObservableObject {
         )
         
         // Also check when app becomes active (returning from background)
+        #if os(iOS)
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(appDidBecomeActive),
             name: UIApplication.didBecomeActiveNotification,
             object: nil
         )
+        #elseif os(watchOS)
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(appDidBecomeActive),
+            name: WKExtension.applicationDidBecomeActiveNotification,
+            object: nil
+        )
+        #endif
     }
     
     @objc private func dayChanged() {
