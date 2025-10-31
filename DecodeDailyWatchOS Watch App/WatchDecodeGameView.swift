@@ -9,134 +9,14 @@ struct WatchDecodeGameView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 12) {
-                // Header
-                VStack(spacing: 4) {
-                    Text("Decode")
-                        .font(.headline)
-                    if !game.isGameOver {
-                        Text("Attempt \(game.currentRow + 1)/\(game.numRows)")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-                }
-                .padding(.top, 8)
+                headerView
 
                 if game.code.isEmpty {
-                    // Loading
-                    ProgressView("Loading...")
-                        .padding()
+                    loadingView
                 } else if !game.isGameOver {
-                    // Game in progress
-                    VStack(spacing: 12) {
-                        // Game board - show last 3 attempts
-                        VStack(spacing: 6) {
-                            let startRow = max(0, game.currentRow - 2)
-                            let endRow = min(game.numRows - 1, game.currentRow)
-
-                            ForEach(startRow...endRow, id: \.self) { row in
-                                HStack(spacing: 4) {
-                                    // Pegs
-                                    ForEach(0..<game.numCols, id: \.self) { col in
-                                        Circle()
-                                            .fill(pegColor(forIndex: game.board[row][col]))
-                                            .frame(width: 24, height: 24)
-                                            .overlay(
-                                                Circle()
-                                                    .stroke(Color.white.opacity(0.3), lineWidth: 1)
-                                            )
-                                    }
-
-                                    // Feedback for completed rows
-                                    if row < game.currentRow {
-                                        FeedbackView(scores: game.feedback[row])
-                                            .frame(width: 30)
-                                    }
-                                }
-                            }
-                        }
-                        .padding(.vertical, 8)
-
-                        // Current row builder
-                        VStack(spacing: 8) {
-                            Text("Building:")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-
-                            HStack(spacing: 4) {
-                                ForEach(0..<game.numCols, id: \.self) { col in
-                                    Circle()
-                                        .fill(pegColor(forIndex: game.board[game.currentRow][col]))
-                                        .frame(width: 28, height: 28)
-                                        .overlay(
-                                            Circle()
-                                                .stroke(currentColumn == col ? Color.white : Color.white.opacity(0.3), lineWidth: currentColumn == col ? 2 : 1)
-                                        )
-                                }
-                            }
-
-                            // Color picker
-                            LazyVGrid(columns: [GridItem(.adaptive(minimum: 35))], spacing: 8) {
-                                ForEach(1...6, id: \.self) { colorIndex in
-                                    Circle()
-                                        .fill(pegColor(forIndex: colorIndex))
-                                        .frame(width: 35, height: 35)
-                                        .onTapGesture {
-                                            selectColor(colorIndex)
-                                        }
-                                }
-                            }
-                            .padding(.horizontal)
-
-                            // Submit button
-                            Button(action: submitGuess) {
-                                Text("Submit Guess")
-                                    .font(.headline)
-                                    .frame(maxWidth: .infinity)
-                                    .padding(.vertical, 10)
-                                    .background(canSubmit ? Color.blue : Color.gray)
-                                    .foregroundColor(.white)
-                                    .cornerRadius(8)
-                            }
-                            .disabled(!canSubmit)
-                        }
-                        .padding()
-                        .background(Color.gray.opacity(0.2))
-                        .cornerRadius(12)
-                    }
+                    gameInProgressView
                 } else {
-                    // Game Over
-                    VStack(spacing: 12) {
-                        Text(game.won ? "You Won!" : "Game Over")
-                            .font(.title3)
-                            .fontWeight(.bold)
-                            .foregroundColor(game.won ? .green : .red)
-
-                        if game.won {
-                            Text("Solved in \(game.currentRow) attempts!")
-                                .font(.subheadline)
-                        } else {
-                            VStack(spacing: 4) {
-                                Text("The code was:")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                                HStack(spacing: 4) {
-                                    ForEach(0..<game.numCols, id: \.self) { col in
-                                        Circle()
-                                            .fill(pegColor(forIndex: game.code[col]))
-                                            .frame(width: 24, height: 24)
-                                    }
-                                }
-                            }
-                        }
-
-                        Button("Done") {
-                            dismiss()
-                        }
-                        .buttonStyle(.borderedProminent)
-                    }
-                    .padding()
-                    .background(Color.gray.opacity(0.2))
-                    .cornerRadius(12)
+                    gameOverView
                 }
             }
             .padding()
@@ -146,6 +26,159 @@ struct WatchDecodeGameView: View {
         .onAppear {
             if game.code.isEmpty {
                 game.startGame()
+            }
+        }
+    }
+
+    private var headerView: some View {
+        VStack(spacing: 4) {
+            Text("Decode")
+                .font(.headline)
+            if !game.isGameOver {
+                Text("Attempt \(game.currentRow + 1)/\(game.numRows)")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+        }
+        .padding(.top, 8)
+    }
+
+    private var loadingView: some View {
+        ProgressView("Loading...")
+            .padding()
+    }
+
+    private var gameInProgressView: some View {
+        VStack(spacing: 12) {
+            gameBoardView
+            currentRowBuilderView
+        }
+    }
+
+    private var gameBoardView: some View {
+        VStack(spacing: 6) {
+            let startRow = max(0, game.currentRow - 2)
+            let endRow = min(game.numRows - 1, game.currentRow)
+
+            ForEach(startRow...endRow, id: \.self) { row in
+                HStack(spacing: 4) {
+                    // Pegs
+                    ForEach(0..<game.numCols, id: \.self) { col in
+                        pegView(forRow: row, col: col)
+                    }
+
+                    // Feedback for completed rows
+                    if row < game.currentRow {
+                        FeedbackView(scores: game.feedback[row])
+                            .frame(width: 30)
+                    }
+                }
+            }
+        }
+        .padding(.vertical, 8)
+    }
+
+    private func pegView(forRow row: Int, col: Int) -> some View {
+        Circle()
+            .fill(pegColor(forIndex: game.board[row][col]))
+            .frame(width: 24, height: 24)
+            .overlay(
+                Circle()
+                    .stroke(Color.white.opacity(0.3), lineWidth: 1)
+            )
+    }
+
+    private var currentRowBuilderView: some View {
+        VStack(spacing: 8) {
+            Text("Building:")
+                .font(.caption)
+                .foregroundColor(.secondary)
+
+            currentRowPegsView
+            colorPickerView
+            submitButton
+        }
+        .padding()
+        .background(Color.gray.opacity(0.2))
+        .cornerRadius(12)
+    }
+
+    private var currentRowPegsView: some View {
+        HStack(spacing: 4) {
+            ForEach(0..<game.numCols, id: \.self) { col in
+                Circle()
+                    .fill(pegColor(forIndex: game.board[game.currentRow][col]))
+                    .frame(width: 28, height: 28)
+                    .overlay(
+                        Circle()
+                            .stroke(currentColumn == col ? Color.white : Color.white.opacity(0.3), lineWidth: currentColumn == col ? 2 : 1)
+                    )
+            }
+        }
+    }
+
+    private var colorPickerView: some View {
+        LazyVGrid(columns: [GridItem(.adaptive(minimum: 35))], spacing: 8) {
+            ForEach(1...6, id: \.self) { colorIndex in
+                Circle()
+                    .fill(pegColor(forIndex: colorIndex))
+                    .frame(width: 35, height: 35)
+                    .onTapGesture {
+                        selectColor(colorIndex)
+                    }
+            }
+        }
+        .padding(.horizontal)
+    }
+
+    private var submitButton: some View {
+        Button(action: submitGuess) {
+            Text("Submit Guess")
+                .font(.headline)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 10)
+                .background(canSubmit ? Color.blue : Color.gray)
+                .foregroundColor(.white)
+                .cornerRadius(8)
+        }
+        .disabled(!canSubmit)
+    }
+
+    private var gameOverView: some View {
+        VStack(spacing: 12) {
+            Text(game.won ? "You Won!" : "Game Over")
+                .font(.title3)
+                .fontWeight(.bold)
+                .foregroundColor(game.won ? .green : .red)
+
+            if game.won {
+                Text("Solved in \(game.currentRow) attempts!")
+                    .font(.subheadline)
+            } else {
+                solutionView
+            }
+
+            Button("Done") {
+                dismiss()
+            }
+            .buttonStyle(.borderedProminent)
+        }
+        .padding()
+        .background(Color.gray.opacity(0.2))
+        .cornerRadius(12)
+    }
+
+    private var solutionView: some View {
+        VStack(spacing: 4) {
+            Text("The code was:")
+                .font(.caption)
+                .foregroundColor(.secondary)
+            HStack(spacing: 4) {
+                ForEach(0..<game.numCols, id: \.self) { col in
+                    Circle()
+                        .fill(pegColor(forIndex: game.code[col]))
+                        .frame(width: 24, height: 24)
+                }
             }
         }
     }
@@ -168,7 +201,7 @@ struct WatchDecodeGameView: View {
 
     private func pegColor(forIndex index: Int) -> Color {
         switch index {
-        case 0: return Color.gray.opacity(0.3)  // Empty
+        case 0: return Color.gray.opacity(0.3)
         case 1: return game.pegShades.count > 0 ? game.pegShades[0] : Color.gray
         case 2: return game.pegShades.count > 1 ? game.pegShades[1] : Color.gray
         case 3: return game.pegShades.count > 2 ? game.pegShades[2] : Color.gray
@@ -188,12 +221,10 @@ struct FeedbackView: View {
             HStack(spacing: 2) {
                 ForEach(0..<scores.count, id: \.self) { index in
                     if scores[index] == 2 {
-                        // Exact match
                         Circle()
                             .fill(Color.green)
                             .frame(width: 6, height: 6)
                     } else if scores[index] == 1 {
-                        // Partial match
                         Circle()
                             .fill(Color.yellow)
                             .frame(width: 6, height: 6)
