@@ -7,6 +7,29 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		440272AD2EB3F3F500D2A92C /* DecodeDailyWatchOS Watch App.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 440272A02EB3F3F100D2A92C /* DecodeDailyWatchOS Watch App.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		440272BF2EB3F53C00D2A92C /* AnagramsGame.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44639B032E7A863500213BDC /* AnagramsGame.swift */; };
+		440272C02EB3F55100D2A92C /* DecodeGame.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44909DEA2E7A8F810063A706 /* DecodeGame.swift */; };
+		440272C12EB3F57500D2A92C /* GameScoreManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44639B122E7A863500213BDC /* GameScoreManager.swift */; };
+		440272C22EB3F57500D2A92C /* FlashdanceGame.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44639B0F2E7A863500213BDC /* FlashdanceGame.swift */; };
+		440272C32EB3F57500D2A92C /* GameCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44639B102E7A863500213BDC /* GameCoordinator.swift */; };
+		440272C42EB3F57500D2A92C /* GameProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44639B112E7A863500213BDC /* GameProtocol.swift */; };
+		440272C52EB3F5AA00D2A92C /* DailyWordset.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44639B0B2E7A863500213BDC /* DailyWordset.swift */; };
+		440272C62EB3F5AA00D2A92C /* DailyCheckManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44909DE82E7A8F810063A706 /* DailyCheckManager.swift */; };
+		440272C72EB3F5AA00D2A92C /* DailyWordsetManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44639B0C2E7A863500213BDC /* DailyWordsetManager.swift */; };
+		440272C82EB3F5AA00D2A92C /* StoreManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44639B2E2E7A865700213BDC /* StoreManager.swift */; };
+		440272C92EB3F5AA00D2A92C /* DailyCodeSetManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44639B0A2E7A863500213BDC /* DailyCodeSetManager.swift */; };
+		440272CA2EB3F5AA00D2A92C /* DailyEquationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44909DE92E7A8F810063A706 /* DailyEquationManager.swift */; };
+		440272CB2EB3F5AA00D2A92C /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44639B0E2E7A863500213BDC /* Extensions.swift */; };
+		440272CC2EB3F5AA00D2A92C /* PaidTier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44909DF42E7A8F810063A706 /* PaidTier.swift */; };
+		440272CD2EB3F5AA00D2A92C /* DailyCodes.json in Resources */ = {isa = PBXBuildFile; fileRef = 44909E072E7B0DDF0063A706 /* DailyCodes.json */; };
+		440272CE2EB3F5AA00D2A92C /* DailyEquations.json in Resources */ = {isa = PBXBuildFile; fileRef = 44639B512E7A89CD00213BDC /* DailyEquations.json */; };
+		440272CF2EB3F5E200D2A92C /* LuloOne-Bold.otf in Resources */ = {isa = PBXBuildFile; fileRef = 44639B3B2E7A867100213BDC /* LuloOne-Bold.otf */; };
+		440272D12EB3F5E200D2A92C /* MasterWordList.json in Resources */ = {isa = PBXBuildFile; fileRef = 44639B4C2E7A89CD00213BDC /* MasterWordList.json */; };
+		440272D22EB3F5E200D2A92C /* LuloOne.otf in Resources */ = {isa = PBXBuildFile; fileRef = 44639B4A2E7A89CC00213BDC /* LuloOne.otf */; };
+		440272D32EB3F5E200D2A92C /* Sole-Light.otf in Resources */ = {isa = PBXBuildFile; fileRef = 44639B3C2E7A867100213BDC /* Sole-Light.otf */; };
+		440272D72EB3FA3B00D2A92C /* Mixpanel in Frameworks */ = {isa = PBXBuildFile; productRef = 440272D62EB3FA3B00D2A92C /* Mixpanel */; };
+		440272D92EB3FE7800D2A92C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 44909E052E7B0C5E0063A706 /* Assets.xcassets */; };
 		444224752E7B482F00361A89 /* FlashdanceSwipeHintOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 444224742E7B482F00361A89 /* FlashdanceSwipeHintOverlay.swift */; };
 		44639B162E7A863500213BDC /* ColorPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44639B082E7A863500213BDC /* ColorPickerView.swift */; };
 		44639B172E7A863500213BDC /* GameScoreManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44639B122E7A863500213BDC /* GameScoreManager.swift */; };
@@ -62,7 +85,32 @@
 		44BCE7FE2DA87D78005DDD84 /* Launch Screen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 44BCE7FD2DA87D78005DDD84 /* Launch Screen.storyboard */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		440272AB2EB3F3F500D2A92C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 442B9E2F2CF3BAD1008DD043 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 4402729F2EB3F3F100D2A92C;
+			remoteInfo = "DecodeDailyWatchOS Watch App";
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		440272AE2EB3F3F500D2A92C /* Embed Watch Content */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
+			dstSubfolderSpec = 16;
+			files = (
+				440272AD2EB3F3F500D2A92C /* DecodeDailyWatchOS Watch App.app in Embed Watch Content */,
+			);
+			name = "Embed Watch Content";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
+		440272A02EB3F3F100D2A92C /* DecodeDailyWatchOS Watch App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "DecodeDailyWatchOS Watch App.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		444224742E7B482F00361A89 /* FlashdanceSwipeHintOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlashdanceSwipeHintOverlay.swift; sourceTree = "<group>"; };
 		44639B012E7A863500213BDC /* AccountPageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountPageView.swift; sourceTree = "<group>"; };
 		44639B022E7A863500213BDC /* AlreadyPlayedOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlreadyPlayedOverlay.swift; sourceTree = "<group>"; };
@@ -94,12 +142,10 @@
 		44639B3A2E7A867100213BDC /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		44639B3B2E7A867100213BDC /* LuloOne-Bold.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "LuloOne-Bold.otf"; sourceTree = "<group>"; };
 		44639B3C2E7A867100213BDC /* Sole-Light.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Sole-Light.otf"; sourceTree = "<group>"; };
-		44639B482E7A89CC00213BDC /* LuloOne-Bold.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "LuloOne-Bold.otf"; sourceTree = "<group>"; };
 		44639B492E7A89CC00213BDC /* Launch Screen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = "Launch Screen.storyboard"; sourceTree = "<group>"; };
 		44639B4A2E7A89CC00213BDC /* LuloOne.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = LuloOne.otf; sourceTree = "<group>"; };
 		44639B4C2E7A89CD00213BDC /* MasterWordList.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = MasterWordList.json; sourceTree = "<group>"; };
 		44639B4D2E7A89CD00213BDC /* DecoderGame.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = DecoderGame.entitlements; sourceTree = "<group>"; };
-		44639B4F2E7A89CD00213BDC /* Sole-Light.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Sole-Light.otf"; sourceTree = "<group>"; };
 		44639B512E7A89CD00213BDC /* DailyEquations.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = DailyEquations.json; sourceTree = "<group>"; };
 		44909DE72E7A8F810063A706 /* ArchivePageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArchivePageView.swift; sourceTree = "<group>"; };
 		44909DE82E7A8F810063A706 /* DailyCheckManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyCheckManager.swift; sourceTree = "<group>"; };
@@ -123,7 +169,36 @@
 		44BCE7FD2DA87D78005DDD84 /* Launch Screen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = "Launch Screen.storyboard"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		440272D82EB3FC8200D2A92C /* Exceptions for "DecodeDailyWatchOS Watch App" folder in "DecodeDailyWatchOS Watch App" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 4402729F2EB3F3F100D2A92C /* DecodeDailyWatchOS Watch App */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		440272A12EB3F3F100D2A92C /* DecodeDailyWatchOS Watch App */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				440272D82EB3FC8200D2A92C /* Exceptions for "DecodeDailyWatchOS Watch App" folder in "DecodeDailyWatchOS Watch App" target */,
+			);
+			path = "DecodeDailyWatchOS Watch App";
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
+
 /* Begin PBXFrameworksBuildPhase section */
+		4402729D2EB3F3F100D2A92C /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				440272D72EB3FA3B00D2A92C /* Mixpanel in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		442B9E342CF3BAD1008DD043 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -135,6 +210,13 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		440272D52EB3FA3B00D2A92C /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		442B9E2E2CF3BAD1008DD043 = {
 			isa = PBXGroup;
 			children = (
@@ -179,7 +261,6 @@
 				44639B492E7A89CC00213BDC /* Launch Screen.storyboard */,
 				44BCE7FD2DA87D78005DDD84 /* Launch Screen.storyboard */,
 				44639B4A2E7A89CC00213BDC /* LuloOne.otf */,
-				44639B482E7A89CC00213BDC /* LuloOne-Bold.otf */,
 				44639B3B2E7A867100213BDC /* LuloOne-Bold.otf */,
 				44909DF02E7A8F810063A706 /* MainMenuPageView.swift */,
 				44909DF12E7A8F810063A706 /* MainMenuView.swift */,
@@ -191,17 +272,42 @@
 				44639B2D2E7A865700213BDC /* NumbersGameView.swift */,
 				44909DF42E7A8F810063A706 /* PaidTier.swift */,
 				44909DF52E7A8F810063A706 /* SettingsView.swift */,
-				44639B4F2E7A89CD00213BDC /* Sole-Light.otf */,
 				44639B3C2E7A867100213BDC /* Sole-Light.otf */,
 				44639B2E2E7A865700213BDC /* StoreManager.swift */,
 				44639B2F2E7A865700213BDC /* SubscriptionTierBadge.swift */,
 				44909E0B2E7B338A0063A706 /* DecodeDailyiOS.app */,
+				440272A02EB3F3F100D2A92C /* DecodeDailyWatchOS Watch App.app */,
+				440272A12EB3F3F100D2A92C /* DecodeDailyWatchOS Watch App */,
+				440272D52EB3FA3B00D2A92C /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		4402729F2EB3F3F100D2A92C /* DecodeDailyWatchOS Watch App */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 440272B12EB3F3F500D2A92C /* Build configuration list for PBXNativeTarget "DecodeDailyWatchOS Watch App" */;
+			buildPhases = (
+				4402729C2EB3F3F100D2A92C /* Sources */,
+				4402729D2EB3F3F100D2A92C /* Frameworks */,
+				4402729E2EB3F3F100D2A92C /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				440272A12EB3F3F100D2A92C /* DecodeDailyWatchOS Watch App */,
+			);
+			name = "DecodeDailyWatchOS Watch App";
+			packageProductDependencies = (
+				440272D62EB3FA3B00D2A92C /* Mixpanel */,
+			);
+			productName = "DecodeDailyWatchOS Watch App";
+			productReference = 440272A02EB3F3F100D2A92C /* DecodeDailyWatchOS Watch App.app */;
+			productType = "com.apple.product-type.application";
+		};
 		442B9E362CF3BAD1008DD043 /* DecodeDailyiOS */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 442B9E482CF3BAD6008DD043 /* Build configuration list for PBXNativeTarget "DecodeDailyiOS" */;
@@ -209,10 +315,12 @@
 				442B9E332CF3BAD1008DD043 /* Sources */,
 				442B9E342CF3BAD1008DD043 /* Frameworks */,
 				442B9E352CF3BAD1008DD043 /* Resources */,
+				440272AE2EB3F3F500D2A92C /* Embed Watch Content */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				440272AC2EB3F3F500D2A92C /* PBXTargetDependency */,
 			);
 			name = DecodeDailyiOS;
 			packageProductDependencies = (
@@ -229,9 +337,13 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastSwiftUpdateCheck = 1610;
+				LastSwiftUpdateCheck = 1620;
 				LastUpgradeCheck = 1620;
 				TargetAttributes = {
+					4402729F2EB3F3F100D2A92C = {
+						CreatedOnToolsVersion = 16.2;
+						LastSwiftMigration = 1620;
+					};
 					442B9E362CF3BAD1008DD043 = {
 						CreatedOnToolsVersion = 16.1;
 						LastSwiftMigration = 1620;
@@ -256,11 +368,26 @@
 			projectRoot = "";
 			targets = (
 				442B9E362CF3BAD1008DD043 /* DecodeDailyiOS */,
+				4402729F2EB3F3F100D2A92C /* DecodeDailyWatchOS Watch App */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		4402729E2EB3F3F100D2A92C /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				440272CD2EB3F5AA00D2A92C /* DailyCodes.json in Resources */,
+				440272CE2EB3F5AA00D2A92C /* DailyEquations.json in Resources */,
+				440272CF2EB3F5E200D2A92C /* LuloOne-Bold.otf in Resources */,
+				440272D12EB3F5E200D2A92C /* MasterWordList.json in Resources */,
+				440272D22EB3F5E200D2A92C /* LuloOne.otf in Resources */,
+				440272D92EB3FE7800D2A92C /* Assets.xcassets in Resources */,
+				440272D32EB3F5E200D2A92C /* Sole-Light.otf in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		442B9E352CF3BAD1008DD043 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -281,6 +408,27 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		4402729C2EB3F3F100D2A92C /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				440272C12EB3F57500D2A92C /* GameScoreManager.swift in Sources */,
+				440272C22EB3F57500D2A92C /* FlashdanceGame.swift in Sources */,
+				440272C52EB3F5AA00D2A92C /* DailyWordset.swift in Sources */,
+				440272C62EB3F5AA00D2A92C /* DailyCheckManager.swift in Sources */,
+				440272C72EB3F5AA00D2A92C /* DailyWordsetManager.swift in Sources */,
+				440272C82EB3F5AA00D2A92C /* StoreManager.swift in Sources */,
+				440272C92EB3F5AA00D2A92C /* DailyCodeSetManager.swift in Sources */,
+				440272CA2EB3F5AA00D2A92C /* DailyEquationManager.swift in Sources */,
+				440272CB2EB3F5AA00D2A92C /* Extensions.swift in Sources */,
+				440272CC2EB3F5AA00D2A92C /* PaidTier.swift in Sources */,
+				440272C32EB3F57500D2A92C /* GameCoordinator.swift in Sources */,
+				440272C42EB3F57500D2A92C /* GameProtocol.swift in Sources */,
+				440272BF2EB3F53C00D2A92C /* AnagramsGame.swift in Sources */,
+				440272C02EB3F55100D2A92C /* DecodeGame.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		442B9E332CF3BAD1008DD043 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -332,7 +480,89 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		440272AC2EB3F3F500D2A92C /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 4402729F2EB3F3F100D2A92C /* DecodeDailyWatchOS Watch App */;
+			targetProxy = 440272AB2EB3F3F500D2A92C /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
+		440272AF2EB3F3F500D2A92C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIconWatch;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "";
+				DEVELOPMENT_TEAM = BNU2NLP8DW;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Decode! Daily";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.megandonahue.DecoderGame;
+				INFOPLIST_KEY_WKRunsIndependentlyOfCompanionApp = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0.4;
+				PRODUCT_BUNDLE_IDENTIFIER = com.megandonahue.DecoderGame.watchkitapp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "DecodeDailyWatchOS Watch App/DecodeDailyWatchOS Watch App-Bridging-Header.h";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				UIAppFonts = "LuloOne.otf\nLuloOne-Bold.otf\nSole-Light.otf";
+				WATCHOS_DEPLOYMENT_TARGET = 9.0;
+			};
+			name = Debug;
+		};
+		440272B02EB3F3F500D2A92C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIconWatch;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "";
+				DEVELOPMENT_TEAM = BNU2NLP8DW;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Decode! Daily";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.megandonahue.DecoderGame;
+				INFOPLIST_KEY_WKRunsIndependentlyOfCompanionApp = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0.4;
+				PRODUCT_BUNDLE_IDENTIFIER = com.megandonahue.DecoderGame.watchkitapp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "DecodeDailyWatchOS Watch App/DecodeDailyWatchOS Watch App-Bridging-Header.h";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				UIAppFonts = "LuloOne.otf\nLuloOne-Bold.otf\nSole-Light.otf";
+				VALIDATE_PRODUCT = YES;
+				WATCHOS_DEPLOYMENT_TARGET = 9.0;
+			};
+			name = Release;
+		};
 		442B9E492CF3BAD6008DD043 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -569,6 +799,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		440272B12EB3F3F500D2A92C /* Build configuration list for PBXNativeTarget "DecodeDailyWatchOS Watch App" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				440272AF2EB3F3F500D2A92C /* Debug */,
+				440272B02EB3F3F500D2A92C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		442B9E322CF3BAD1008DD043 /* Build configuration list for PBXProject "DecoderGame" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -601,6 +840,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		440272D62EB3FA3B00D2A92C /* Mixpanel */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 44AD93462E7A8D8F0095BCE2 /* XCRemoteSwiftPackageReference "mixpanel-swift" */;
+			productName = Mixpanel;
+		};
 		44AD93472E7A8D8F0095BCE2 /* Mixpanel */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 44AD93462E7A8D8F0095BCE2 /* XCRemoteSwiftPackageReference "mixpanel-swift" */;
