@@ -66,12 +66,51 @@ struct GameRowView: View {
 struct WatchScoresView: View {
     @EnvironmentObject var gameScoreManager: GameScoreManager
 
+    private var todaysDecodeScore: Int? {
+        let today = Calendar.current.startOfDay(for: Date())
+        return gameScoreManager.allScores
+            .filter { $0.gameId == "decode" && Calendar.current.isDate($0.date, inSameDayAs: today) }
+            .first?.finalScore
+    }
+
+    private var todaysFlashdanceScore: Int? {
+        let today = Calendar.current.startOfDay(for: Date())
+        return gameScoreManager.allScores
+            .filter { $0.gameId == "flashdance" && Calendar.current.isDate($0.date, inSameDayAs: today) }
+            .first?.finalScore
+    }
+
+    private var todaysAnagramsScore: Int? {
+        let today = Calendar.current.startOfDay(for: Date())
+        return gameScoreManager.allScores
+            .filter { $0.gameId == "anagrams" && Calendar.current.isDate($0.date, inSameDayAs: today) }
+            .first?.finalScore
+    }
+
     var body: some View {
         List {
             Section("Today's Scores") {
-                ScoreRowView(game: "Decode", score: gameScoreManager.todaysDecodeScore)
-                ScoreRowView(game: "Flashdance", score: gameScoreManager.todaysFlashdanceScore)
-                ScoreRowView(game: "Anagrams", score: gameScoreManager.todaysAnagramsScore)
+                ScoreRowView(game: "Decode", score: todaysDecodeScore)
+                ScoreRowView(game: "Flashdance", score: todaysFlashdanceScore)
+                ScoreRowView(game: "Anagrams", score: todaysAnagramsScore)
+            }
+
+            Section("Recent Games") {
+                ForEach(gameScoreManager.getRecentScores(limit: 5)) { score in
+                    VStack(alignment: .leading, spacing: 4) {
+                        HStack {
+                            Text(score.gameId.capitalized)
+                                .font(.headline)
+                            Spacer()
+                            Text("\(score.finalScore)")
+                                .font(.title3)
+                                .fontWeight(.bold)
+                        }
+                        Text(score.formattedDate)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                }
             }
         }
         .navigationTitle("Scores")
