@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct WatchDecodeGameView: View {
-    @StateObject private var game = DecodeGame()
+    @StateObject private var game = DecodeGame(scoreManager: GameScoreManager.shared)
     @EnvironmentObject var gameScoreManager: GameScoreManager
     @Environment(\.dismiss) private var dismiss
     @State private var selectedColor: Color?
@@ -147,9 +147,8 @@ struct WatchDecodeGameView: View {
     }
 
     private func saveScore() {
-        if game.won {
-            gameScoreManager.recordDecodeScore(game.score, forDate: Date())
-        }
+        // Score is automatically saved by the game when it ends
+        // No need to manually save here
     }
 }
 

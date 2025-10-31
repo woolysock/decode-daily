@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct WatchAnagramsGameView: View {
-    @StateObject private var game = AnagramsGame()
+    @StateObject private var game = AnagramsGame(scoreManager: GameScoreManager.shared)
     @EnvironmentObject var gameScoreManager: GameScoreManager
     @Environment(\.dismiss) private var dismiss
     @State private var timeRemaining = 60
@@ -221,7 +221,8 @@ struct WatchAnagramsGameView: View {
     }
 
     private func saveScore() {
-        gameScoreManager.recordAnagramsScore(game.score, forDate: Date())
+        // Score is automatically saved by the game when it ends
+        // No need to manually save here
     }
 }
 

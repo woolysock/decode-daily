@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct WatchFlashdanceGameView: View {
-    @StateObject private var game = FlashdanceGame()
+    @StateObject private var game = FlashdanceGame(scoreManager: GameScoreManager.shared)
     @EnvironmentObject var gameScoreManager: GameScoreManager
     @Environment(\.dismiss) private var dismiss
     @State private var timeRemaining = 30
@@ -144,7 +144,8 @@ struct WatchFlashdanceGameView: View {
     }
 
     private func saveScore() {
-        gameScoreManager.recordFlashdanceScore(game.score, forDate: Date())
+        // Score is automatically saved by the game when it ends
+        // No need to manually save here
     }
 }
 
