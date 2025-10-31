@@ -4,9 +4,6 @@ struct WatchAnagramsGameView: View {
     @StateObject private var game = AnagramsGame(scoreManager: GameScoreManager.shared)
     @EnvironmentObject var gameScoreManager: GameScoreManager
     @Environment(\.dismiss) private var dismiss
-    @State private var timeRemaining = 60
-    @State private var timer: Timer?
-    @State private var selectedLetters: [Character] = []
 
     var body: some View {
         ScrollView {
@@ -14,7 +11,7 @@ struct WatchAnagramsGameView: View {
                 if !game.gameStarted {
                     // Start screen
                     VStack(spacing: 16) {
-                        Text("Anagrams")
+                        Text("'Grams")
                             .font(.title2)
                             .fontWeight(.bold)
 
@@ -24,30 +21,43 @@ struct WatchAnagramsGameView: View {
                             .foregroundColor(.secondary)
 
                         Button("Start Game") {
-                            startGame()
+                            game.startGame()
                         }
                         .buttonStyle(.borderedProminent)
                     }
                     .padding()
-                } else if !game.gameOver {
+                } else if game.isPreCountdownActive {
+                    // Countdown: 3...2...1...
+                    VStack(spacing: 20) {
+                        Text("Get Ready!")
+                            .font(.headline)
+
+                        Text("\(game.countdownValue)")
+                            .font(.system(size: 72, weight: .bold))
+                            .foregroundColor(.blue)
+                    }
+                    .padding()
+                } else if game.isGameActive {
                     // Game in progress
                     VStack(spacing: 12) {
                         // Header
                         HStack {
                             VStack(alignment: .leading, spacing: 2) {
-                                HStack {
+                                HStack(spacing: 4) {
                                     Image(systemName: "timer")
-                                    Text("\(timeRemaining)s")
+                                        .font(.caption)
+                                    Text("\(game.gameTimeRemaining)s")
                                         .fontWeight(.bold)
-                                        .foregroundColor(timeRemaining <= 10 ? .red : .primary)
+                                        .foregroundColor(game.gameTimeRemaining <= 10 ? .red : .primary)
                                 }
                                 Text("Score: \(game.score)")
                                     .font(.caption)
+                                    .foregroundColor(.secondary)
                             }
 
                             Spacer()
 
-                            Text("Word \(game.currentWordIndex + 1)/\(game.totalWords)")
+                            Text("\(game.wordsCompleted)/\(game.totalWords)")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
@@ -56,72 +66,64 @@ struct WatchAnagramsGameView: View {
                         Divider()
 
                         // Scrambled letters
-                        if let scrambled = game.currentScrambledWord {
+                        if !game.scrambledLetters.isEmpty {
                             VStack(spacing: 12) {
-                                Text("Unscramble:")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
+                                // Current answer being built
+                                VStack(spacing: 4) {
+                                    Text("Your word:")
+                                        .font(.caption2)
+                                        .foregroundColor(.secondary)
 
-                                Text(scrambled.uppercased())
-                                    .font(.title3)
-                                    .fontWeight(.bold)
-                                    .tracking(2)
-                                    .padding()
-                                    .background(Color(.systemGray6))
-                                    .cornerRadius(8)
-
-                                // Current word being built
-                                if !selectedLetters.isEmpty {
-                                    VStack(spacing: 4) {
-                                        Text("Your word:")
-                                            .font(.caption2)
+                                    if game.userAnswer.isEmpty {
+                                        Text("Tap letters below")
+                                            .font(.caption)
                                             .foregroundColor(.secondary)
-
-                                        Text(String(selectedLetters))
-                                            .font(.headline)
-                                            .tracking(1)
+                                            .italic()
+                                    } else {
+                                        Text(game.userAnswer.uppercased())
+                                            .font(.title3)
+                                            .fontWeight(.bold)
+                                            .tracking(2)
                                     }
                                 }
+                                .frame(minHeight: 40)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 8)
+                                .background(Color(.systemGray6))
+                                .cornerRadius(8)
 
-                                // Letter selection
+                                // Letter selection grid
                                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 32))], spacing: 8) {
-                                    ForEach(Array(scrambled.enumerated()), id: \.offset) { index, letter in
-                                        Text(String(letter).uppercased())
+                                    ForEach(Array(game.scrambledLetters.enumerated()), id: \.offset) { index, letter in
+                                        let isUsed = game.usedLetterIndices.contains(index)
+
+                                        Text(letter.uppercased())
                                             .font(.headline)
                                             .frame(width: 32, height: 32)
-                                            .background(selectedLetters.contains(letter) ? Color.gray : Color.blue)
+                                            .background(isUsed ? Color.gray.opacity(0.5) : Color.blue)
                                             .foregroundColor(.white)
                                             .cornerRadius(6)
+                                            .opacity(isUsed ? 0.5 : 1.0)
                                             .onTapGesture {
-                                                toggleLetter(letter)
+                                                game.selectLetter(at: index)
                                             }
                                     }
                                 }
                                 .padding(.horizontal)
 
-                                // Actions
+                                // Action buttons
                                 VStack(spacing: 8) {
-                                    Button(action: submitWord) {
-                                        Text("Submit")
-                                            .font(.headline)
-                                            .frame(maxWidth: .infinity)
-                                            .padding(.vertical, 10)
-                                            .background(selectedLetters.count >= 3 ? Color.green : Color.gray)
-                                            .foregroundColor(.white)
-                                            .cornerRadius(8)
-                                    }
-                                    .disabled(selectedLetters.count < 3)
-
                                     HStack(spacing: 8) {
                                         Button(action: clearSelection) {
                                             Text("Clear")
                                                 .font(.subheadline)
                                                 .frame(maxWidth: .infinity)
                                                 .padding(.vertical, 8)
-                                                .background(Color.orange)
+                                                .background(game.userAnswer.isEmpty ? Color.gray.opacity(0.3) : Color.orange)
                                                 .foregroundColor(.white)
                                                 .cornerRadius(6)
                                         }
+                                        .disabled(game.userAnswer.isEmpty)
 
                                         Button(action: skipWord) {
                                             Text("Skip")
@@ -138,7 +140,7 @@ struct WatchAnagramsGameView: View {
                         }
                     }
                     .padding()
-                } else {
+                } else if game.isGameOver {
                     // Game Over
                     VStack(spacing: 16) {
                         Text("Time's Up!")
@@ -152,16 +154,27 @@ struct WatchAnagramsGameView: View {
                             Text("\(game.score)")
                                 .font(.system(size: 48, weight: .bold))
 
-                            Text("Words solved: \(game.wordsCompleted)")
-                                .font(.subheadline)
-                                .foregroundColor(.secondary)
+                            Divider()
+                                .padding(.vertical, 4)
+
+                            VStack(spacing: 4) {
+                                Text("Words solved: \(game.wordsCompleted)")
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
+
+                                if !game.completedWordLengths.isEmpty {
+                                    let longestWord = game.completedWordLengths.max() ?? 0
+                                    Text("Longest word: \(longestWord) letters")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+                            }
                         }
                         .padding()
                         .background(Color(.systemGray6))
                         .cornerRadius(12)
 
                         Button("Done") {
-                            saveScore()
                             dismiss()
                         }
                         .buttonStyle(.borderedProminent)
@@ -170,59 +183,17 @@ struct WatchAnagramsGameView: View {
                 }
             }
         }
-        .navigationTitle("Anagrams")
+        .navigationTitle("'Grams")
         .navigationBarTitleDisplayMode(.inline)
     }
 
-    private func startGame() {
-        game.loadDailyWordset()
-        game.startGame()
-        startTimer()
-    }
-
-    private func startTimer() {
-        timeRemaining = 60
-        timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
-            if timeRemaining > 0 {
-                timeRemaining -= 1
-            } else {
-                endGame()
-            }
-        }
-    }
-
-    private func toggleLetter(_ letter: Character) {
-        if let index = selectedLetters.firstIndex(of: letter) {
-            selectedLetters.remove(at: index)
-        } else {
-            selectedLetters.append(letter)
-        }
-    }
-
     private func clearSelection() {
-        selectedLetters.removeAll()
-    }
-
-    private func submitWord() {
-        let word = String(selectedLetters).lowercased()
-        game.submitWord(word)
-        selectedLetters.removeAll()
+        game.userAnswer = ""
+        game.usedLetterIndices.removeAll()
     }
 
     private func skipWord() {
-        game.skipWord()
-        selectedLetters.removeAll()
-    }
-
-    private func endGame() {
-        timer?.invalidate()
-        timer = nil
-        game.endGame()
-    }
-
-    private func saveScore() {
-        // Score is automatically saved by the game when it ends
-        // No need to manually save here
+        game.skipCurrentWord()
     }
 }
 

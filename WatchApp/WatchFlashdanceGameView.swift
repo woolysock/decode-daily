@@ -4,8 +4,6 @@ struct WatchFlashdanceGameView: View {
     @StateObject private var game = FlashdanceGame(scoreManager: GameScoreManager.shared)
     @EnvironmentObject var gameScoreManager: GameScoreManager
     @Environment(\.dismiss) private var dismiss
-    @State private var timeRemaining = 30
-    @State private var timer: Timer?
 
     var body: some View {
         VStack(spacing: 16) {
@@ -22,47 +20,70 @@ struct WatchFlashdanceGameView: View {
                         .foregroundColor(.secondary)
 
                     Button("Start Game") {
-                        startGame()
+                        game.startGame()
                     }
                     .buttonStyle(.borderedProminent)
                 }
                 .padding()
-            } else if !game.gameOver {
+            } else if game.isPreCountdownActive {
+                // Countdown: 3...2...1...
+                VStack(spacing: 20) {
+                    Text("Get Ready!")
+                        .font(.headline)
+
+                    Text("\(game.countdownValue)")
+                        .font(.system(size: 72, weight: .bold))
+                        .foregroundColor(.blue)
+                }
+                .padding()
+            } else if game.isGameActive {
                 // Game in progress
                 VStack(spacing: 12) {
-                    // Timer
+                    // Timer and Score
                     HStack {
-                        Image(systemName: "timer")
-                        Text("\(timeRemaining)s")
-                            .font(.title3)
-                            .fontWeight(.bold)
-                            .foregroundColor(timeRemaining <= 5 ? .red : .primary)
-                    }
+                        HStack(spacing: 4) {
+                            Image(systemName: "timer")
+                                .font(.caption)
+                            Text("\(game.gameTimeRemaining)s")
+                                .font(.title3)
+                                .fontWeight(.bold)
+                                .foregroundColor(game.gameTimeRemaining <= 5 ? .red : .primary)
+                        }
 
-                    // Score
-                    Text("Score: \(game.score)")
-                        .font(.headline)
+                        Spacer()
+
+                        VStack(alignment: .trailing, spacing: 2) {
+                            Text("Score: \(game.score)")
+                                .font(.headline)
+                            Text("\(game.correctCount) correct")
+                                .font(.caption2)
+                                .foregroundColor(.green)
+                        }
+                    }
+                    .padding(.horizontal)
 
                     Divider()
 
                     // Current equation
-                    if let equation = game.currentEquation {
+                    if !game.currentEquation.isEmpty {
                         VStack(spacing: 16) {
-                            Text(equation.equation)
+                            Text(game.currentEquation)
                                 .font(.title2)
                                 .fontWeight(.bold)
                                 .padding()
                                 .frame(maxWidth: .infinity)
                                 .background(Color(.systemGray6))
                                 .cornerRadius(12)
+                                .minimumScaleFactor(0.5)
+                                .lineLimit(1)
 
                             // Answer options
                             VStack(spacing: 8) {
-                                ForEach(equation.options, id: \.self) { option in
+                                ForEach(game.answers, id: \.self) { answer in
                                     Button(action: {
-                                        submitAnswer(option)
+                                        submitAnswer(answer)
                                     }) {
-                                        Text("\(option)")
+                                        Text("\(answer)")
                                             .font(.title3)
                                             .fontWeight(.semibold)
                                             .frame(maxWidth: .infinity)
@@ -75,10 +96,14 @@ struct WatchFlashdanceGameView: View {
                                 }
                             }
                         }
+                    } else {
+                        // Loading next equation
+                        ProgressView()
+                            .padding()
                     }
                 }
                 .padding()
-            } else {
+            } else if game.isGameOver {
                 // Game Over
                 VStack(spacing: 16) {
                     Text("Time's Up!")
@@ -92,19 +117,36 @@ struct WatchFlashdanceGameView: View {
                         Text("\(game.score)")
                             .font(.system(size: 48, weight: .bold))
 
-                        Text("Correct: \(game.correctCount)")
-                            .font(.subheadline)
-                            .foregroundColor(.green)
-                        Text("Incorrect: \(game.incorrectCount)")
-                            .font(.subheadline)
-                            .foregroundColor(.red)
+                        Divider()
+                            .padding(.vertical, 4)
+
+                        HStack(spacing: 20) {
+                            VStack {
+                                Text("\(game.correctCount)")
+                                    .font(.title)
+                                    .fontWeight(.bold)
+                                    .foregroundColor(.green)
+                                Text("Correct")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+
+                            VStack {
+                                Text("\(game.incorrectCount)")
+                                    .font(.title)
+                                    .fontWeight(.bold)
+                                    .foregroundColor(.red)
+                                Text("Wrong")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
                     }
                     .padding()
                     .background(Color(.systemGray6))
                     .cornerRadius(12)
 
                     Button("Done") {
-                        saveScore()
                         dismiss()
                     }
                     .buttonStyle(.borderedProminent)
@@ -116,36 +158,9 @@ struct WatchFlashdanceGameView: View {
         .navigationBarTitleDisplayMode(.inline)
     }
 
-    private func startGame() {
-        game.loadDailyEquations()
-        game.startGame()
-        startTimer()
-    }
-
-    private func startTimer() {
-        timeRemaining = 30
-        timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
-            if timeRemaining > 0 {
-                timeRemaining -= 1
-            } else {
-                endGame()
-            }
-        }
-    }
-
     private func submitAnswer(_ answer: Int) {
-        game.submitAnswer(answer)
-    }
-
-    private func endGame() {
-        timer?.invalidate()
-        timer = nil
-        game.endGame()
-    }
-
-    private func saveScore() {
-        // Score is automatically saved by the game when it ends
-        // No need to manually save here
+        _ = game.checkAnswer(selected: answer)
+        // Game automatically handles scoring and moving to next equation
     }
 }
 

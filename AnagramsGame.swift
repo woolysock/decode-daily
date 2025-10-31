@@ -64,7 +64,25 @@ class AnagramsGame: GameProtocol, ObservableObject {
         //gameLocation: AnyView(EmptyView()), // replace with real view if needed
         gameIcon: Image(systemName: "60.arrow.trianglehead.clockwise")
     )
-    
+
+    // MARK: - Computed Properties (Clean API for watchOS and future use)
+    /// Boolean indicating if game has ended
+    var isGameOver: Bool { gameOver > 0 }
+
+    /// Clean alias for attempts (which represents score in this game)
+    var score: Int { attempts }
+
+    /// Boolean indicating if game has started
+    var gameStarted: Bool { isGameActive || isPreCountdownActive }
+
+    /// Current scrambled word as a single string
+    var currentScrambledWord: String? {
+        scrambledLetters.isEmpty ? nil : scrambledLetters.joined()
+    }
+
+    /// Total number of words in the current wordset
+    var totalWords: Int { totalWordsInSet }
+
     // Initialize with score manager and use singleton wordset manager
     init(scoreManager: GameScoreManager, targetDate: Date? = nil) {
         self.scoreManager = GameScoreManager.shared

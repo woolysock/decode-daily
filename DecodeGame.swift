@@ -52,7 +52,29 @@ class DecodeGame: ObservableObject, GameProtocol {
 
     let numRows = 7
     let numCols = 5
-    
+
+    // MARK: - Computed Properties (Clean API for watchOS and future use)
+    /// Clean alias for theBoard - represents the game board state
+    var board: [[Int]] { theBoard }
+
+    /// Clean alias for theCode - represents the secret code to crack
+    var code: [Int] { theCode }
+
+    /// Clean alias for theScore - represents the feedback for each guess (exact/partial matches)
+    var feedback: [[Int]] { theScore }
+
+    /// Clean alias for currentTurn - represents current row/attempt number
+    var currentRow: Int { currentTurn }
+
+    /// Boolean indicating if game has ended
+    var isGameOver: Bool { gameOver > 0 }
+
+    /// Clean alias for gameWon
+    var won: Bool { gameWon }
+
+    /// Clean alias for gameInteractive - indicates if user can interact with the game
+    var isActive: Bool { gameInteractive }
+
     init(scoreManager: GameScoreManager, targetDate: Date? = nil) {
         print("🔍 DecodeGame() init: targetDate: \(String(describing: targetDate))")
         

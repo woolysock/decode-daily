@@ -61,6 +61,22 @@ class FlashdanceGame: GameProtocol, ObservableObject {
         gameIcon: Image(systemName: "30.arrow.trianglehead.clockwise")
     )
 
+    // MARK: - Computed Properties (Clean API for watchOS and future use)
+    /// Boolean indicating if game has ended
+    var isGameOver: Bool { gameOver > 0 }
+
+    /// Clean alias for totalScore
+    var score: Int { totalScore }
+
+    /// Clean alias for correctAttempts
+    var correctCount: Int { correctAttempts }
+
+    /// Clean alias for incorrectAttempts
+    var incorrectCount: Int { incorrectAttempts }
+
+    /// Boolean indicating if game has started
+    var gameStarted: Bool { isGameActive || isPreCountdownActive }
+
     // Initialize with score manager
     init(scoreManager: GameScoreManager, targetDate: Date? = nil) {
         self.scoreManager = GameScoreManager.shared
